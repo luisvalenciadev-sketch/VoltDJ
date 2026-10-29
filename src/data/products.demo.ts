@@ -1,8 +1,9 @@
-import { stockImage } from "./stock-images";
-import type { Product, Spec } from "./types";
+import type { Brand, Product, Spec } from "./types";
+
+export const DEMO_BRANDS: Brand[] = ["a", "b", "c", "d", "e", "f"].map((l) => ({ id: `marca-${l}`, name: `Marca ${l.toUpperCase()}`, authorized: false, isDemo: true }));
 
 /**
- * CATÁLOGO DE DEMOSTRACIÓN. Marcas, precios, referencias y disponibilidad son
+ * CATÁLOGO DE DEMOSTRACIÓN: solo se usa como datos de prueba (tests), no en la tienda. Marcas, precios, referencias y disponibilidad son
  * ficticios (`isDemo: true`, SKU con prefijo VD-). No usar como datos comerciales.
  */
 const s = (pairs: [string, string][]): Spec[] => pairs.map(([label, value]) => ({ label, value }));
@@ -10,7 +11,7 @@ const UPDATED = "2026-10-28";
 
 type Seed = Omit<Product, "images" | "status" | "isDemo" | "updatedAt" | "promoEndsAt"> & { promoEndsAt?: string | null };
 const demo = (p: Seed): Product => ({
-  images: [stockImage(`p/${p.id}`, `Foto de referencia: ${p.name}`)].filter((i) => i !== undefined),
+  images: [],
   status: "published",
   isDemo: true,
   updatedAt: UPDATED,

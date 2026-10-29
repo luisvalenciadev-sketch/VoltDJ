@@ -19,7 +19,7 @@ export function Logo() {
   );
 }
 
-export function Header({ categories }: { categories: Category[] }) {
+export function Header({ categories, showOffers }: { categories: Category[]; showOffers: boolean }) {
   return (
     <>
       <div className="topbar">
@@ -50,7 +50,7 @@ export function Header({ categories }: { categories: Category[] }) {
             </Suspense>
           </div>
         </div>
-        <CategoryNav categories={categories} />
+        <CategoryNav categories={categories} showOffers={showOffers} />
       </header>
     </>
   );

@@ -4,7 +4,7 @@ import type { Category } from "@/data/types";
 import { Logo } from "./Header";
 import { Pending } from "./ui";
 
-export function Footer({ categories }: { categories: Category[] }) {
+export function Footer({ categories, showOffers }: { categories: Category[]; showOffers: boolean }) {
   const year = new Date().getFullYear();
   return (
     <footer className="ft">
@@ -19,8 +19,8 @@ export function Footer({ categories }: { categories: Category[] }) {
             <h2>Tienda</h2>
             <ul>
               <li><Link href="/catalogo">Todo el catálogo</Link></li>
-              <li><Link href="/ofertas">Ofertas</Link></li>
-              {categories.slice(0, 5).map((c) => (
+              {showOffers && <li><Link href="/ofertas">Ofertas</Link></li>}
+              {categories.slice(0, 6).map((c) => (
                 <li key={c.id}><Link href={`/catalogo/${c.slug}`}>{c.name}</Link></li>
               ))}
             </ul>

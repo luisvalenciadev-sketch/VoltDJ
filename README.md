@@ -60,7 +60,8 @@ Los colores, la tipografía, el espaciado y los radios están en `src/styles/tok
 | Archivo | Contenido |
 |---|---|
 | `src/data/types.ts` | Modelo de producto, categoría y marca |
-| `src/data/products.demo.ts` | Productos de **demostración** |
+| `src/data/products.ts` | **Catálogo real** (28 productos) |
+| `src/data/products.demo.ts` | Productos ficticios, solo para pruebas |
 | `src/data/categories.ts` / `brands.ts` | Categorías y marcas |
 | `src/data/catalog.ts` | Repositorio: única puerta de acceso a los datos |
 

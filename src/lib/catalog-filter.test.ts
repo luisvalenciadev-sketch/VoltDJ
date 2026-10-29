@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { BRANDS } from "@/data/brands";
 import { CATEGORIES } from "@/data/categories";
-import { DEMO_PRODUCTS } from "@/data/products.demo";
+import { DEMO_BRANDS as BRANDS, DEMO_PRODUCTS } from "@/data/products.demo";
 import { filterProducts, parseCatalogQuery, toSearchParams } from "./catalog-filter";
 import { unitPrice } from "./pricing";
 

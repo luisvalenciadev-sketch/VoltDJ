@@ -19,7 +19,7 @@ export default async function HomePage() {
   const featured = products.filter((p) => p.featured).slice(0, 4);
   const promos = products.filter(hasPromo).slice(0, 4);
   const accessories = products.filter((p) => p.categoryId === "accesorios").slice(0, 4);
-  const authorizedBrands = brands.filter((b) => b.authorized);
+  const catalogBrands = brands.filter((b) => products.some((p) => p.brandId === b.id));
   const [line1, line2, line3] = STORE.tagline.split(". ").map((s) => s.replace(/\.$/, ""));
 
   return (
@@ -36,10 +36,10 @@ export default async function HomePage() {
               {line2}.<br />
               <em>{line3}.</em>
             </h1>
-            <p className="lead">Controladores, mezcladores, parlantes y accesorios para cabina, estudio y eventos. Arma tu pedido y confírmalo con un asesor por WhatsApp.</p>
+            <p className="lead">Sistemas todo en uno, controladores, reproductores, parlantes y monitores para cabina, estudio y eventos. Arma tu pedido y confírmalo con un asesor por WhatsApp.</p>
             <div className="ctas">
               <Link className="btn btn-primary" href="/catalogo">Explorar productos</Link>
-              <Link className="btn btn-ghost" href="/ofertas">Ver ofertas</Link>
+              {promos.length > 0 && <Link className="btn btn-ghost" href="/ofertas">Ver ofertas</Link>}
             </div>
           </div>
           <div className="shot">
@@ -120,14 +120,16 @@ export default async function HomePage() {
         <div className="wrap">
           <div className="sechead">
             <div>
-              <h2 className="disp" id="h-brands">Marcas</h2>
-              <p>Solo publicamos marcas con distribución o autorización confirmada.</p>
+              <h2 className="disp" id="h-brands">Marcas en nuestro catálogo</h2>
+              <p>Equipos de las marcas que usan DJs y productores.</p>
             </div>
           </div>
           <div className="brands">
-            {authorizedBrands.length
-              ? authorizedBrands.map((b) => <span key={b.id}>{b.name}</span>)
-              : Array.from({ length: 6 }, (_, i) => <span key={i}><Pending>Logo de marca {i + 1}</Pending></span>)}
+            {catalogBrands.map((b) => (
+              <Link key={b.id} href={`/catalogo?marca=${b.id}`}>
+                {b.name}
+              </Link>
+            ))}
           </div>
         </div>
       </section>

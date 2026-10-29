@@ -167,7 +167,8 @@ img.cover { width: 100% !important; height: 100% !important; object-fit: cover; 
 /* ---------- Bloques de inicio ---------- */
 .brands { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s2); }
 @media (min-width: 720px) { .brands { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
-.brands > * { min-height: 72px; display: grid; place-items: center; border: 1px dashed var(--border); border-radius: var(--r); font-family: var(--f-mono); font-size: var(--t-xs); color: var(--fg-2); text-align: center; padding: var(--s2); }
+.brands > * { min-height: 72px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: var(--r); font-family: var(--f-display); font-stretch: 112%; font-weight: 700; font-size: var(--t-md); color: var(--fg); text-align: center; padding: var(--s2); text-decoration: none; }
+.brands > a:hover { border-color: var(--fg-2); }
 .benefits { display: grid; gap: var(--s5); }
 @media (min-width: 720px) { .benefits { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1080px) { .benefits { grid-template-columns: repeat(4, minmax(0, 1fr)); } }

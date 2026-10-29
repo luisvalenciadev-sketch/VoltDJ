@@ -31,7 +31,7 @@ export const STORE: StoreConfig = {
   name: "VOLT DJ",
   tagline: "Tu sonido. Tu energía. Tu escenario.",
   description:
-    "Tienda especializada en equipos DJ, audio profesional y accesorios en Colombia. Arma tu pedido y confírmalo con un asesor por WhatsApp.",
+    "Tienda de equipos DJ y audio profesional en Ibagué, con envíos a todo Colombia. Arma tu pedido y confírmalo con un asesor por WhatsApp.",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   locale: "es-CO",
   currency: "COP",

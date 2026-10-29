@@ -1,7 +1,7 @@
 import "server-only";
 import { BRANDS } from "./brands";
 import { CATEGORIES } from "./categories";
-import { DEMO_PRODUCTS } from "./products.demo";
+import { PRODUCTS } from "./products";
 import type { Brand, CartProduct, Category, Product } from "./types";
 
 /**
@@ -9,7 +9,7 @@ import type { Brand, CartProduct, Category, Product } from "./types";
  * archivos locales; para pasar a un CMS se reemplaza la implementación de estas
  * funciones sin tocar páginas ni componentes.
  */
-const SOURCE: Product[] = DEMO_PRODUCTS;
+const SOURCE: Product[] = PRODUCTS;
 
 const isPublished = (p: Product) => p.status === "published";
 

@@ -19,28 +19,12 @@ const ROOT = path.resolve(import.meta.dirname, "..");
 /** clave → búsqueda, orientación y tamaño de recorte. `id` fija una foto elegida a mano. */
 const JOBS = {
   "hero": { q: "dj controller hands", orientation: "landscape", w: 1600, h: 1200 },
+  "cat/standalone": { q: "dj controller screen", id: 17027110, w: 960, h: 600 },
   "cat/controladores": { q: "dj controller", orientation: "landscape", w: 960, h: 600 },
-  "cat/mezcladores": { q: "dj mixer knobs", orientation: "landscape", w: 960, h: 600 },
-  "cat/reproductores": { q: "turntable vinyl record", orientation: "landscape", w: 960, h: 600 },
-  "cat/parlantes": { q: "speakers on stage", orientation: "landscape", w: 960, h: 600 },
-  "cat/audifonos": { q: "dj headphones", orientation: "landscape", w: 960, h: 600 },
-  "cat/microfonos": { q: "microphone stage", orientation: "landscape", w: 960, h: 600 },
-  "cat/iluminacion": { q: "stage lights concert", orientation: "landscape", w: 960, h: 600 },
-  "cat/accesorios": { q: "audio cables", orientation: "landscape", w: 960, h: 600 },
-  "p/p01": { q: "dj controller", orientation: "square", w: 900, h: 900 },
-  "p/p02": { q: "dj controller screen", orientation: "square", w: 900, h: 900 },
-  "p/p03": { q: "audio mixer", orientation: "square", w: 900, h: 900 },
-  "p/p04": { q: "turntable", orientation: "square", w: 900, h: 900 },
-  "p/p05": { q: "dj booth", orientation: "square", w: 900, h: 900 },
-  "p/p06": { q: "pa speaker", id: 34585133, orientation: "square", w: 900, h: 900 },
-  "p/p07": { q: "studio monitor speakers", orientation: "square", w: 900, h: 900 },
-  "p/p08": { q: "black headphones", orientation: "square", w: 900, h: 900 },
-  "p/p09": { q: "microphone", orientation: "square", w: 900, h: 900 },
-  "p/p10": { q: "led stage spotlight", orientation: "square", w: 900, h: 900 },
-  "p/p11": { q: "equipment case", orientation: "square", w: 900, h: 900 },
-  "p/p12": { q: "rca cable", id: 12997214, orientation: "square", w: 900, h: 900 },
-  "p/p13": { q: "turntable needle", orientation: "square", w: 900, h: 900 },
-  "p/p14": { q: "laptop stand desk", orientation: "square", w: 900, h: 900 },
+  "cat/reproductores": { q: "dj console screen", id: 15081310, w: 960, h: 600 },
+  "cat/efectos": { q: "dj mixer led pads", id: 164745, w: 960, h: 600 },
+  "cat/parlantes": { q: "pa speaker", id: 34585133, w: 960, h: 600 },
+  "cat/monitores": { q: "studio speakers desk", id: 11044640, w: 960, h: 600 },
 };
 
 // Con argumentos se regeneran solo esas claves: node ... scripts/fetch-images.mjs p/p02 p/p10

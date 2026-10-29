@@ -29,7 +29,7 @@ export function SearchForm({ id }: { id: string }) {
       <label className="sr-only" htmlFor={id}>
         Buscar productos
       </label>
-      <input id={id} name="q" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Busca controladores, audífonos, marcas…" autoComplete="off" enterKeyHint="search" maxLength={80} />
+      <input id={id} name="q" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Busca CDJ, controladores, parlantes, marcas…" autoComplete="off" enterKeyHint="search" maxLength={80} />
     </form>
   );
 }
@@ -49,14 +49,16 @@ export function CartButton() {
   );
 }
 
-export function CategoryNav({ categories }: { categories: { slug: string; name: string }[] }) {
+export function CategoryNav({ categories, showOffers }: { categories: { slug: string; name: string }[]; showOffers: boolean }) {
   const pathname = usePathname();
   return (
     <nav className="catnav" aria-label="Categorías">
       <div className="wrap">
-        <Link className="hot" href="/ofertas" aria-current={pathname === "/ofertas" ? "page" : undefined}>
+        {showOffers && (
+          <Link className="hot" href="/ofertas" aria-current={pathname === "/ofertas" ? "page" : undefined}>
           Ofertas
         </Link>
+        )}
         {categories.map((c) => {
           const href = `/catalogo/${c.slug}`;
           return (
