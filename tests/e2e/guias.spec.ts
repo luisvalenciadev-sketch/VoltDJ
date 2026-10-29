@@ -60,7 +60,7 @@ test("guía manual: avanza con un clic, cambia con nota y muestra el saldo pendi
   await customer.goto(`/seguimiento/${code}`);
   await expect(customer.getByRole("heading", { level: 1 })).toHaveText("Pedido confirmado");
   await expect(customer.getByText("Servientrega")).toBeVisible();
-  await expect(customer.locator(".totals .due dd")).toHaveText("$ 552.000");
+  await expect(customer.locator(".rc-split .due b")).toHaveText("$ 552.000");
   await expect(customer.getByText("300 123 4567")).toHaveCount(0); // el celular nunca se muestra
 
   await page.getByRole("button", { name: "Marcar como: Pago recibido" }).click();
@@ -74,11 +74,14 @@ test("guía manual: avanza con un clic, cambia con nota y muestra el saldo pendi
 
   await page.getByRole("button", { name: "Marcar todo como pagado" }).click();
   await expect(page.getByText("Pedido pagado por completo.")).toBeVisible();
+  // Sin recargar: las cuentas del panel se actualizan solas.
+  await expect(page.locator(".pay-form .totals .due dd")).toHaveText("$ 0");
+  await expect(page.locator(".guide-meta .pay-chip")).toHaveText("Pagado");
 
   await customer.reload();
   await expect(customer.getByRole("heading", { level: 1 })).toHaveText("Enviado");
   await expect(customer.getByText("Salió en el despacho de la mañana")).toBeVisible();
-  await expect(customer.locator(".totals .due dd")).toHaveText("$ 0");
+  await expect(customer.locator(".rc-split .due b")).toHaveText("$ 0");
 });
 
 test("guía automática: el estado sale del calendario según la fecha", async ({ page }) => {
@@ -119,4 +122,49 @@ test("la consulta acepta el código como lo escriba el cliente", async ({ page }
   await expect(page.locator(".alert[role=alert]")).toContainText("no tiene el formato correcto");
   await page.goto("/seguimiento/VD-ZZZZ-ZZZZ");
   await expect(page.getByRole("heading", { name: "No encontramos esa guía" })).toBeVisible();
+});
+
+test("entrega fallida: el pedido se bloquea, el cliente reprograma y se entrega a una persona", async ({ page, context }) => {
+  await login(page);
+  const code = await createGuide(page, async (p) => {
+    await p.locator(".mode-card", { hasText: "Manual" }).click();
+  });
+  for (const next of ["Pago recibido", "Preparando tu pedido", "Enviado", "En reparto"]) {
+    await page.getByRole("button", { name: `Marcar como: ${next}` }).click();
+    await expect(page.locator("#h-now")).toHaveText(next);
+  }
+
+  // En reparto: productos y montos bloqueados.
+  await page.getByText("Editar contacto y envío (pedido bloqueado)").click();
+  await expect(page.getByText(/sus productos y montos quedaron fijos/)).toBeVisible();
+  await expect(page.getByLabel("Agregar producto *")).toHaveCount(0);
+
+  await page.getByText("Otro estado o calendario").click();
+  await page.locator(".status-picks").getByText("Entrega fallida", { exact: true }).click();
+  await page.getByLabel("Motivo (lo ve el cliente)").selectOption("No había nadie en la dirección");
+  await page.getByRole("button", { name: "Cambiar estado" }).click();
+  await expect(page.locator("#h-now")).toHaveText("Entrega fallida");
+
+  const customer = await context.newPage();
+  await customer.goto(`/seguimiento/${code}`);
+  await expect(customer.getByRole("heading", { level: 1 })).toHaveText("Entrega fallida");
+  await expect(customer.getByText("No había nadie en la dirección")).toBeVisible();
+  await customer.getByLabel("Horario").selectOption("tarde");
+  await customer.getByRole("button", { name: "Reprogramar entrega" }).click();
+  // La página se actualiza sola al reprogramar: el nuevo estado es la confirmación.
+  await expect(customer.getByRole("heading", { level: 1 })).toHaveText("Entrega reprogramada");
+  await expect(customer.getByText(/para recibir en la tarde/)).toBeVisible();
+  await expect(customer.getByText(/Nueva fecha de entrega:/)).toBeVisible();
+  await expect(customer.getByRole("button", { name: "Reprogramar entrega" })).toHaveCount(0); // una sola vez por falla
+
+  await page.reload();
+  await page.getByRole("button", { name: "Marcar como: En reparto" }).click();
+  await expect(page.locator("#h-now")).toHaveText("En reparto");
+  await page.getByLabel("Recibido por").fill("Carolina Restrepo");
+  await page.getByRole("button", { name: "Marcar como: Entregado" }).click();
+  await expect(page.locator("#h-now")).toHaveText("Entregado");
+
+  await customer.reload();
+  await expect(customer.getByRole("heading", { level: 1 })).toHaveText("Entregado");
+  await expect(customer.getByText("Recibido por Carolina Restrepo.")).toBeVisible();
 });
