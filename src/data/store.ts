@@ -1,7 +1,7 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
-import type { StoreSettings } from "@/config/store";
+import { defaultStore, mergeStore, type StoreSettings } from "@/config/store";
 import { cacheScope } from "@/lib/cache-scope";
 import { settingsStore } from "@/lib/settings-store";
 import type { StoreInfo } from "@/store/store-info";
@@ -12,9 +12,11 @@ import type { StoreInfo } from "@/store/store-info";
  */
 export const SETTINGS_TAG = "settings";
 
-const read = unstable_cache(() => settingsStore().get(), ["store-settings-v1", cacheScope()], { tags: [SETTINGS_TAG] });
+// La caché de Vercel sobrevive a los despliegues: versión en la clave y, por si llega una entrada vieja,
+// se completa con los valores iniciales (un campo nuevo nunca llega vacío a la página).
+const read = unstable_cache(() => settingsStore().get(), ["store-settings-v2", cacheScope()], { tags: [SETTINGS_TAG] });
 
-export const getStore = cache((): Promise<StoreSettings> => read());
+export const getStore = cache(async (): Promise<StoreSettings> => mergeStore(defaultStore(), await read()));
 
 export const toStoreInfo = (s: StoreSettings): StoreInfo => ({
   name: s.name,

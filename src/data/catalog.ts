@@ -1,7 +1,7 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
 import { cacheScope } from "@/lib/cache-scope";
-import { catalogStore } from "@/lib/catalog-store";
+import { catalogStore, type CatalogSnapshot } from "@/lib/catalog-store";
 import { toPublicProduct } from "@/lib/inventory";
 import { discountPercent } from "@/lib/pricing";
 import { bestPromotion, storewidePromotion } from "@/lib/promotions";
@@ -14,7 +14,15 @@ import type { Brand, CartProduct, Category, Product } from "./types";
  */
 export const CATALOG_TAG = "catalog";
 
-const snapshot = unstable_cache(() => catalogStore().snapshot(), ["catalog-snapshot-v1", cacheScope()], { tags: [CATALOG_TAG] });
+/*
+ * La caché de datos de Vercel sobrevive a los despliegues. Si cambia la forma de lo guardado aquí, se sube la
+ * versión de la clave; y la lectura completa lo que falte, por si una entrada vieja llega de todas formas.
+ */
+const cachedSnapshot = unstable_cache(() => catalogStore().snapshot(), ["catalog-snapshot-v2", cacheScope()], { tags: [CATALOG_TAG] });
+const snapshot = async (): Promise<CatalogSnapshot> => {
+  const s = await cachedSnapshot();
+  return { ...s, promotions: s.promotions ?? [] };
+};
 
 /**
  * Las promociones se aplican en cada lectura, no dentro de la caché: así empiezan y terminan a su hora
