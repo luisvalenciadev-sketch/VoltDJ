@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { WarnIcon, WhatsAppIcon } from "@/components/icons";
 import { Breadcrumbs, Pending } from "@/components/ui";
-import { STORE } from "@/config/store";
+import { phoneHref, STORE } from "@/config/store";
 import { buildGeneralMessage, buildWhatsAppLink } from "@/lib/whatsapp";
 
 export const metadata: Metadata = {
@@ -44,8 +44,9 @@ export default function ContactPage() {
           <h2 id="h-data">Datos de la tienda</h2>
           <ul className="contact-list">
             <li><span>Horario</span><span>{STORE.hours ?? <Pending>Horario de atención</Pending>}</span></li>
-            <li><span>Correo</span><span>{STORE.email ?? <Pending>Correo</Pending>}</span></li>
-            <li><span>Dirección</span><span>{STORE.address ?? <Pending>Dirección / showroom</Pending>}</span></li>
+            <li><span>Correo</span><span>{STORE.email ? <a href={`mailto:${STORE.email}`}>{STORE.email}</a> : <Pending>Correo</Pending>}</span></li>
+            <li><span>Teléfono</span><span>{STORE.phone ? <a href={phoneHref(STORE.phone)}>{STORE.phone}</a> : <Pending>Teléfono</Pending>}</span></li>
+            <li><span>Tienda</span><span>{STORE.address ?? <Pending>Dirección / showroom</Pending>}</span></li>
             <li><span>Razón social</span><span>{STORE.legalName ?? <Pending>Razón social</Pending>}</span></li>
             <li><span>NIT</span><span>{STORE.taxId ?? <Pending>NIT</Pending>}</span></li>
           </ul>

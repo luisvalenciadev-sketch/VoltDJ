@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { STORE } from "@/config/store";
+import { phoneHref, STORE } from "@/config/store";
 import type { Category } from "@/data/types";
 import { Logo } from "./Header";
 import { Pending } from "./ui";
@@ -37,7 +37,8 @@ export function Footer({ categories }: { categories: Category[] }) {
             <h2>Contacto</h2>
             <ul>
               <li>{STORE.whatsappNumber ? <Link href="/contacto">WhatsApp comercial</Link> : <Pending>WhatsApp comercial</Pending>}</li>
-              <li>{STORE.email ?? <Pending>Correo</Pending>}</li>
+              <li>{STORE.email ? <a href={`mailto:${STORE.email}`}>{STORE.email}</a> : <Pending>Correo</Pending>}</li>
+              {STORE.phone && <li><a href={phoneHref(STORE.phone)}>Tel. {STORE.phone}</a></li>}
               <li>{STORE.address ?? <Pending>Dirección / showroom</Pending>}</li>
               <li>{STORE.hours ?? <Pending>Horario</Pending>}</li>
               {STORE.social.length ? (

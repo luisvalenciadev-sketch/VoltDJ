@@ -17,6 +17,8 @@ export interface StoreConfig {
   legalName: string | null;
   taxId: string | null;
   email: string | null;
+  /** Teléfono de contacto (llamadas). El de pedidos es whatsappNumber. */
+  phone: string | null;
   address: string | null;
   hours: string | null;
   social: { label: string; url: string }[];
@@ -35,11 +37,12 @@ export const STORE: StoreConfig = {
   currency: "COP",
   whatsappNumber: (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "").replace(/\D/g, ""),
   orderIdPrefix: "VD",
-  topbar: ["Envíos a todo Colombia", null, null],
-  legalName: null,
-  taxId: null,
-  email: null,
-  address: null,
+  topbar: ["Envíos a todo Colombia", null, "Tienda en Ibagué · Calle 17 #4-91, Centro"],
+  legalName: "CD-R SDJ COLOMBIA",
+  taxId: "1110518122-5",
+  email: "cdr.sdjcolombia@gmail.com",
+  phone: "324 203 8766",
+  address: "Calle 17 #4-91, Centro, Ibagué, Tolima",
   hours: null,
   social: [],
   shipping: {
@@ -62,3 +65,8 @@ export const STORE: StoreConfig = {
 
 /** Etiquetas de los marcadores para datos pendientes, en el mismo orden que `topbar`. */
 export const TOPBAR_PLACEHOLDERS = ["Cobertura de envíos", "Horario de atención", "Ciudad / showroom"];
+
+/** Enlace tel: con indicativo de Colombia a partir de un número escrito con espacios. */
+export function phoneHref(phone: string): string {
+  return `tel:+57${phone.replace(/\D/g, "")}`;
+}
