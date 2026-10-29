@@ -6,10 +6,12 @@ import { TrackingTimeline } from "@/components/TrackingTimeline";
 import { formatCOP } from "@/lib/pricing";
 import {
   addManualStatus,
+  FAIL_REASONS,
   isoToLocalInput,
   localInputToISO,
   orderTotals,
   PAYMENT_LABEL,
+  sampleRecipient,
   SCHEDULE_PRESETS,
   STATUS_LABEL,
   STEPS,
@@ -464,11 +466,32 @@ export function NewGuideForm({ catalog, defaultStart, nowISO }: { catalog: Catal
 // ---------- Guía existente ----------
 
 /** El paso siguiente con un solo clic: es lo que el asesor hace casi siempre. */
+/**
+ * "Recibido por": por ahora el dato se confirma a mano con la transportadora. El botón de ejemplo
+ * llena un nombre aleatorio para probar; en un pedido real se reemplaza por el nombre confirmado.
+ */
+function ReceivedByField({ id }: { id: string }) {
+  const [value, setValue] = useState("");
+  return (
+    <div className="field">
+      <label htmlFor={id}>Recibido por</label>
+      <div className="with-action">
+        <input id={id} name="receivedBy" className="input" maxLength={80} value={value} onChange={(e) => setValue(e.target.value)} placeholder="Nombre de quien recibió" autoComplete="off" />
+        <button type="button" className="btn btn-ghost btn-sm" onClick={() => setValue(sampleRecipient())}>
+          Nombre de ejemplo
+        </button>
+      </div>
+      <span className="note">Opcional. El cliente verá “Recibido por …”. Confírmalo con la transportadora antes de usarlo en un pedido real.</span>
+    </div>
+  );
+}
+
 export function AdvanceForm({ code, next }: { code: string; next: StatusId }) {
   const [state, action, pending] = useActionState(setManualStatus.bind(null, code), undefined);
   return (
     <form action={action} className="stack">
       <input type="hidden" name="status" value={next} />
+      {next === "entregado" && <ReceivedByField id="adv-received" />}
       <button type="submit" className="btn btn-primary btn-block" disabled={pending}>
         {pending ? "Actualizando…" : `Marcar como: ${STATUS_LABEL[next]}`}
       </button>
@@ -477,23 +500,48 @@ export function AdvanceForm({ code, next }: { code: string; next: StatusId }) {
   );
 }
 
-export function ManualStatusForm({ code, current }: { code: string; current: StatusId | null }) {
+export function ManualStatusForm({ code, current, minDay, maxDay }: { code: string; current: StatusId | null; minDay: string; maxDay: string }) {
   const [state, action, pending] = useActionState(setManualStatus.bind(null, code), undefined);
-  const options: StatusId[] = [...STEPS.map((s) => s.id), "cancelado"];
+  const [picked, setPicked] = useState<StatusId | null>(current);
+  const options: StatusId[] = [...STEPS.slice(0, 5).map((s) => s.id), "entrega_fallida", "reprogramado", "entregado", "cancelado"];
   return (
     <form action={action} className="stack">
       <div className="status-picks" role="radiogroup" aria-label="Nuevo estado">
         {options.map((id) => (
-          <label key={id} className={`pick${id === "cancelado" ? " danger" : ""}`}>
-            <input type="radio" name="status" value={id} defaultChecked={id === current} required />
+          <label key={id} className={`pick${id === "cancelado" ? " danger" : id === "entrega_fallida" ? " warn" : ""}`}>
+            <input type="radio" name="status" value={id} defaultChecked={id === current} onChange={() => setPicked(id)} required />
             <span>{STATUS_LABEL[id]}</span>
           </label>
         ))}
       </div>
-      <div className="field">
-        <label htmlFor="note">Nota en este paso (opcional, la ve el cliente)</label>
-        <input id="note" name="note" className="input" maxLength={160} placeholder="Ej.: salió en el despacho de la mañana" />
-      </div>
+      {/* Campos según el estado elegido: lo que el cliente necesita saber de ese paso. */}
+      {picked === "entrega_fallida" ? (
+        <div className="field">
+          <label htmlFor="reason">Motivo (lo ve el cliente)</label>
+          <select id="reason" name="reason" className="input" defaultValue="" required>
+            <option value="" disabled>
+              Elige un motivo…
+            </option>
+            {FAIL_REASONS.map((r) => (
+              <option key={r}>{r}</option>
+            ))}
+          </select>
+          <span className="note">El cliente podrá elegir una nueva fecha desde su página de seguimiento.</span>
+        </div>
+      ) : picked === "reprogramado" ? (
+        <div className="field">
+          <label htmlFor="rescheduledFor">Nueva fecha de entrega</label>
+          <input id="rescheduledFor" name="rescheduledFor" type="date" className="input" min={minDay} max={maxDay} defaultValue={minDay} required />
+        </div>
+      ) : picked === "entregado" ? (
+        <ReceivedByField id="mf-received" />
+      ) : null}
+      {picked !== "entrega_fallida" && (
+        <div className="field">
+          <label htmlFor="note">Nota en este paso (opcional, la ve el cliente)</label>
+          <input id="note" name="note" className="input" maxLength={160} placeholder="Ej.: salió en el despacho de la mañana" />
+        </div>
+      )}
       <Message state={state} />
       <button type="submit" className="btn btn-secondary" disabled={pending}>
         {pending ? "Actualizando…" : "Cambiar estado"}
@@ -517,7 +565,7 @@ export function ScheduleForm({ code, events, isAuto, defaultStart }: { code: str
 }
 
 /** Modo de la guía como pestañas: se ve cuál está activo y qué implica cambiar. */
-export function StatusModes({ code, mode, events, current, defaultStart }: { code: string; mode: "auto" | "manual"; events: TrackingEvent[]; current: StatusId | null; defaultStart: string }) {
+export function StatusModes({ code, mode, events, current, defaultStart, minDay, maxDay }: { code: string; mode: "auto" | "manual"; events: TrackingEvent[]; current: StatusId | null; defaultStart: string; minDay: string; maxDay: string }) {
   const [tab, setTab] = useState(mode);
   return (
     <div className="stack">
@@ -532,7 +580,7 @@ export function StatusModes({ code, mode, events, current, defaultStart }: { cod
       {tab === "manual" ? (
         <>
           {mode === "auto" && <p className="note">Al cambiar el estado a mano, el calendario se detiene y la guía pasa a modo manual.</p>}
-          <ManualStatusForm code={code} current={current} />
+          <ManualStatusForm code={code} current={current} minDay={minDay} maxDay={maxDay} />
         </>
       ) : (
         <>
@@ -547,9 +595,12 @@ export function StatusModes({ code, mode, events, current, defaultStart }: { cod
 export function PaymentForm({ code, total, paid }: { code: string; total: number; paid: number }) {
   const [state, action, pending] = useActionState(savePayment.bind(null, code), undefined);
   const [value, setValue] = useState(paid);
+  // Cuando el servidor confirma un pago (p. ej. "Marcar todo como pagado"), el campo y las cuentas
+  // toman el valor nuevo al instante, sin recargar la página.
+  useEffect(() => setValue(paid), [paid]);
   const t = orderTotals({ lines: [{ productId: null, name: "", qty: 1, unitPrice: total }], shipping: 0, paid: value });
   return (
-    <form action={action} className="stack">
+    <form action={action} className="stack pay-form">
       <MoneyInput id="pay" name="paid" label="Total recibido hasta hoy" value={value} onChange={setValue} />
       <Totals totals={t} />
       <Message state={state} />
@@ -567,7 +618,7 @@ export function PaymentForm({ code, total, paid }: { code: string; total: number
   );
 }
 
-export function EditDetailsForm({ guide, catalog }: { guide: Guide; catalog: CatalogOption[] }) {
+export function EditDetailsForm({ guide, catalog, locked }: { guide: Guide; catalog: CatalogOption[]; locked: boolean }) {
   const [state, action, pending] = useActionState(updateDetails.bind(null, guide.code), undefined);
   const [lines, setLines] = useState<OrderLine[]>(guide.lines);
   const [shipping, setShipping] = useState(guide.shipping);
@@ -575,10 +626,16 @@ export function EditDetailsForm({ guide, catalog }: { guide: Guide; catalog: Cat
   return (
     <form action={action} className="stack">
       <CustomerFields guide={guide} />
-      <OrderEditor catalog={catalog} lines={lines} setLines={setLines} shipping={shipping} setShipping={setShipping} paid={paid} setPaid={setPaid} />
+      {locked ? (
+        <p className="alert warn">
+          <span>El pedido ya salió a reparto: sus productos y montos quedaron fijos. Puedes corregir los datos de contacto y envío, y registrar pagos arriba.</span>
+        </p>
+      ) : (
+        <OrderEditor catalog={catalog} lines={lines} setLines={setLines} shipping={shipping} setShipping={setShipping} paid={paid} setPaid={setPaid} />
+      )}
       <ShippingFields guide={guide} />
       <Message state={state} />
-      <button type="submit" className="btn btn-primary" disabled={pending || lines.length === 0}>
+      <button type="submit" className="btn btn-primary" disabled={pending || (!locked && lines.length === 0)}>
         {pending ? "Guardando…" : "Guardar cambios"}
       </button>
     </form>

@@ -9,7 +9,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { adminCatalog } from "@/lib/admin-catalog";
 import { guidesStore } from "@/lib/guides-store";
 import { formatCOP } from "@/lib/pricing";
-import { currentStatus, formatTrackingDate, isoToLocalInput, nextScheduled, nextStep, normalizeGuideCode, orderTotals, PAYMENT_LABEL, STATUS_LABEL, timeline } from "@/lib/tracking";
+import { currentStatus, formatTrackingDate, isoToLocalInput, isOrderLocked, nextScheduled, nextStep, normalizeGuideCode, orderTotals, PAYMENT_LABEL, STATUS_LABEL, timeline } from "@/lib/tracking";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 
 type Params = Promise<{ codigo: string }>;
@@ -36,6 +36,9 @@ export default async function GuideAdminPage({ params, searchParams }: { params:
   const next = nextScheduled(guide, now);
   const advance = nextStep(cur?.status ?? null);
   const totals = orderTotals(guide);
+  const locked = isOrderLocked(cur?.status);
+  const today = new Date(now.getTime() - 5 * 3_600_000);
+  const dayPlus = (n: number) => new Date(today.getTime() + n * 86_400_000).toISOString().slice(0, 10);
   const publicUrl = new URL(`/seguimiento/${guide.code}`, STORE.siteUrl).toString();
   const firstName = guide.customerName.split(" ")[0];
   const pendingLine = totals.pending > 0 ? `\nSaldo pendiente para la entrega: ${formatCOP(totals.pending)}` : "";
@@ -82,10 +85,13 @@ export default async function GuideAdminPage({ params, searchParams }: { params:
               {cur ? `Desde el ${formatTrackingDate(cur.at)}` : "Aún no llega la primera fecha del calendario"}
               {next && ` · Siguiente automático: ${STATUS_LABEL[next.status]} el ${formatTrackingDate(next.at)}`}
             </p>
+            {cur?.receivedBy && <p className="note">Recibido por {cur.receivedBy}</p>}
+            {cur?.status === "entrega_fallida" && cur.note && <p className="alert warn"><span>Motivo: {cur.note}. El cliente puede reprogramar desde su página.</span></p>}
+            {cur?.status === "reprogramado" && cur.rescheduledFor && <p className="alert"><span>Nueva fecha de entrega: {cur.rescheduledFor}{cur.note ? ` · ${cur.note}` : ""}</span></p>}
             {advance && <AdvanceForm code={guide.code} next={advance} />}
             <details className="admin-acc">
               <summary>Otro estado o calendario</summary>
-              <StatusModes code={guide.code} mode={guide.mode} events={guide.events} current={cur?.status ?? null} defaultStart={isoToLocalInput(now.toISOString())} />
+              <StatusModes code={guide.code} mode={guide.mode} events={guide.events} current={cur?.status ?? null} defaultStart={isoToLocalInput(now.toISOString())} minDay={dayPlus(1)} maxDay={dayPlus(30)} />
             </details>
           </section>
 
@@ -139,8 +145,10 @@ export default async function GuideAdminPage({ params, searchParams }: { params:
           </section>
 
           <details className="panel admin-acc">
-            <summary>Editar datos del pedido</summary>
-            <EditDetailsForm guide={guide} catalog={await adminCatalog()} />
+            <summary>{locked ? "Editar contacto y envío (pedido bloqueado)" : "Editar datos del pedido"}</summary>
+            {/* key = última modificación: si cambia el pago o el estado, el formulario arranca con los
+                datos guardados y nunca reescribe un pago con un valor viejo. */}
+            <EditDetailsForm key={guide.updatedAt} guide={guide} catalog={await adminCatalog()} locked={locked} />
           </details>
           <DeleteGuideButton code={guide.code} />
         </div>
