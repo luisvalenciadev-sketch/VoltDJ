@@ -14,17 +14,17 @@ export interface CartItem {
   seenPrice: number | null;
 }
 
-export type CartLine =
-  | { kind: "missing"; id: string; qty: number }
-  | {
-      kind: "ok" | "soldout";
-      product: CartProduct;
-      qty: number;
-      unit: number | null;
-      total: number | null;
-      priceChangedFrom: number | null;
-      qtyClamped: boolean;
-    };
+export interface ProductLine {
+  kind: "ok" | "soldout";
+  product: CartProduct;
+  qty: number;
+  unit: number | null;
+  total: number | null;
+  priceChangedFrom: number | null;
+  qtyClamped: boolean;
+}
+
+export type CartLine = { kind: "missing"; id: string; qty: number } | ProductLine;
 
 export interface CartSummary {
   lines: CartLine[];
@@ -33,7 +33,7 @@ export interface CartSummary {
   hasUnpriced: boolean;
   hasIssues: boolean;
   /** Líneas que pueden enviarse en el pedido. */
-  orderable: Extract<CartLine, { kind: "ok" }>[];
+  orderable: ProductLine[];
 }
 
 export const MIN_QTY = 1;
@@ -87,7 +87,7 @@ export function summarize(items: CartItem[], catalog: CartProduct[]): CartSummar
       qtyClamped: qty !== item.qty,
     };
   });
-  const orderable = lines.filter((l): l is Extract<CartLine, { kind: "ok" }> => l.kind === "ok");
+  const orderable = lines.filter((l): l is ProductLine => l.kind === "ok");
   return {
     lines,
     orderable,

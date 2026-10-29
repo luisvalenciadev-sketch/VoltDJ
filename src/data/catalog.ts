@@ -34,9 +34,8 @@ export async function getBrands(): Promise<Brand[]> {
 }
 
 /** Vista reducida para el carrito: lo justo para recalcular precios en el cliente. */
-export async function getCartCatalog(): Promise<CartProduct[]> {
-  const [products, brands] = await Promise.all([getProducts(), getBrands()]);
-  return products.map((p) => ({
+export function toCartProduct(p: Product, brands: Brand[]): CartProduct {
+  return {
     id: p.id,
     slug: p.slug,
     name: p.name,
@@ -48,5 +47,10 @@ export async function getCartCatalog(): Promise<CartProduct[]> {
     promoPrice: p.promoPrice,
     availability: p.availability,
     maxQtyPerOrder: p.maxQtyPerOrder,
-  }));
+  };
+}
+
+export async function getCartCatalog(): Promise<CartProduct[]> {
+  const [products, brands] = await Promise.all([getProducts(), getBrands()]);
+  return products.map((p) => toCartProduct(p, brands));
 }

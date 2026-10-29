@@ -1,0 +1,62 @@
+/*
+ * Tokens de diseño de VOLT DJ. Única fuente de verdad visual: para cambiar la
+ * identidad (colores, tipografía, radios) se edita solo este archivo.
+ * Las familias tipográficas las inyecta next/font en src/app/fonts.ts.
+ */
+:root {
+  /* Marca */
+  --bg: #101114;
+  --surface: #191b20;
+  --surface-2: #22252b;
+  --surface-hover: #2b2e35;
+  --fg: #f5f5f5;
+  --fg-2: #a7a9b0;
+  --accent: #b8ff32;
+  --accent-ink: #101114;
+  --border: #30323a;
+  --border-strong: #474a54;
+
+  /* Pozo fotográfico: claro para que las fotos de fabricante (fondo blanco) encajen */
+  --photo: #e7e8eb;
+  --art-ink: #1c1e23;
+  --art-mid: #3a3d45;
+  --art-hi: #8a8e98;
+
+  /* Semántica (independiente del acento) */
+  --ok: #5bd28a;
+  --warn: #f2b544;
+  --info: #7db4ff;
+  --off: #6b6e77;
+  --danger: #ff6b5e;
+  --placeholder: #f2b544;
+
+  /* Tipografía */
+  --f-display: var(--font-archivo), "Arial Narrow", system-ui, sans-serif;
+  --f-body: var(--font-hanken), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: var(--font-mono), ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --t-xs: 0.75rem;
+  --t-sm: 0.875rem;
+  --t-md: 1rem;
+  --t-lg: 1.25rem;
+  --t-xl: 1.75rem;
+  --t-2xl: 2.5rem;
+  --t-3xl: 3.5rem;
+
+  /* Espaciado (base 4) */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+  --s8: 72px;
+
+  /* Forma */
+  --r: 4px;
+  --r-lg: 6px;
+  --container: 1240px;
+  --header-h: 128px;
+
+  color-scheme: dark;
+}

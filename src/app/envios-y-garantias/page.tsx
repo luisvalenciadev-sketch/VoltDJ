@@ -1,0 +1,40 @@
+import type { Metadata } from "next";
+import { PolicyList } from "@/components/Content";
+import { Breadcrumbs, Pending } from "@/components/ui";
+import { STORE } from "@/config/store";
+
+export const metadata: Metadata = {
+  title: "Envíos y garantías",
+  description: "Condiciones de envío y política de garantía.",
+  alternates: { canonical: "/envios-y-garantias" },
+};
+
+export default function ShippingPage() {
+  return (
+    <div className="wrap">
+      <Breadcrumbs items={[{ label: "Inicio", href: "/" }, { label: "Envíos y garantías" }]} />
+      <div className="pagehead">
+        <h1 className="disp">Envíos y garantías</h1>
+        <p>El costo y el tiempo de envío se confirman por WhatsApp antes del pago, según tu ciudad y los productos del pedido.</p>
+      </div>
+      <div className="split" style={{ paddingBottom: "var(--s7)" }}>
+        <section className="panel" id="envios" aria-labelledby="h-env">
+          <h2 id="h-env">Envíos</h2>
+          <p className="muted">{STORE.shipping.summary ?? <Pending>Resumen de la política de envíos</Pending>}</p>
+          <PolicyList
+            items={STORE.shipping.details}
+            placeholders={["Ciudades y transportadoras", "Tiempo estimado por zona", "Costo o regla de envío gratis", "Qué hacer si el paquete llega dañado"]}
+          />
+        </section>
+        <section className="panel" id="garantias" aria-labelledby="h-gar">
+          <h2 id="h-gar">Garantías</h2>
+          <p className="muted">{STORE.warranty.summary ?? <Pending>Resumen de la política de garantía</Pending>}</p>
+          <PolicyList
+            items={STORE.warranty.details}
+            placeholders={["Duración por categoría o marca", "Qué cubre y qué no", "Documentos necesarios", "Cómo y dónde se hace un reclamo"]}
+          />
+        </section>
+      </div>
+    </div>
+  );
+}
