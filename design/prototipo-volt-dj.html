@@ -1,0 +1,1009 @@
+<title>VOLT DJ Prototipo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: prototype toolbar + resizable "device" frame (container queries) so one build reviews móvil / tablet / escritorio.
+   Brand tokens: single dark look by decision of the brief. Every value below is the ONE source of truth. */
+:root {
+  /* Marca (configurable) */
+  --bg: #101114;
+  --surface: #191B20;
+  --surface-2: #22252B;
+  --fg: #F5F5F5;
+  --fg-2: #A7A9B0;
+  --accent: #B8FF32;
+  --accent-ink: #101114;
+  --border: #30323A;
+  /* Pozo fotográfico: claro para que las fotos de fabricante (fondo blanco) encajen */
+  --photo: #E7E8EB;
+  --art-ink: #1C1E23;
+  --art-mid: #3A3D45;
+  --art-hi: #8A8E98;
+  /* Semántica de disponibilidad (independiente del acento) */
+  --ok: #5BD28A;
+  --warn: #F2B544;
+  --info: #7DB4FF;
+  --off: #6B6E77;
+  --danger: #FF6B5E;
+  --ph: #F2B544;
+  /* Tipografía */
+  --f-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --t-xs: .75rem; --t-sm: .875rem; --t-md: 1rem; --t-lg: 1.25rem; --t-xl: 1.75rem; --t-2xl: 2.5rem; --t-3xl: 3.5rem;
+  /* Espaciado y forma */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px; --s8: 72px;
+  --r: 4px; --r-lg: 6px;
+  --tool-h: 52px;
+  --chrome: #0A0B0D;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--chrome); color: var(--fg); font-family: var(--f-body); font-size: var(--t-md); line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 50; background: var(--chrome); }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+p { margin: 0; }
+.mono { font-family: var(--f-mono); }
+.num { font-variant-numeric: tabular-nums; }
+.disp { font-family: var(--f-display); font-stretch: 115%; font-weight: 800; text-transform: uppercase; letter-spacing: -.005em; line-height: 1.02; }
+.eyebrow { font-family: var(--f-mono); font-size: var(--t-xs); text-transform: uppercase; letter-spacing: .08em; color: var(--fg-2); }
+.ph { outline: 1px dashed var(--ph); outline-offset: 2px; color: var(--ph); font-style: normal; }
+.ph::before { content: "⟨"; } .ph::after { content: "⟩"; }
+
+/* ---------- Prototype toolbar ---------- */
+.tool { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 40; height: var(--tool-h); display: flex; align-items: center; gap: var(--s3);
+  background: var(--chrome); border-bottom: 1px solid var(--border);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); overflow-x: auto; }
+.tool .tag { font-family: var(--f-mono); font-size: var(--t-xs); color: var(--fg-2); white-space: nowrap; }
+.tool nav, .tool .dev { display: flex; gap: 2px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 2px; flex-shrink: 0; }
+.tool nav a, .tool .dev button { font-family: var(--f-mono); font-size: var(--t-xs); text-decoration: none; padding: 6px 10px; border-radius: 3px; color: var(--fg-2); background: none; border: 0; white-space: nowrap; }
+.tool nav a[aria-current="page"], .tool .dev button[aria-pressed="true"] { background: var(--surface-2); color: var(--fg); }
+.tool .spacer { flex: 1; }
+
+.stage { padding-block: var(--s5) var(--s8); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.device { container: shop / inline-size; margin: 0 auto; max-width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-lg); transition: width .25s ease; width: 100%; }
+.device[data-w="tablet"] { width: 820px; }
+.device[data-w="mobile"] { width: 390px; }
+.devnote { text-align: center; margin-top: var(--s3); font-family: var(--f-mono); font-size: var(--t-xs); color: var(--fg-2); }
+
+/* ---------- Shop shell ---------- */
+.wrap { padding-inline: var(--s4); margin: 0 auto; max-width: 1240px; }
+@container shop (min-width: 720px) { .wrap { padding-inline: var(--s6); } }
+.topbar { background: var(--surface); border-bottom: 1px solid var(--border); font-size: var(--t-xs); color: var(--fg-2); }
+.topbar .wrap { display: flex; gap: var(--s5); justify-content: center; padding-block: 8px; overflow-x: auto; white-space: nowrap; }
+.topbar .wrap > span:nth-child(n+2) { display: none; }
+@container shop (min-width: 720px) { .topbar .wrap { justify-content: space-between; } .topbar .wrap > span:nth-child(n+2) { display: inline; } }
+
+.hdr { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--tool-h)); z-index: 20; background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+.hdr .row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--s3); padding-block: var(--s3); }
+.logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+.logo svg { width: 28px; height: 28px; }
+.logo b { font-family: var(--f-display); font-stretch: 125%; font-weight: 900; font-size: 1.15rem; letter-spacing: .02em; }
+.logo b i { font-style: normal; color: var(--fg-2); font-weight: 500; font-stretch: 100%; }
+.search { display: none; position: relative; }
+.search input { width: 100%; height: 44px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 0 var(--s4) 0 40px; }
+.search input::placeholder { color: var(--fg-2); }
+.search svg { position: absolute; left: 12px; top: 12px; width: 20px; height: 20px; color: var(--fg-2); }
+.hdr .actions { display: flex; gap: var(--s2); justify-self: end; grid-column: 3; }
+.iconbtn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 44px; height: 44px; padding: 0 10px; background: none; border: 1px solid var(--border); border-radius: var(--r); text-decoration: none; }
+.iconbtn svg { width: 20px; height: 20px; }
+.iconbtn .lbl { display: none; font-size: var(--t-sm); font-weight: 600; }
+.badge { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font: 700 11px/20px var(--f-mono); text-align: center; }
+.msearch { padding-bottom: var(--s3); }
+.msearch .search { display: block; }
+.catnav { border-top: 1px solid var(--border); }
+.catnav .wrap { display: flex; gap: var(--s1); overflow-x: auto; scrollbar-width: none; padding-block: 6px; }
+.catnav button { flex-shrink: 0; background: none; border: 0; padding: 8px 10px; font-size: var(--t-sm); color: var(--fg-2); border-radius: var(--r); white-space: nowrap; }
+.catnav button:hover, .catnav button[aria-current="true"] { color: var(--fg); background: var(--surface); }
+.catnav button.hot { color: var(--accent); }
+@container shop (min-width: 900px) {
+  .hdr .row { grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--s6); }
+  .hdr .row .search { display: block; max-width: 560px; }
+  .msearch { display: none; }
+  .iconbtn .lbl { display: inline; }
+}
+
+main.view { min-height: 60vh; }
+.sec { padding-block: var(--s7); }
+.sec + .sec { border-top: 1px solid var(--border); }
+.sechead { display: flex; align-items: end; justify-content: space-between; gap: var(--s4); margin-bottom: var(--s5); }
+.sechead h2 { font-size: var(--t-xl); }
+.sechead p { color: var(--fg-2); margin-top: 6px; max-width: 60ch; }
+.link { color: var(--fg); font-size: var(--t-sm); font-weight: 600; white-space: nowrap; background: none; border: 0; padding: 0; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--border); }
+.link:hover { text-decoration-color: var(--accent); }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; padding: 0 var(--s5); border-radius: var(--r); font-weight: 700; font-size: var(--t-md); text-decoration: none; border: 1px solid transparent; white-space: nowrap; }
+.btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+.btn-primary { background: var(--accent); color: var(--accent-ink); }
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-secondary { background: var(--surface-2); color: var(--fg); border-color: var(--border); }
+.btn-secondary:hover { border-color: var(--fg-2); }
+.btn-ghost { background: none; color: var(--fg); border-color: var(--border); }
+.btn-sm { height: 40px; padding: 0 var(--s4); font-size: var(--t-sm); }
+.btn[disabled], .btn[aria-disabled="true"] { background: var(--surface-2); color: var(--off); border-color: var(--border); cursor: not-allowed; filter: none; }
+.btn-block { width: 100%; }
+
+/* Hero */
+.hero { padding-block: var(--s6) var(--s7); }
+.hero .grid { display: grid; gap: var(--s5); }
+.hero h1 { font-size: clamp(2.2rem, 9cqi, 4.5rem); }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero .lead { color: var(--fg-2); font-size: var(--t-lg); margin-top: var(--s4); max-width: 46ch; }
+.hero .ctas { display: flex; flex-wrap: wrap; gap: var(--s3); margin-top: var(--s5); }
+.hero .shot { position: relative; aspect-ratio: 4 / 3; max-width: 100%; border-radius: var(--r-lg); background: radial-gradient(120% 90% at 70% 30%, #23262D, #121317 70%); border: 1px solid var(--border); overflow: hidden; display: grid; place-items: center; }
+.hero .shot svg { width: 88%; }
+.hero .shot .cap { position: absolute; left: var(--s3); bottom: var(--s3); font-family: var(--f-mono); font-size: var(--t-xs); background: var(--bg); border: 1px dashed var(--ph); color: var(--ph); padding: 4px 8px; border-radius: var(--r); }
+@container shop (min-width: 900px) { .hero .grid { grid-template-columns: 1.05fr 1fr; align-items: center; gap: var(--s7); } }
+
+/* Meter motif (marca): barra de nivel por segmentos */
+.meter { display: inline-flex; gap: 3px; align-items: end; height: 14px; }
+.meter i { width: 4px; background: var(--border); }
+.meter i.on { background: var(--fg-2); }
+.meter i.pk { background: var(--accent); }
+
+/* Categories */
+.cats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); }
+@container shop (min-width: 720px) { .cats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.cat { display: grid; grid-template-rows: auto auto; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 0; overflow: hidden; }
+.cat:hover { border-color: var(--fg-2); }
+.cat .ph-img { aspect-ratio: 16 / 10; background: var(--photo); display: grid; place-items: center; }
+.cat .ph-img svg { width: 62%; height: 80%; }
+.cat .meta { padding: var(--s3) var(--s4); display: flex; justify-content: space-between; align-items: center; gap: var(--s2); }
+.cat .meta b { font-size: var(--t-sm); }
+.cat .meta span { font-family: var(--f-mono); font-size: var(--t-xs); color: var(--fg-2); }
+
+/* Product grid & card */
+.grid-p { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); }
+@container shop (min-width: 720px) { .grid-p { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s4); } }
+@container shop (min-width: 1080px) { .grid-p { grid-template-columns: repeat(4, minmax(0, 1fr)); } .grid-p.in-cat { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.card { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; min-width: 0; }
+.card:hover { border-color: #474A54; }
+.card .img { position: relative; aspect-ratio: 1; background: var(--photo); display: grid; place-items: center; border: 0; padding: 0; width: 100%; }
+.card .img svg { width: 72%; height: 72%; }
+.card .flag { position: absolute; top: var(--s2); left: var(--s2); background: var(--accent); color: var(--accent-ink); font: 700 var(--t-xs)/1 var(--f-mono); padding: 5px 7px; border-radius: 2px; }
+.card .demo { position: absolute; top: var(--s2); right: var(--s2); background: var(--art-ink); color: var(--photo); font: 500 10px/1 var(--f-mono); padding: 4px 6px; border-radius: 2px; letter-spacing: .06em; }
+.card .body { display: flex; flex-direction: column; gap: 6px; padding: var(--s3); flex: 1; }
+@container shop (min-width: 720px) { .card .body { padding: var(--s4); } }
+.card .brand { font-family: var(--f-mono); font-size: var(--t-xs); color: var(--fg-2); text-transform: uppercase; letter-spacing: .06em; }
+.card .name { font-weight: 600; font-size: var(--t-sm); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: calc(1.35em * 2); background: none; border: 0; padding: 0; text-align: left; }
+@container shop (min-width: 720px) { .card .name { font-size: var(--t-md); } }
+.price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-variant-numeric: tabular-nums; }
+.price b { font-size: var(--t-lg); font-weight: 700; }
+.price s { color: var(--fg-2); font-size: var(--t-sm); }
+.price .tbc { font-size: var(--t-sm); color: var(--fg-2); font-weight: 600; }
+.card .foot { margin-top: auto; display: grid; grid-template-columns: 1fr auto; gap: var(--s2); padding-top: var(--s2); }
+.card .foot .btn { height: 40px; padding: 0 var(--s3); font-size: var(--t-sm); }
+.card .foot .wa { width: 40px; padding: 0; }
+
+/* Availability LED */
+.avail { display: inline-flex; align-items: center; gap: 7px; font-size: var(--t-xs); font-weight: 600; color: var(--fg-2); }
+.avail::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 20%, transparent); }
+.avail[data-a="disponible"] { color: var(--ok); }
+.avail[data-a="pocas"] { color: var(--warn); }
+.avail[data-a="bajo_pedido"] { color: var(--info); }
+.avail[data-a="agotado"] { color: var(--off); }
+.avail[data-a="consultar"] { color: var(--fg-2); }
+
+/* Brands, benefits, info */
+.brands { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s2); }
+@container shop (min-width: 720px) { .brands { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.brands div { height: 72px; display: grid; place-items: center; border: 1px dashed var(--border); border-radius: var(--r); font-family: var(--f-mono); font-size: var(--t-xs); color: var(--fg-2); text-align: center; padding: var(--s2); }
+.benefits { display: grid; gap: var(--s4); }
+@container shop (min-width: 720px) { .benefits { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s5); } }
+.benefit { display: grid; gap: var(--s2); align-content: start; }
+.benefit svg { width: 28px; height: 28px; color: var(--accent); }
+.benefit b { font-size: var(--t-md); }
+.benefit p { color: var(--fg-2); font-size: var(--t-sm); }
+.split { display: grid; gap: var(--s4); }
+@container shop (min-width: 720px) { .split { grid-template-columns: 1fr 1fr; } }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: var(--s5); display: grid; gap: var(--s3); align-content: start; }
+.panel h3 { font-size: var(--t-lg); }
+.panel ul { margin: 0; padding-left: 1.1em; color: var(--fg-2); display: grid; gap: 6px; font-size: var(--t-sm); }
+.faq { display: grid; gap: 0; border-top: 1px solid var(--border); max-width: 820px; }
+.faq details { border-bottom: 1px solid var(--border); }
+.faq summary { cursor: pointer; list-style: none; padding: var(--s4) 0; font-weight: 600; display: flex; justify-content: space-between; gap: var(--s4); }
+.faq summary::after { content: "+"; font-family: var(--f-mono); color: var(--fg-2); }
+.faq details[open] summary::after { content: "–"; }
+.faq details p { padding-bottom: var(--s4); color: var(--fg-2); max-width: 65ch; }
+
+footer.ft { background: var(--surface); border-top: 1px solid var(--border); padding-block: var(--s7) var(--s5); font-size: var(--t-sm); color: var(--fg-2); }
+.ft .cols { display: grid; gap: var(--s5); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@container shop (min-width: 720px) { .ft .cols { grid-template-columns: 1.4fr repeat(3, 1fr); } }
+.ft .cols > div:first-child { grid-column: 1 / -1; }
+@container shop (min-width: 720px) { .ft .cols > div:first-child { grid-column: auto; } }
+.ft h4 { margin: 0 0 var(--s3); color: var(--fg); font-size: var(--t-sm); }
+.ft ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ft .legal { margin-top: var(--s6); padding-top: var(--s4); border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: var(--s3) var(--s5); justify-content: space-between; font-size: var(--t-xs); }
+
+/* Catalog */
+.crumbs { font-size: var(--t-xs); color: var(--fg-2); padding-top: var(--s5); display: flex; gap: 6px; flex-wrap: wrap; }
+.crumbs button { background: none; border: 0; padding: 0; color: var(--fg-2); text-decoration: underline; text-underline-offset: 3px; }
+.cathead { padding-block: var(--s3) var(--s5); display: grid; gap: var(--s2); }
+.cathead h1 { font-size: clamp(1.8rem, 6cqi, 2.75rem); }
+.cathead p { color: var(--fg-2); }
+.catlayout { display: grid; gap: var(--s5); padding-bottom: var(--s7); }
+@container shop (min-width: 900px) { .catlayout { grid-template-columns: 248px minmax(0, 1fr); gap: var(--s6); } }
+.filters { display: none; }
+@container shop (min-width: 900px) { .filters { display: grid; gap: var(--s5); align-content: start; position: sticky; top: calc(var(--tool-h) + 150px); } .fbtn { display: none !important; } }
+.filters.open { display: grid; gap: var(--s5); background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: var(--s4); }
+.fgroup { display: grid; gap: var(--s2); }
+.fgroup h3 { font-family: var(--f-mono); font-size: var(--t-xs); text-transform: uppercase; letter-spacing: .08em; color: var(--fg-2); font-weight: 500; }
+.check { display: flex; align-items: center; gap: 10px; font-size: var(--t-sm); min-height: 32px; cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); }
+.check .n { margin-left: auto; font-family: var(--f-mono); font-size: var(--t-xs); color: var(--fg-2); }
+.range { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); }
+.field { display: grid; gap: 6px; }
+.field label { font-size: var(--t-xs); color: var(--fg-2); }
+.input, select.input { height: 44px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); padding: 0 var(--s3); width: 100%; min-width: 0; }
+.toolbar-c { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s3); margin-bottom: var(--s4); }
+.toolbar-c .count { font-size: var(--t-sm); color: var(--fg-2); }
+.toolbar-c .r { display: flex; gap: var(--s2); align-items: center; }
+.chips { display: flex; flex-wrap: wrap; gap: var(--s2); margin-bottom: var(--s4); }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); font-size: var(--t-xs); }
+.chip button { background: none; border: 0; color: var(--fg-2); padding: 0 2px; }
+
+/* Empty / skeleton / alerts */
+.empty { display: grid; justify-items: center; text-align: center; gap: var(--s3); padding: var(--s7) var(--s4); border: 1px dashed var(--border); border-radius: var(--r); }
+.empty svg { width: 40px; height: 40px; color: var(--fg-2); }
+.empty p { color: var(--fg-2); max-width: 40ch; }
+.sk { background: linear-gradient(90deg, var(--surface-2) 0%, #2B2E35 50%, var(--surface-2) 100%); background-size: 200% 100%; animation: sk 1.4s linear infinite; border-radius: 3px; }
+@keyframes sk { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .sk { animation: none; } .device { transition: none; } }
+.alert { display: grid; grid-template-columns: auto 1fr; gap: var(--s3); align-items: start; padding: var(--s3) var(--s4); border-radius: var(--r); border: 1px solid var(--border); background: var(--surface); font-size: var(--t-sm); }
+.alert svg { width: 20px; height: 20px; margin-top: 1px; }
+.alert b { display: block; }
+.alert p { color: var(--fg-2); }
+.alert.warn { border-color: color-mix(in srgb, var(--warn) 45%, var(--border)); } .alert.warn svg { color: var(--warn); }
+.alert.err { border-color: color-mix(in srgb, var(--danger) 45%, var(--border)); } .alert.err svg { color: var(--danger); }
+.alert.ok { border-color: color-mix(in srgb, var(--ok) 45%, var(--border)); } .alert.ok svg { color: var(--ok); }
+.alert.info svg { color: var(--fg-2); }
+
+/* Product detail */
+.pdp { display: grid; gap: var(--s5); padding-block: var(--s4) var(--s7); }
+@container shop (min-width: 900px) { .pdp { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: var(--s7); align-items: start; } }
+.gallery { display: grid; gap: var(--s2); }
+.gallery .main { aspect-ratio: 1; max-width: 100%; background: var(--photo); border-radius: var(--r); display: grid; place-items: center; position: relative; }
+.gallery .main svg { width: 70%; height: 70%; }
+.gallery .thumbs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s2); }
+.gallery .thumbs button { aspect-ratio: 1; background: var(--photo); border: 2px solid transparent; border-radius: var(--r); display: grid; place-items: center; padding: 0; }
+.gallery .thumbs button[aria-pressed="true"] { border-color: var(--accent); }
+.gallery .thumbs svg { width: 60%; height: 60%; }
+.gallery .thumbs button:nth-child(n+2) svg { opacity: .55; }
+.buy { display: grid; gap: var(--s4); align-content: start; }
+@container shop (min-width: 900px) { .buy { position: sticky; top: calc(var(--tool-h) + 150px); } }
+.buy h1 { font-size: clamp(1.5rem, 4.5cqi, 2.25rem); font-family: var(--f-display); font-stretch: 100%; font-weight: 700; line-height: 1.15; text-transform: none; }
+.buy .ref { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s4); align-items: center; font-size: var(--t-xs); color: var(--fg-2); }
+.buy .price b { font-size: var(--t-2xl); font-family: var(--f-display); font-stretch: 105%; font-weight: 800; }
+.buy .save { font: 600 var(--t-xs)/1 var(--f-mono); color: var(--accent); border: 1px solid var(--accent); padding: 4px 6px; border-radius: 2px; }
+.qtyrow { display: grid; grid-template-columns: auto 1fr; gap: var(--s3); }
+.stepper { display: inline-grid; grid-template-columns: 44px 52px 44px; height: 48px; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.stepper button { background: var(--surface); border: 0; font-size: 1.2rem; }
+.stepper button:disabled { color: var(--off); cursor: not-allowed; }
+.stepper input { text-align: center; background: var(--bg); border: 0; border-inline: 1px solid var(--border); width: 100%; font-variant-numeric: tabular-nums; font-weight: 600; -moz-appearance: textfield; }
+.stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.stepper.sm { grid-template-columns: 36px 40px 36px; height: 36px; }
+.assure { display: grid; gap: var(--s2); border-top: 1px solid var(--border); padding-top: var(--s4); font-size: var(--t-sm); }
+.assure div { display: grid; grid-template-columns: 22px 1fr; gap: var(--s2); color: var(--fg-2); }
+.assure svg { width: 18px; height: 18px; margin-top: 2px; color: var(--fg); }
+.assure b { color: var(--fg); font-weight: 600; }
+.tabs-pdp { padding-bottom: var(--s7); display: grid; gap: var(--s6); }
+@container shop (min-width: 900px) { .tabs-pdp { grid-template-columns: 1fr 1fr; } }
+.specs { width: 100%; border-collapse: collapse; font-size: var(--t-sm); }
+.specs th, .specs td { text-align: left; padding: 10px 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+.specs th { color: var(--fg-2); font-weight: 500; width: 42%; padding-right: var(--s3); }
+.specs td { font-family: var(--f-mono); font-size: .8125rem; }
+.stickybuy { position: sticky; bottom: 0; z-index: 15; display: grid; grid-template-columns: 1fr auto; gap: var(--s2); align-items: center; padding: var(--s3) var(--s4); padding-bottom: calc(var(--s3) + env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1px solid var(--border); }
+.stickybuy .price b { font-size: var(--t-md); }
+@container shop (min-width: 900px) { .stickybuy { display: none; } }
+
+/* Cart & order */
+.cartlayout { display: grid; gap: var(--s5); padding-block: var(--s3) var(--s7); }
+@container shop (min-width: 900px) { .cartlayout { grid-template-columns: minmax(0, 1fr) 380px; gap: var(--s6); align-items: start; } }
+.lines { display: grid; border-top: 1px solid var(--border); }
+.line { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: var(--s3); padding-block: var(--s4); border-bottom: 1px solid var(--border); }
+@container shop (min-width: 720px) { .line { grid-template-columns: 112px minmax(0, 1fr) auto; gap: var(--s4); } }
+.line .thumb { aspect-ratio: 1; background: var(--photo); border-radius: var(--r); display: grid; place-items: center; }
+.line .thumb svg { width: 72%; height: 72%; }
+.line .info { display: grid; gap: 4px; align-content: start; min-width: 0; }
+.line .info b { font-size: var(--t-sm); line-height: 1.35; }
+.line .ctrl { grid-column: 2; display: flex; align-items: center; justify-content: space-between; gap: var(--s3); flex-wrap: wrap; }
+@container shop (min-width: 720px) { .line .ctrl { grid-column: 3; flex-direction: column; align-items: end; justify-content: space-between; } }
+.line .lt { font-weight: 700; font-variant-numeric: tabular-nums; }
+.rm { background: none; border: 0; color: var(--fg-2); font-size: var(--t-xs); text-decoration: underline; text-underline-offset: 3px; padding: 4px 0; }
+.rm:hover { color: var(--danger); }
+.summary { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: var(--s5); display: grid; gap: var(--s4); }
+@container shop (min-width: 900px) { .summary { position: sticky; top: calc(var(--tool-h) + 150px); } }
+.summary h2 { font-size: var(--t-lg); font-family: var(--f-display); font-stretch: 110%; font-weight: 800; text-transform: uppercase; }
+.sumrow { display: flex; justify-content: space-between; gap: var(--s3); font-size: var(--t-sm); color: var(--fg-2); font-variant-numeric: tabular-nums; }
+.sumrow.total { color: var(--fg); font-size: var(--t-lg); font-weight: 700; border-top: 1px solid var(--border); padding-top: var(--s3); }
+.note { font-size: var(--t-xs); color: var(--fg-2); }
+.steps { display: flex; gap: var(--s2); font-family: var(--f-mono); font-size: var(--t-xs); color: var(--fg-2); margin-block: var(--s5) var(--s2); flex-wrap: wrap; }
+.steps span { padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--r); }
+.steps span[aria-current="step"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.steps span.done { color: var(--fg); }
+.wa-preview { background: #0B141A; border: 1px solid var(--border); border-radius: var(--r); padding: var(--s4); display: grid; gap: var(--s3); }
+.wa-preview .bubble { justify-self: end; max-width: 100%; background: #144D37; color: #E9EDEF; border-radius: 8px 0 8px 8px; padding: 10px 12px; font-size: .8125rem; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-body); line-height: 1.45; }
+.wa-preview .hd { display: flex; align-items: center; gap: var(--s2); font-size: var(--t-xs); color: #8696A0; }
+.codebox { font-family: var(--f-mono); font-size: 11px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); padding: var(--s3); overflow-wrap: anywhere; color: var(--fg-2); max-height: 120px; overflow-y: auto; }
+
+/* System / map views */
+.sys { display: grid; gap: var(--s7); padding-block: var(--s6) var(--s8); }
+.sys h2 { font-size: var(--t-xl); margin-bottom: var(--s4); }
+.sys h3 { font-size: var(--t-md); margin-bottom: var(--s3); }
+.sys .lead { color: var(--fg-2); max-width: 70ch; margin-bottom: var(--s4); }
+.swatches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); }
+@container shop (min-width: 720px) { .swatches { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.sw { border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; font-size: var(--t-xs); }
+.sw div { height: 64px; }
+.sw p { padding: var(--s2) var(--s3); display: grid; gap: 2px; }
+.sw p span { font-family: var(--f-mono); color: var(--fg-2); }
+.typescale { display: grid; gap: var(--s4); }
+.typescale > div { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: var(--s4); align-items: baseline; border-bottom: 1px solid var(--border); padding-bottom: var(--s3); }
+.typescale span { font-family: var(--f-mono); font-size: var(--t-xs); color: var(--fg-2); }
+.compgrid { display: grid; gap: var(--s4); }
+@container shop (min-width: 720px) { .compgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.compgrid .panel { gap: var(--s4); }
+.row-wrap { display: flex; flex-wrap: wrap; gap: var(--s3); align-items: center; }
+.sitemap { display: grid; gap: var(--s3); }
+@container shop (min-width: 720px) { .sitemap { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.sitemap .node { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: var(--s4); display: grid; gap: var(--s2); align-content: start; }
+.sitemap .node b { font-size: var(--t-sm); }
+.sitemap .node ul { margin: 0; padding-left: 1em; color: var(--fg-2); font-size: var(--t-sm); display: grid; gap: 4px; }
+.sitemap .node .p { font-family: var(--f-mono); font-size: var(--t-xs); color: var(--accent); }
+.flow { display: grid; gap: 0; counter-reset: f; }
+.flow li { list-style: none; display: grid; grid-template-columns: 40px 1fr; gap: var(--s3); padding-bottom: var(--s4); position: relative; }
+.flow li::before { counter-increment: f; content: counter(f); width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 50%; display: grid; place-items: center; font: 500 var(--t-xs) var(--f-mono); background: var(--surface); }
+.flow li::after { content: ""; position: absolute; left: 16px; top: 34px; bottom: 2px; width: 1px; background: var(--border); }
+.flow li:last-child::after { display: none; }
+.flow li b { display: block; font-size: var(--t-sm); }
+.flow li p { color: var(--fg-2); font-size: var(--t-sm); }
+.flow { padding: 0; margin: 0; }
+.wire { display: grid; gap: 6px; padding: var(--s3); border: 1px dashed var(--border); border-radius: var(--r); font: 11px/1.3 var(--f-mono); color: var(--fg-2); }
+.wire div { border: 1px solid var(--border); border-radius: 2px; padding: 6px; }
+.wire .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; border: 0; padding: 0; }
+.wires { display: grid; gap: var(--s3); }
+@container shop (min-width: 720px) { .wires { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: var(--r); font-size: var(--t-sm); font-weight: 600; z-index: 60; display: flex; gap: 12px; align-items: center; max-width: calc(100vw - 32px); }
+.toast button { background: none; border: 0; color: var(--bg); text-decoration: underline; font-weight: 700; padding: 0; }
+.srh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+
+<div class="tool" role="toolbar" aria-label="Controles del prototipo">
+  <span class="tag">PROTOTIPO · FASE 1</span>
+  <nav aria-label="Pantallas">
+    <a href="#inicio">Inicio</a>
+    <a href="#catalogo">Catálogo</a>
+    <a href="#producto">Producto</a>
+    <a href="#carrito">Carrito</a>
+    <a href="#pedido">Pedido WhatsApp</a>
+    <a href="#sistema">Sistema de diseño</a>
+    <a href="#mapa">Mapa y flujos</a>
+  </nav>
+  <span class="spacer"></span>
+  <div class="dev" aria-label="Ancho de pantalla">
+    <button type="button" data-w="desktop" aria-pressed="true">Escritorio</button>
+    <button type="button" data-w="tablet" aria-pressed="false">Tablet</button>
+    <button type="button" data-w="mobile" aria-pressed="false">Móvil 390</button>
+  </div>
+</div>
+
+<div class="stage">
+  <div class="device" id="device" data-w="desktop">
+    <div class="topbar"><div class="wrap" id="topbar"></div></div>
+    <header class="hdr">
+      <div class="wrap">
+        <div class="row">
+          <a class="logo" href="#inicio" aria-label="Ir al inicio">
+            <svg viewBox="0 0 28 28" aria-hidden="true"><rect x="1" y="1" width="26" height="26" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><rect x="12.5" y="5" width="3" height="18" rx="1.5" fill="var(--border)"/><rect x="8" y="9" width="12" height="5" rx="1" fill="var(--accent)"/></svg>
+            <b id="brandname">VOLT<i> DJ</i></b>
+          </a>
+          <form class="search" role="search" data-search><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><label class="srh" for="q1">Buscar productos</label><input id="q1" type="search" placeholder="Busca controladores, audífonos, marcas…" autocomplete="off"></form>
+          <div class="actions">
+            <a class="iconbtn" href="#pedido" aria-label="Consultar por WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3.5 20.5 5 16a8.5 8.5 0 1 1 3.2 3.1Z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1.2-1.4-2-1-1 .8a4 4 0 0 1-2-2l.8-1-1-2Z" fill="currentColor" stroke="none"/></svg><span class="lbl">WhatsApp</span></a>
+            <a class="iconbtn" href="#carrito" aria-label="Carrito"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 4h2.5l2.2 11h10.6L20.5 8H7"/><circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/></svg><span class="lbl">Carrito</span><span class="badge" id="cartcount" hidden>0</span></a>
+          </div>
+        </div>
+        <div class="msearch"><form class="search" role="search" data-search><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><label class="srh" for="q2">Buscar productos</label><input id="q2" type="search" placeholder="Buscar productos o marcas" autocomplete="off"></form></div>
+      </div>
+      <nav class="catnav" aria-label="Categorías"><div class="wrap" id="catnav"></div></nav>
+    </header>
+    <main class="view" id="view"></main>
+    <footer class="ft" id="footer"></footer>
+  </div>
+  <p class="devnote" id="devnote">Datos de producto, marcas y precios: DEMOSTRACIÓN. Los textos entre ⟨ ⟩ son datos comerciales pendientes.</p>
+</div>
+<div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
+
+<script>
+/* ================= CONFIGURACIÓN CENTRAL (fase 2: src/config/store.ts) ================= */
+const STORE = {
+  name: "VOLT DJ",
+  tagline: "Tu sonido. Tu energía. Tu escenario.",
+  whatsappNumber: "",            // E.164 sin "+", p. ej. 57XXXXXXXXXX. Vacío = no configurado.
+  currency: "COP", locale: "es-CO",
+  topbar: ["⟨Cobertura de envíos pendiente⟩", "⟨Horario de atención pendiente⟩", "⟨Ciudad / showroom pendiente⟩"],
+  shipping: "⟨Condiciones de envío pendientes⟩",
+  warranty: "⟨Política de garantía pendiente⟩",
+  orderPrefix: "VD",
+};
+
+const CATEGORIES = [
+  { id: "controladores", name: "Controladores", art: "controller" },
+  { id: "mezcladores", name: "Mezcladores", art: "mixer" },
+  { id: "reproductores", name: "Reproductores y tornamesas", art: "turntable" },
+  { id: "parlantes", name: "Parlantes y monitores", art: "speaker" },
+  { id: "audifonos", name: "Audífonos", art: "headphones" },
+  { id: "microfonos", name: "Micrófonos", art: "mic" },
+  { id: "iluminacion", name: "Iluminación", art: "light" },
+  { id: "accesorios", name: "Accesorios", art: "case" },
+];
+
+/* Productos de DEMOSTRACIÓN. Marcas ficticias, precios ficticios. isDemo = true en todos. */
+const PRODUCTS = [
+  { id: "p01", slug: "controlador-2-canales-pads", name: "Controlador DJ 2 canales con pads de rendimiento", brand: "Marca A", category: "controladores", price: 1890000, promoPrice: 1690000, sku: "DEMO-CTR-002", availability: "disponible", maxQty: 5, featured: true, art: "controller",
+    desc: "Controlador compacto para empezar a mezclar con software. Dos decks, mezclador integrado y pads por canal para hot cues, loops y samples.",
+    specs: [["Canales", "2"], ["Jog wheels", "2 × 5,5 in"], ["Pads", "8 por deck"], ["Salidas", "Master RCA · Audífonos 3,5 mm"], ["Conexión", "USB-B"], ["Alimentación", "Bus USB 5 V"], ["Peso", "2,1 kg"]] },
+  { id: "p02", slug: "controlador-4-canales-standalone", name: "Controlador standalone 4 canales con pantalla", brand: "Marca B", category: "controladores", price: 6490000, promoPrice: null, sku: "DEMO-CTR-004", availability: "pocas", maxQty: 2, featured: true, art: "controller",
+    desc: "Sistema todo en uno que funciona sin computador. Lectura desde USB, pantalla táctil y mezclador de cuatro canales.",
+    specs: [["Canales", "4"], ["Pantalla", "7 in táctil"], ["Jog wheels", "2 × 6 in"], ["Salidas", "Master XLR + RCA · Booth TRS"], ["Entradas", "2 × Phono/Line · Mic XLR/TRS"], ["Alimentación", "100–240 V AC"], ["Peso", "5,8 kg"]] },
+  { id: "p03", slug: "mezclador-2-canales-efectos", name: "Mezclador 2 canales con efectos", brand: "Marca C", category: "mezcladores", price: 2750000, promoPrice: null, sku: "DEMO-MIX-201", availability: "disponible", maxQty: 5, featured: false, art: "mixer",
+    desc: "Mezclador de club para dos decks con efectos por canal y crossfader reemplazable.",
+    specs: [["Canales", "2"], ["Ecualizador", "3 bandas, –26 / +6 dB"], ["Respuesta", "20 Hz – 20 kHz"], ["Salidas", "Master XLR · Booth TRS"], ["Interfaz de audio", "USB 24 bit / 48 kHz"]] },
+  { id: "p04", slug: "tornamesa-traccion-directa", name: "Tornamesa de tracción directa", brand: "Marca D", category: "reproductores", price: 2190000, promoPrice: null, sku: "DEMO-TT-110", availability: "bajo_pedido", maxQty: 4, featured: true, art: "turntable",
+    desc: "Motor de tracción directa con alto torque y control de pitch para scratch y mezcla en vinilo.",
+    specs: [["Tracción", "Directa"], ["Velocidades", "33⅓ · 45 · 78 rpm"], ["Pitch", "±8 % / ±16 %"], ["Arranque", "< 0,3 s a 33⅓ rpm"], ["Salida", "Phono RCA"]] },
+  { id: "p05", slug: "reproductor-multimedia-dj", name: "Reproductor multimedia DJ profesional", brand: "Marca B", category: "reproductores", price: null, promoPrice: null, sku: "DEMO-PLY-300", availability: "consultar", maxQty: 4, featured: false, art: "turntable",
+    desc: "Reproductor de cabina para USB y streaming. Precio sujeto a confirmación del distribuidor.",
+    specs: [["Formatos", "MP3 · AAC · WAV · AIFF · FLAC"], ["Pantalla", "9 in táctil"], ["Salidas", "Digital coaxial · RCA"]] },
+  { id: "p06", slug: "parlante-activo-12", name: "Parlante activo 12 in bi-amplificado", brand: "Marca E", category: "parlantes", price: 2390000, promoPrice: 2090000, sku: "DEMO-SPK-12A", availability: "disponible", maxQty: 6, featured: true, art: "speaker",
+    desc: "Parlante de dos vías para eventos y cabina. Montaje en trípode y DSP con presets.",
+    specs: [["Woofer", "12 in"], ["Tweeter", "1 in"], ["Potencia", "500 W RMS"], ["SPL máx.", "126 dB"], ["Respuesta", "50 Hz – 20 kHz (–10 dB)"], ["Entradas", "XLR/TRS combo · RCA"], ["Peso", "15,4 kg"]] },
+  { id: "p07", slug: "monitores-estudio-5-par", name: "Monitores de estudio 5 in (par)", brand: "Marca E", category: "parlantes", price: 1590000, promoPrice: null, sku: "DEMO-MON-05P", availability: "agotado", maxQty: 3, featured: false, art: "speaker",
+    desc: "Par de monitores activos de campo cercano para producción y práctica.",
+    specs: [["Woofer", "5 in"], ["Potencia", "2 × 35 W"], ["Respuesta", "54 Hz – 30 kHz"], ["Entradas", "XLR · TRS · RCA"]] },
+  { id: "p08", slug: "audifonos-dj-cerrados", name: "Audífonos DJ cerrados y plegables", brand: "Marca F", category: "audifonos", price: 690000, promoPrice: 590000, sku: "DEMO-HP-500", availability: "disponible", maxQty: 6, featured: true, art: "headphones",
+    desc: "Audífonos de monitoreo con copas giratorias, cable en espiral desmontable y alto aislamiento.",
+    specs: [["Driver", "50 mm"], ["Impedancia", "32 Ω"], ["Respuesta", "5 Hz – 30 kHz"], ["Sensibilidad", "107 dB SPL/mW"], ["Cable", "Espiral desmontable 1,2–3 m"]] },
+  { id: "p09", slug: "microfono-dinamico-vocal", name: "Micrófono dinámico vocal cardioide", brand: "Marca C", category: "microfonos", price: 420000, promoPrice: null, sku: "DEMO-MIC-58", availability: "disponible", maxQty: 8, featured: false, art: "mic",
+    desc: "Micrófono de mano para voz en vivo y anuncios desde cabina.",
+    specs: [["Tipo", "Dinámico"], ["Patrón", "Cardioide"], ["Respuesta", "50 Hz – 15 kHz"], ["Conector", "XLR 3 pines"]] },
+  { id: "p10", slug: "luz-par-led-rgbw", name: "Luz PAR LED RGBW", brand: "Marca D", category: "iluminacion", price: 380000, promoPrice: null, sku: "DEMO-LGT-PAR", availability: "pocas", maxQty: 2, featured: false, art: "light",
+    desc: "Proyector PAR con mezcla RGBW, control DMX y modo automático por sonido.",
+    specs: [["LED", "12 × 10 W RGBW"], ["Control", "DMX 512 · auto · sonido"], ["Canales DMX", "4 / 8"], ["Consumo", "130 W"]] },
+  { id: "p11", slug: "estuche-rigido-controlador", name: "Estuche rígido para controlador mediano", brand: "Marca A", category: "accesorios", price: 520000, promoPrice: null, sku: "DEMO-ACC-CASE", availability: "disponible", maxQty: 6, featured: false, art: "case",
+    desc: "Estuche con interior en espuma y cierres metálicos. Verifica la compatibilidad de medidas antes de pedir.",
+    specs: [["Medidas internas", "56 × 34 × 8 cm"], ["Material", "Contrachapado + aluminio"], ["Peso", "4,2 kg"]] },
+  { id: "p12", slug: "cable-rca-rca-15", name: "Cable RCA a RCA 1,5 m", brand: "Marca F", category: "accesorios", price: 45000, promoPrice: null, sku: "DEMO-ACC-RCA15", availability: "disponible", maxQty: 20, featured: false, art: "cable",
+    desc: "Cable estéreo blindado para conectar reproductores y mezcladores.",
+    specs: [["Largo", "1,5 m"], ["Conectores", "2 × RCA a 2 × RCA"], ["Blindaje", "Malla de cobre"]] },
+  { id: "p13", slug: "capsula-aguja-tornamesa", name: "Cápsula y aguja para tornamesa", brand: "Marca D", category: "accesorios", price: 260000, promoPrice: null, sku: "DEMO-ACC-STY", availability: "disponible", maxQty: 6, featured: false, art: "needle",
+    desc: "Cápsula de imán móvil para scratch con aguja esférica de repuesto.",
+    specs: [["Tipo", "Imán móvil (MM)"], ["Aguja", "Esférica"], ["Fuerza de tracking", "3–5 g"]] },
+  { id: "p14", slug: "soporte-laptop-dj", name: "Soporte para laptop plegable", brand: "Marca A", category: "accesorios", price: 150000, promoPrice: 129000, sku: "DEMO-ACC-STD", availability: "disponible", maxQty: 6, featured: false, art: "stand",
+    desc: "Soporte de aluminio con altura regulable para cabina.",
+    specs: [["Material", "Aluminio"], ["Altura", "Regulable, 6 posiciones"], ["Carga máx.", "8 kg"]] },
+];
+
+const AVAIL = {
+  disponible: "Disponible",
+  pocas: "Pocas unidades",
+  bajo_pedido: "Bajo pedido",
+  agotado: "Agotado",
+  consultar: "Consultar disponibilidad",
+};
+
+/* ================= Ilustraciones (sustituyen fotografías autorizadas) ================= */
+const ART = {
+  controller: `<svg viewBox="0 0 200 120" aria-hidden="true"><rect x="8" y="22" width="184" height="76" rx="6" fill="var(--art-ink)"/><circle cx="52" cy="56" r="24" fill="var(--art-mid)" stroke="var(--art-hi)" stroke-width="1.5"/><circle cx="52" cy="56" r="6" fill="var(--art-ink)"/><circle cx="148" cy="56" r="24" fill="var(--art-mid)" stroke="var(--art-hi)" stroke-width="1.5"/><circle cx="148" cy="56" r="6" fill="var(--art-ink)"/><rect x="88" y="32" width="24" height="58" rx="2" fill="var(--art-mid)"/><rect x="93" y="44" width="3" height="34" fill="var(--art-ink)"/><rect x="104" y="44" width="3" height="34" fill="var(--art-ink)"/><rect x="90" y="60" width="9" height="5" fill="var(--art-hi)"/><rect x="101" y="52" width="9" height="5" fill="var(--art-hi)"/><g fill="var(--art-hi)"><rect x="28" y="86" width="9" height="7" rx="1"/><rect x="40" y="86" width="9" height="7" rx="1"/><rect x="52" y="86" width="9" height="7" rx="1"/><rect x="64" y="86" width="9" height="7" rx="1"/><rect x="124" y="86" width="9" height="7" rx="1"/><rect x="136" y="86" width="9" height="7" rx="1"/><rect x="148" y="86" width="9" height="7" rx="1"/><rect x="160" y="86" width="9" height="7" rx="1"/></g></svg>`,
+  mixer: `<svg viewBox="0 0 200 120" aria-hidden="true"><rect x="60" y="6" width="80" height="108" rx="4" fill="var(--art-ink)"/><g fill="var(--art-mid)" stroke="var(--art-hi)" stroke-width="1"><circle cx="82" cy="22" r="6"/><circle cx="118" cy="22" r="6"/><circle cx="82" cy="38" r="6"/><circle cx="118" cy="38" r="6"/><circle cx="82" cy="54" r="6"/><circle cx="118" cy="54" r="6"/></g><rect x="80" y="66" width="4" height="30" fill="var(--art-mid)"/><rect x="116" y="66" width="4" height="30" fill="var(--art-mid)"/><rect x="76" y="76" width="12" height="6" fill="var(--art-hi)"/><rect x="112" y="72" width="12" height="6" fill="var(--art-hi)"/><rect x="86" y="102" width="28" height="3" fill="var(--art-mid)"/><rect x="96" y="99" width="8" height="9" fill="var(--art-hi)"/><g fill="var(--art-mid)"><rect x="97" y="18" width="6" height="2"/><rect x="97" y="22" width="6" height="2"/><rect x="97" y="26" width="6" height="2"/><rect x="97" y="30" width="6" height="2"/></g></svg>`,
+  turntable: `<svg viewBox="0 0 200 120" aria-hidden="true"><rect x="28" y="12" width="144" height="98" rx="5" fill="var(--art-ink)"/><circle cx="88" cy="61" r="40" fill="var(--art-mid)"/><circle cx="88" cy="61" r="34" fill="none" stroke="var(--art-ink)" stroke-width=".8"/><circle cx="88" cy="61" r="26" fill="none" stroke="var(--art-ink)" stroke-width=".8"/><circle cx="88" cy="61" r="10" fill="var(--art-hi)"/><circle cx="88" cy="61" r="1.6" fill="var(--art-ink)"/><circle cx="152" cy="28" r="7" fill="var(--art-mid)"/><path d="M152 28 L146 82 L132 92" fill="none" stroke="var(--art-hi)" stroke-width="2.5" stroke-linecap="round"/><rect x="150" y="70" width="5" height="30" fill="var(--art-mid)"/><circle cx="42" cy="98" r="4" fill="var(--art-hi)"/></svg>`,
+  speaker: `<svg viewBox="0 0 200 120" aria-hidden="true"><rect x="66" y="4" width="68" height="112" rx="5" fill="var(--art-ink)"/><circle cx="100" cy="30" r="11" fill="var(--art-mid)" stroke="var(--art-hi)" stroke-width="1"/><circle cx="100" cy="30" r="4" fill="var(--art-hi)"/><circle cx="100" cy="76" r="26" fill="var(--art-mid)" stroke="var(--art-hi)" stroke-width="1.2"/><circle cx="100" cy="76" r="17" fill="none" stroke="var(--art-ink)" stroke-width="1"/><circle cx="100" cy="76" r="7" fill="var(--art-ink)"/></svg>`,
+  headphones: `<svg viewBox="0 0 200 120" aria-hidden="true"><path d="M62 80 V60 a38 38 0 0 1 76 0 V80" fill="none" stroke="var(--art-ink)" stroke-width="9" stroke-linecap="round"/><rect x="50" y="66" width="26" height="42" rx="10" fill="var(--art-ink)"/><rect x="124" y="66" width="26" height="42" rx="10" fill="var(--art-ink)"/><rect x="56" y="74" width="14" height="26" rx="6" fill="var(--art-mid)"/><rect x="130" y="74" width="14" height="26" rx="6" fill="var(--art-mid)"/></svg>`,
+  mic: `<svg viewBox="0 0 200 120" aria-hidden="true"><g transform="rotate(-35 100 60)"><rect x="86" y="4" width="28" height="34" rx="14" fill="var(--art-mid)" stroke="var(--art-ink)" stroke-width="3"/><path d="M90 14h20M88 22h24M90 30h20" stroke="var(--art-ink)" stroke-width="1.2"/><path d="M88 40 h24 l-4 70 h-16 z" fill="var(--art-ink)"/><rect x="96" y="60" width="8" height="10" rx="1" fill="var(--art-hi)"/></g></svg>`,
+  light: `<svg viewBox="0 0 200 120" aria-hidden="true"><path d="M64 26 h72" stroke="var(--art-mid)" stroke-width="5"/><path d="M68 26 V68 M132 26 V68" stroke="var(--art-mid)" stroke-width="5"/><rect x="72" y="36" width="56" height="64" rx="8" fill="var(--art-ink)"/><circle cx="100" cy="68" r="22" fill="var(--art-mid)"/><g fill="var(--art-hi)"><circle cx="92" cy="60" r="4"/><circle cx="108" cy="60" r="4"/><circle cx="92" cy="76" r="4"/><circle cx="108" cy="76" r="4"/><circle cx="100" cy="68" r="4"/></g></svg>`,
+  case: `<svg viewBox="0 0 200 120" aria-hidden="true"><rect x="30" y="34" width="140" height="70" rx="4" fill="var(--art-ink)"/><path d="M30 58 H170" stroke="var(--art-hi)" stroke-width="2"/><path d="M84 34 v-10 h32 v10" fill="none" stroke="var(--art-ink)" stroke-width="6"/><g fill="var(--art-hi)"><rect x="44" y="54" width="12" height="9" rx="1"/><rect x="144" y="54" width="12" height="9" rx="1"/></g><g fill="var(--art-mid)"><rect x="30" y="34" width="8" height="8"/><rect x="162" y="34" width="8" height="8"/><rect x="30" y="96" width="8" height="8"/><rect x="162" y="96" width="8" height="8"/></g></svg>`,
+  cable: `<svg viewBox="0 0 200 120" aria-hidden="true"><path d="M40 40 C 90 10, 70 110, 120 80 S 150 40, 160 80" fill="none" stroke="var(--art-ink)" stroke-width="4"/><path d="M44 52 C 94 22, 74 122, 124 92 S 154 52, 164 92" fill="none" stroke="var(--art-mid)" stroke-width="4"/><g fill="var(--art-ink)"><rect x="26" y="34" width="16" height="10" rx="2"/><rect x="30" y="46" width="16" height="10" rx="2"/><rect x="152" y="80" width="10" height="16" rx="2"/><rect x="160" y="92" width="10" height="16" rx="2"/></g></svg>`,
+  needle: `<svg viewBox="0 0 200 120" aria-hidden="true"><rect x="60" y="40" width="80" height="34" rx="4" fill="var(--art-ink)"/><rect x="74" y="74" width="40" height="18" fill="var(--art-mid)"/><path d="M114 84 L140 98" stroke="var(--art-hi)" stroke-width="3"/><circle cx="141" cy="99" r="2.5" fill="var(--art-ink)"/><g fill="var(--art-hi)"><circle cx="76" cy="57" r="4"/><circle cx="124" cy="57" r="4"/></g></svg>`,
+  stand: `<svg viewBox="0 0 200 120" aria-hidden="true"><path d="M50 40 L150 30" stroke="var(--art-ink)" stroke-width="6" stroke-linecap="round"/><path d="M70 38 L90 108 M130 32 L110 108 M80 108 h40" stroke="var(--art-mid)" stroke-width="5" stroke-linecap="round"/><path d="M60 46 L148 38" stroke="var(--art-hi)" stroke-width="2"/></svg>`,
+};
+const ICON = {
+  wa: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3.5 20.5 5 16a8.5 8.5 0 1 1 3.2 3.1Z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1.2-1.4-2-1-1 .8a4 4 0 0 1-2-2l.8-1-1-2Z" fill="currentColor" stroke="none"/></svg>`,
+  cart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 4h2.5l2.2 11h10.6L20.5 8H7"/><circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/></svg>`,
+  truck: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 6h12v10H2zM14 9h4l3 3v4h-7z"/><circle cx="6" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>`,
+  shield: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>`,
+  chat: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>`,
+  tag: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/></svg>`,
+  info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>`,
+  warn: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3 2 20h20z"/><path d="M12 10v4.5M12 17v.5"/></svg>`,
+  ok: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>`,
+  search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>`,
+  filter: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>`,
+};
+
+/* ================= Lógica (fase 2: src/lib/*) ================= */
+const fmt = (n) => new Intl.NumberFormat(STORE.locale, { style: "currency", currency: STORE.currency, maximumFractionDigits: 0 }).format(n);
+const byId = (id) => PRODUCTS.find((p) => p.id === id);
+const unitPrice = (p) => (p.price == null ? null : (p.promoPrice ?? p.price));
+const canAdd = (p) => p.availability !== "agotado";
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+const cart = {
+  items: [],
+  load() { try { const raw = localStorage.getItem("voltdj.cart.v1"); if (raw) this.items = JSON.parse(raw).filter((i) => i && typeof i.id === "string" && Number.isInteger(i.qty)); } catch (e) {} },
+  save() { try { localStorage.setItem("voltdj.cart.v1", JSON.stringify(this.items)); } catch (e) {} updateBadge(); },
+  add(id, qty = 1) {
+    const p = byId(id); if (!p || !canAdd(p)) return false;
+    const line = this.items.find((i) => i.id === id);
+    const next = Math.min((line ? line.qty : 0) + qty, p.maxQty);
+    if (line) line.qty = next; else this.items.push({ id, qty: next });
+    this.save(); return true;
+  },
+  setQty(id, qty) { const p = byId(id); const line = this.items.find((i) => i.id === id); if (!line) return; line.qty = Math.max(1, Math.min(qty | 0 || 1, p ? p.maxQty : 1)); this.save(); },
+  remove(id) { this.items = this.items.filter((i) => i.id !== id); this.save(); },
+  clear() { this.items = []; this.save(); },
+  /* Resuelve contra el catálogo: precio actual, descontinuados y agotados. */
+  resolve() {
+    const lines = this.items.map((i) => { const p = byId(i.id); if (!p) return { id: i.id, qty: i.qty, missing: true }; const u = unitPrice(p); return { p, qty: i.qty, unit: u, total: u == null ? null : u * i.qty }; });
+    const priced = lines.filter((l) => !l.missing && l.total != null && l.p.availability !== "agotado");
+    return { lines, subtotal: priced.reduce((s, l) => s + l.total, 0), units: this.items.reduce((s, i) => s + i.qty, 0), hasUnpriced: lines.some((l) => !l.missing && l.unit == null), hasIssues: lines.some((l) => l.missing || (l.p && l.p.availability === "agotado")) };
+  },
+};
+
+let orderId = null;
+const newOrderId = () => { const d = new Date(); const ymd = String(d.getFullYear()).slice(2) + String(d.getMonth() + 1).padStart(2, "0") + String(d.getDate()).padStart(2, "0"); const rnd = Math.random().toString(36).slice(2, 6).toUpperCase(); return `${STORE.orderPrefix}-${ymd}-${rnd}`; };
+
+const whatsapp = {
+  buildOrderMessage({ lines, subtotal, hasUnpriced }, { orderId, city }) {
+    const out = [`Hola ${STORE.name}, quiero consultar este pedido.`, `Pedido provisional: ${orderId}`, ""];
+    lines.filter((l) => !l.missing && l.p.availability !== "agotado").forEach((l, i) => {
+      out.push(`${i + 1}. ${l.p.name}`);
+      out.push(`   Ref.: ${l.p.sku}`);
+      out.push(`   Cantidad: ${l.qty}`);
+      out.push(l.unit == null ? "   Precio: por confirmar" : `   Precio unitario: ${fmt(l.unit)} · Total: ${fmt(l.total)}`);
+    });
+    out.push("", `Subtotal estimado: ${fmt(subtotal)}${hasUnpriced ? " (sin incluir productos con precio por confirmar)" : ""}`, "No incluye envío.");
+    if (city && city.trim()) out.push(`Ciudad de envío: ${city.trim().slice(0, 60)}`);
+    out.push("", "¿Me confirman disponibilidad, costo de envío y tiempo de entrega?");
+    return out.join("\n");
+  },
+  buildProductMessage(p) {
+    const u = unitPrice(p);
+    return [`Hola ${STORE.name}, quiero información sobre este producto:`, `${p.name}`, `Ref.: ${p.sku}`, u == null ? "Precio: por confirmar" : `Precio publicado: ${fmt(u)}`, "", "¿Está disponible y cuánto cuesta el envío?"].join("\n");
+  },
+  link(text) { return `https://wa.me/${STORE.whatsappNumber || "57XXXXXXXXXX"}?text=${encodeURIComponent(text)}`; },
+  configured() { return /^\d{10,15}$/.test(STORE.whatsappNumber); },
+};
+
+/* ================= Render helpers ================= */
+const $ = (s, r = document) => r.querySelector(s);
+const view = $("#view");
+const state = { cat: null, q: "", brands: new Set(), avail: new Set(), onlyPromo: false, min: "", max: "", sort: "rel", productId: "p02", filtersOpen: false, imgIdx: 0, city: "" };
+
+function availEl(a) { return `<span class="avail" data-a="${a}">${AVAIL[a]}</span>`; }
+function priceEl(p) {
+  if (p.price == null) return `<div class="price"><span class="tbc">Precio por confirmar</span></div>`;
+  if (p.promoPrice != null) return `<div class="price"><b>${fmt(p.promoPrice)}</b><s aria-label="Precio anterior">${fmt(p.price)}</s></div>`;
+  return `<div class="price"><b>${fmt(p.price)}</b></div>`;
+}
+function pct(p) { return p.promoPrice != null && p.price ? Math.round((1 - p.promoPrice / p.price) * 100) : 0; }
+function card(p) {
+  const promo = pct(p);
+  return `<article class="card">
+    <button class="img" data-open="${p.id}" aria-label="Ver ${esc(p.name)}">${ART[p.art]}${promo ? `<span class="flag">−${promo}%</span>` : ""}<span class="demo">DEMO</span></button>
+    <div class="body">
+      <span class="brand">${esc(p.brand)}</span>
+      <button class="name" data-open="${p.id}">${esc(p.name)}</button>
+      ${priceEl(p)}
+      ${availEl(p.availability)}
+      <div class="foot">
+        <button class="btn btn-secondary" data-open="${p.id}">Ver detalles</button>
+        <a class="btn btn-ghost wa" href="${whatsapp.link(whatsapp.buildProductMessage(p))}" target="_blank" rel="noopener" data-wa aria-label="Consultar ${esc(p.name)} por WhatsApp">${ICON.wa}</a>
+      </div>
+    </div>
+  </article>`;
+}
+function sechead(title, sub, action) {
+  return `<div class="sechead"><div><h2 class="disp">${title}</h2>${sub ? `<p>${sub}</p>` : ""}</div>${action || ""}</div>`;
+}
+function meter(n = 7, on = 5) { return `<span class="meter" aria-hidden="true">${Array.from({ length: n }, (_, i) => `<i class="${i === on ? "pk" : i < on ? "on" : ""}" style="height:${30 + i * 10}%"></i>`).join("")}</span>`; }
+
+/* ---------- Pantallas ---------- */
+function homeView() {
+  const featured = PRODUCTS.filter((p) => p.featured);
+  const promos = PRODUCTS.filter((p) => p.promoPrice != null);
+  const acc = PRODUCTS.filter((p) => p.category === "accesorios");
+  return `
+  <section class="hero"><div class="wrap grid">
+    <div>
+      <p class="eyebrow">${meter()} &nbsp;Equipos DJ y audio profesional</p>
+      <h1 class="disp" style="margin-top:16px">Tu sonido.<br>Tu energía.<br><em>Tu escenario.</em></h1>
+      <p class="lead">Controladores, mezcladores, parlantes y accesorios para cabina, estudio y eventos. Arma tu pedido y confírmalo con un asesor por WhatsApp.</p>
+      <div class="ctas"><button class="btn btn-primary" data-go="catalogo">Explorar productos</button><button class="btn btn-ghost" data-go="ofertas">Ver ofertas</button></div>
+    </div>
+    <div class="shot">${ART.controller}<span class="cap">Fotografía autorizada pendiente · 1600×1200</span></div>
+  </div></section>
+
+  <section class="sec"><div class="wrap">
+    ${sechead("Categorías", "Encuentra el equipo según lo que vas a hacer.", `<button class="link" data-go="catalogo">Ver todo el catálogo</button>`)}
+    <div class="cats">${CATEGORIES.map((c) => `<button class="cat" data-cat="${c.id}"><span class="ph-img">${ART[c.art]}</span><span class="meta"><b>${c.name}</b><span>${PRODUCTS.filter((p) => p.category === c.id).length}</span></span></button>`).join("")}</div>
+  </div></section>
+
+  <section class="sec"><div class="wrap">
+    ${sechead("Destacados", "Selección del equipo de la tienda. Productos de demostración.", `<button class="link" data-go="catalogo">Ver más</button>`)}
+    <div class="grid-p">${featured.slice(0, 4).map(card).join("")}</div>
+  </div></section>
+
+  <section class="sec" id="ofertas"><div class="wrap">
+    ${sechead("Ofertas vigentes", `Solo aparecen productos con precio promocional cargado en el catálogo. Vigencia: <em class="ph">fecha de fin por producto</em>`)}
+    <div class="grid-p">${promos.map(card).join("")}</div>
+  </div></section>
+
+  <section class="sec"><div class="wrap">
+    ${sechead("Marcas", "Se publican solo marcas con distribución o autorización confirmada.")}
+    <div class="brands">${Array.from({ length: 6 }, (_, i) => `<div>Logo de marca ${i + 1}<br>pendiente</div>`).join("")}</div>
+  </div></section>
+
+  <section class="sec"><div class="wrap">
+    ${sechead("Accesorios y complementos", "Cables, estuches, cápsulas y soportes para completar tu setup.", `<button class="link" data-cat="accesorios">Ver accesorios</button>`)}
+    <div class="grid-p">${acc.slice(0, 4).map(card).join("")}</div>
+  </div></section>
+
+  <section class="sec"><div class="wrap">
+    ${sechead("Cómo compras aquí")}
+    <div class="benefits">
+      <div class="benefit">${ICON.chat}<b>Asesoría por WhatsApp</b><p>Te ayudamos a elegir equipo compatible con tu software y tu setup.</p></div>
+      <div class="benefit">${ICON.cart}<b>Pedido sin pago en línea</b><p>Armas el carrito y un asesor confirma disponibilidad, envío y forma de pago.</p></div>
+      <div class="benefit">${ICON.truck}<b>Envíos</b><p><em class="ph">Cobertura y tiempos de envío</em></p></div>
+      <div class="benefit">${ICON.shield}<b>Garantía</b><p><em class="ph">Garantía por marca o tienda</em></p></div>
+    </div>
+  </div></section>
+
+  <section class="sec"><div class="wrap split">
+    <div class="panel"><h3>Envíos</h3><ul><li><em class="ph">Ciudades y transportadoras</em></li><li><em class="ph">Tiempo estimado por zona</em></li><li><em class="ph">Costo o regla de envío gratis</em></li></ul><button class="link" style="justify-self:start" data-go="info">Leer política de envíos</button></div>
+    <div class="panel"><h3>Garantías</h3><ul><li><em class="ph">Duración por categoría o marca</em></li><li><em class="ph">Qué cubre y qué no</em></li><li><em class="ph">Cómo se hace un reclamo</em></li></ul><button class="link" style="justify-self:start" data-go="info">Leer política de garantías</button></div>
+  </div></section>
+
+  <section class="sec"><div class="wrap">
+    ${sechead("Preguntas frecuentes")}
+    <div class="faq">
+      <details open><summary>¿Cómo hago un pedido?</summary><p>Agrega productos al carrito, revisa el resumen y pulsa “Enviar pedido por WhatsApp”. Se abre una conversación con el detalle ya escrito. El pedido queda confirmado cuando un asesor te responda con disponibilidad, envío y forma de pago.</p></details>
+      <details><summary>¿Los precios incluyen envío?</summary><p>No. El subtotal del carrito es solo de productos. El costo de envío lo confirma el asesor según tu ciudad.</p></details>
+      <details><summary>¿Qué formas de pago aceptan?</summary><p><em class="ph">Medios de pago aceptados</em></p></details>
+      <details><summary>¿Los productos tienen garantía?</summary><p><em class="ph">Política de garantía</em></p></details>
+    </div>
+  </div></section>`;
+}
+
+function filtered() {
+  const q = state.q.trim().toLowerCase();
+  let list = PRODUCTS.filter((p) =>
+    (!state.cat || p.category === state.cat) &&
+    (!q || [p.name, p.brand, p.sku, CATEGORIES.find((c) => c.id === p.category).name].join(" ").toLowerCase().includes(q)) &&
+    (!state.brands.size || state.brands.has(p.brand)) &&
+    (!state.avail.size || state.avail.has(p.availability)) &&
+    (!state.onlyPromo || p.promoPrice != null) &&
+    (state.min === "" || (unitPrice(p) ?? Infinity) >= +state.min) &&
+    (state.max === "" || (unitPrice(p) ?? -1) <= +state.max && unitPrice(p) != null));
+  const val = (p) => unitPrice(p);
+  if (state.sort === "asc") list = list.slice().sort((a, b) => (val(a) ?? Infinity) - (val(b) ?? Infinity));
+  if (state.sort === "desc") list = list.slice().sort((a, b) => (val(b) ?? -1) - (val(a) ?? -1));
+  return list;
+}
+function catalogView() {
+  const cat = CATEGORIES.find((c) => c.id === state.cat);
+  const list = filtered();
+  const base = PRODUCTS.filter((p) => !state.cat || p.category === state.cat);
+  const brands = [...new Set(base.map((p) => p.brand))].sort();
+  const title = state.q ? `Resultados para “${esc(state.q)}”` : cat ? cat.name : "Catálogo";
+  const chips = [
+    ...(state.q ? [[`Búsqueda: ${esc(state.q)}`, "q"]] : []),
+    ...[...state.brands].map((b) => [b, "b:" + b]),
+    ...[...state.avail].map((a) => [AVAIL[a], "a:" + a]),
+    ...(state.onlyPromo ? [["Con promoción", "promo"]] : []),
+    ...(state.min !== "" || state.max !== "" ? [[`Precio ${state.min || 0} – ${state.max || "∞"}`, "price"]] : []),
+  ];
+  return `<div class="wrap">
+    <nav class="crumbs" aria-label="Ruta"><button data-go="inicio">Inicio</button><span>/</span><button data-cat="">Catálogo</button>${cat ? `<span>/</span><span>${cat.name}</span>` : ""}</nav>
+    <div class="cathead"><h1 class="disp">${title}</h1><p>${cat ? "Equipos de la categoría con precio y disponibilidad según el catálogo." : "Todos los productos publicados. Filtra por marca, precio o disponibilidad."}</p></div>
+    <div class="catlayout">
+      <aside class="filters ${state.filtersOpen ? "open" : ""}" aria-label="Filtros">
+        <div class="fgroup"><h3>Categoría</h3>${CATEGORIES.map((c) => `<label class="check"><input type="radio" name="fcat" value="${c.id}" ${state.cat === c.id ? "checked" : ""} data-f="cat">${c.name}<span class="n">${PRODUCTS.filter((p) => p.category === c.id).length}</span></label>`).join("")}<label class="check"><input type="radio" name="fcat" value="" ${!state.cat ? "checked" : ""} data-f="cat">Todas</label></div>
+        <div class="fgroup"><h3>Marca</h3>${brands.map((b) => `<label class="check"><input type="checkbox" value="${b}" ${state.brands.has(b) ? "checked" : ""} data-f="brand">${b}<span class="n">${base.filter((p) => p.brand === b).length}</span></label>`).join("")}</div>
+        <div class="fgroup"><h3>Precio (COP)</h3><div class="range"><div class="field"><label for="pmin">Mínimo</label><input class="input num" id="pmin" inputmode="numeric" value="${state.min}" data-f="min" placeholder="0"></div><div class="field"><label for="pmax">Máximo</label><input class="input num" id="pmax" inputmode="numeric" value="${state.max}" data-f="max" placeholder="Sin límite"></div></div></div>
+        <div class="fgroup"><h3>Disponibilidad</h3>${Object.keys(AVAIL).map((a) => `<label class="check"><input type="checkbox" value="${a}" ${state.avail.has(a) ? "checked" : ""} data-f="avail">${AVAIL[a]}</label>`).join("")}</div>
+        <div class="fgroup"><h3>Promociones</h3><label class="check"><input type="checkbox" ${state.onlyPromo ? "checked" : ""} data-f="promo">Solo con precio promocional</label></div>
+      </aside>
+      <div style="min-width:0">
+        <div class="toolbar-c">
+          <span class="count" aria-live="polite">${list.length} ${list.length === 1 ? "producto" : "productos"}</span>
+          <div class="r">
+            <button class="btn btn-ghost btn-sm fbtn" data-act="filters" aria-expanded="${state.filtersOpen}">${ICON.filter} Filtros${chips.length ? ` (${chips.length})` : ""}</button>
+            <label class="srh" for="sort">Ordenar</label>
+            <select class="input" id="sort" data-f="sort" style="width:auto;height:40px"><option value="rel" ${state.sort === "rel" ? "selected" : ""}>Relevancia</option><option value="asc" ${state.sort === "asc" ? "selected" : ""}>Menor precio</option><option value="desc" ${state.sort === "desc" ? "selected" : ""}>Mayor precio</option></select>
+          </div>
+        </div>
+        ${chips.length ? `<div class="chips">${chips.map(([l, k]) => `<span class="chip">${l}<button data-unchip="${esc(k)}" aria-label="Quitar filtro ${l}">✕</button></span>`).join("")}<button class="link" data-act="clearf">Limpiar todo</button></div>` : ""}
+        ${list.length ? `<div class="grid-p in-cat">${list.map(card).join("")}</div>` :
+          `<div class="empty">${ICON.search}<b>No encontramos productos con esos criterios</b><p>Revisa la ortografía, quita algún filtro o pregúntanos por WhatsApp: también conseguimos equipos bajo pedido.</p><div class="row-wrap" style="justify-content:center"><button class="btn btn-secondary btn-sm" data-act="clearf">Quitar filtros</button><a class="btn btn-ghost btn-sm" href="${whatsapp.link(`Hola ${STORE.name}, busco: ${state.q || "un equipo"}. ¿Lo tienen o lo pueden conseguir?`)}" target="_blank" rel="noopener" data-wa>${ICON.wa} Preguntar por WhatsApp</a></div></div>`}
+      </div>
+    </div>
+  </div>`;
+}
+
+function productView() {
+  const p = byId(state.productId);
+  const cat = CATEGORIES.find((c) => c.id === p.category);
+  const promo = pct(p);
+  const related = PRODUCTS.filter((x) => x.id !== p.id && (x.category === p.category || x.category === "accesorios")).slice(0, 4);
+  const inCart = cart.items.find((i) => i.id === p.id);
+  const addLabel = p.availability === "bajo_pedido" ? "Añadir al carrito (bajo pedido)" : "Añadir al carrito";
+  return `<div class="wrap">
+    <nav class="crumbs" aria-label="Ruta"><button data-go="inicio">Inicio</button><span>/</span><button data-cat="${cat.id}">${cat.name}</button><span>/</span><span>${esc(p.name)}</span></nav>
+    <div class="pdp">
+      <div class="gallery">
+        <div class="main">${ART[p.art]}${promo ? `<span class="flag" style="position:absolute;top:12px;left:12px;background:var(--accent);color:var(--accent-ink);font:700 12px/1 var(--f-mono);padding:6px 8px;border-radius:2px">−${promo}%</span>` : ""}</div>
+        <div class="thumbs">${[0, 1, 2, 3].map((i) => `<button aria-label="Foto ${i + 1}" aria-pressed="${i === 0}">${ART[p.art]}</button>`).join("")}</div>
+        <p class="note">Ilustración de referencia. Reemplazar por fotografías autorizadas (mín. 1200×1200, fondo uniforme).</p>
+      </div>
+      <div class="buy">
+        <span class="eyebrow">${esc(p.brand)} · ${cat.name}</span>
+        <h1>${esc(p.name)}</h1>
+        <div class="ref"><span class="mono">Ref. ${p.sku}</span>${availEl(p.availability)}<span class="mono">DEMO</span></div>
+        <div class="price">${p.price == null ? `<b style="font-size:var(--t-xl)">Precio por confirmar</b>` : p.promoPrice != null ? `<b>${fmt(p.promoPrice)}</b><s>${fmt(p.price)}</s><span class="save">Ahorras ${fmt(p.price - p.promoPrice)}</span>` : `<b>${fmt(p.price)}</b>`}</div>
+        ${p.promoPrice != null ? `<p class="note">Promoción vigente hasta <em class="ph">fecha</em> o hasta agotar unidades.</p>` : ""}
+        ${p.availability === "agotado" ? `<div class="alert warn">${ICON.warn}<div><b>Agotado por ahora</b><p>Pregúntanos por WhatsApp la fecha de reposición o una alternativa similar.</p></div></div>` : ""}
+        ${p.availability === "bajo_pedido" ? `<div class="alert info">${ICON.info}<div><b>Bajo pedido</b><p>El asesor confirma tiempo de llegada antes de cerrar la compra.</p></div></div>` : ""}
+        ${canAdd(p) ? `<div class="qtyrow">
+          <div class="stepper" role="group" aria-label="Cantidad"><button data-pq="-1" aria-label="Disminuir">−</button><input id="pqty" class="num" value="1" inputmode="numeric" aria-label="Cantidad"><button data-pq="1" aria-label="Aumentar">+</button></div>
+          <button class="btn btn-primary" data-add="${p.id}">${ICON.cart}${addLabel}</button>
+        </div>
+        <p class="note">Máximo ${p.maxQty} por pedido.${inCart ? ` Ya tienes ${inCart.qty} en el carrito.` : ""}</p>` : ""}
+        <a class="btn ${canAdd(p) ? "btn-secondary" : "btn-primary"} btn-block" href="${whatsapp.link(whatsapp.buildProductMessage(p))}" target="_blank" rel="noopener" data-wa>${ICON.wa} ${p.availability === "agotado" ? "Preguntar por reposición" : "Consultar este producto por WhatsApp"}</a>
+        <div class="assure">
+          <div>${ICON.truck}<span><b>Envío:</b> <em class="ph">condiciones de envío</em></span></div>
+          <div>${ICON.shield}<span><b>Garantía:</b> <em class="ph">política de garantía</em></span></div>
+          <div>${ICON.chat}<span><b>Confirmación:</b> el asesor confirma disponibilidad y costo de envío antes de pagar.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="tabs-pdp">
+      <section><h2 class="disp" style="font-size:var(--t-lg);margin-bottom:12px">Descripción</h2><p style="color:var(--fg-2);max-width:62ch">${esc(p.desc)}</p></section>
+      <section><h2 class="disp" style="font-size:var(--t-lg);margin-bottom:12px">Especificaciones</h2><table class="specs"><tbody>${p.specs.map(([k, v]) => `<tr><th scope="row">${k}</th><td>${v}</td></tr>`).join("")}</tbody></table></section>
+    </div>
+    <section class="sec" style="padding-top:0"><div>${sechead("También te puede servir")}<div class="grid-p">${related.map(card).join("")}</div></div></section>
+  </div>
+  ${canAdd(p) ? `<div class="stickybuy">${priceEl(p)}<button class="btn btn-primary btn-sm" data-add="${p.id}" data-qty1>${ICON.cart} Añadir</button></div>` : ""}`;
+}
+
+function cartLines(lines, editable) {
+  return lines.map((l) => {
+    if (l.missing) return `<div class="line"><div class="thumb"></div><div class="info"><b>Producto ya no disponible</b><span class="note">Ref. ${esc(l.id)} fue retirado del catálogo. No se incluirá en el pedido.</span></div><div class="ctrl"><button class="rm" data-rm="${esc(l.id)}">Eliminar</button></div></div>`;
+    const p = l.p;
+    return `<div class="line">
+      <button class="thumb" data-open="${p.id}" aria-label="Ver ${esc(p.name)}" style="border:0;padding:0">${ART[p.art]}</button>
+      <div class="info"><span class="brand eyebrow">${esc(p.brand)}</span><b>${esc(p.name)}</b><span class="note mono">Ref. ${p.sku}</span>${availEl(p.availability)}
+        ${l.unit == null ? `<span class="note">Precio por confirmar · no suma al subtotal</span>` : `<span class="note num">${fmt(l.unit)} c/u</span>`}
+        ${p.availability === "agotado" ? `<span class="note" style="color:var(--warn)">Se agotó después de añadirlo. No se incluirá en el mensaje.</span>` : ""}
+      </div>
+      <div class="ctrl">
+        ${editable ? `<div class="stepper sm" role="group" aria-label="Cantidad de ${esc(p.name)}"><button data-q="${p.id}" data-d="-1" aria-label="Disminuir" ${l.qty <= 1 ? "disabled" : ""}>−</button><input class="num" value="${l.qty}" data-qi="${p.id}" inputmode="numeric" aria-label="Cantidad"><button data-q="${p.id}" data-d="1" aria-label="Aumentar" ${l.qty >= p.maxQty ? "disabled" : ""}>+</button></div>` : `<span class="note num">× ${l.qty}</span>`}
+        <span class="lt">${l.total == null ? "—" : fmt(l.total)}</span>
+        ${editable ? `<button class="rm" data-rm="${p.id}">Eliminar</button>` : ""}
+      </div>
+    </div>`;
+  }).join("");
+}
+function stepsEl(i) { return `<div class="steps" aria-label="Progreso">${["1 Carrito", "2 Resumen", "3 WhatsApp"].map((s, k) => `<span ${k === i ? 'aria-current="step"' : k < i ? 'class="done"' : ""}>${s}</span>`).join("")}</div>`; }
+
+function cartView() {
+  const r = cart.resolve();
+  if (!cart.items.length) return `<div class="wrap">${stepsEl(0)}<div class="cathead"><h1 class="disp">Carrito</h1></div><div class="empty" style="margin-bottom:var(--s7)">${ICON.cart}<b>Tu carrito está vacío</b><p>Explora el catálogo y añade los equipos que quieres consultar.</p><button class="btn btn-primary" data-go="catalogo">Ir al catálogo</button></div></div>`;
+  return `<div class="wrap">${stepsEl(0)}
+    <div class="cathead"><h1 class="disp">Carrito</h1><p>${r.units} ${r.units === 1 ? "unidad" : "unidades"} · los precios se recalculan con el catálogo actual.</p></div>
+    <div class="cartlayout">
+      <div style="min-width:0;display:grid;gap:var(--s4)">
+        ${r.hasIssues ? `<div class="alert warn">${ICON.warn}<div><b>Revisa tu carrito</b><p>Algunos productos cambiaron desde que los añadiste. Los marcados no se incluirán en el pedido.</p></div></div>` : ""}
+        <div class="lines">${cartLines(r.lines, true)}</div>
+        <div class="row-wrap" style="justify-content:space-between"><button class="link" data-go="catalogo">Seguir comprando</button><button class="rm" data-act="clear">Vaciar carrito</button></div>
+      </div>
+      <aside class="summary" aria-label="Resumen">
+        <h2>Resumen</h2>
+        ${r.lines.filter((l) => !l.missing).map((l) => `<div class="sumrow"><span>${l.qty} × ${esc(l.p.name.slice(0, 34))}${l.p.name.length > 34 ? "…" : ""}</span><span>${l.total == null ? "Por confirmar" : fmt(l.total)}</span></div>`).join("")}
+        <div class="sumrow total"><span>Subtotal estimado</span><span>${fmt(r.subtotal)}</span></div>
+        <p class="note">No incluye envío.${r.hasUnpriced ? " Hay productos con precio por confirmar." : ""} El asesor confirma el valor final por WhatsApp.</p>
+        <button class="btn btn-primary btn-block" data-go="pedido">Revisar pedido</button>
+      </aside>
+    </div>
+  </div>`;
+}
+
+function orderView() {
+  const r = cart.resolve();
+  if (!cart.items.length) return `<div class="wrap">${stepsEl(1)}<div class="empty" style="margin-block:var(--s5) var(--s7)">${ICON.cart}<b>No hay productos para enviar</b><p>Añade productos al carrito para preparar el mensaje de pedido.</p><button class="btn btn-primary" data-go="catalogo">Ir al catálogo</button></div></div>`;
+  orderId = orderId || newOrderId();
+  const msg = whatsapp.buildOrderMessage(r, { orderId, city: state.city });
+  const link = whatsapp.link(msg);
+  const ok = whatsapp.configured();
+  return `<div class="wrap">${stepsEl(1)}
+    <div class="cathead"><h1 class="disp">Revisa tu pedido</h1><p>Enviaremos este resumen a un asesor. Tu pedido queda confirmado cuando te respondan con disponibilidad, envío y forma de pago.</p></div>
+    <div class="cartlayout">
+      <div style="min-width:0;display:grid;gap:var(--s5)">
+        <div class="lines">${cartLines(r.lines, false)}</div>
+        <div class="field" style="max-width:360px"><label for="city">Ciudad de envío (opcional, para cotizar el envío)</label><input class="input" id="city" maxlength="60" value="${esc(state.city)}" placeholder="Ej.: Medellín" data-city></div>
+        <section><h2 class="eyebrow" style="margin-bottom:8px">Vista previa del mensaje</h2>
+          <div class="wa-preview"><div class="hd">${ICON.wa} WhatsApp · ${STORE.name}</div><div class="bubble" id="msgprev">${esc(msg)}</div></div>
+        </section>
+      </div>
+      <aside class="summary" aria-label="Enviar">
+        <h2>Pedido ${orderId}</h2>
+        <div class="sumrow"><span>Productos</span><span>${r.units}</span></div>
+        <div class="sumrow total"><span>Subtotal estimado</span><span>${fmt(r.subtotal)}</span></div>
+        <p class="note">Identificador provisional para que el asesor ubique tu consulta. No es una confirmación de compra.</p>
+        ${ok ? "" : `<div class="alert warn">${ICON.warn}<div><b>Número de WhatsApp sin configurar</b><p>Define <span class="mono">WHATSAPP_NUMBER</span> en la configuración de la tienda para activar el envío.</p></div></div>`}
+        <a class="btn btn-primary btn-block" ${ok ? `href="${link}" target="_blank" rel="noopener"` : `aria-disabled="true"`} data-send>${ICON.wa} Enviar pedido por WhatsApp</a>
+        <button class="btn btn-ghost btn-block btn-sm" data-act="copy">Copiar mensaje</button>
+        <details><summary class="note" style="cursor:pointer">Ver enlace generado (${link.length} caracteres)</summary><div class="codebox" style="margin-top:8px">${esc(link)}</div></details>
+        <button class="link" data-go="carrito" style="justify-self:start">Volver al carrito</button>
+      </aside>
+    </div>
+  </div>`;
+}
+
+function infoView() {
+  return `<div class="wrap"><div class="cathead" style="padding-top:var(--s6)"><h1 class="disp">Envíos y garantías</h1><p>Plantilla de página informativa. Todo el contenido comercial está pendiente de la tienda.</p></div>
+  <div class="split" style="padding-bottom:var(--s7)"><div class="panel"><h3>Envíos</h3><p class="ph">Cobertura, transportadoras, tiempos y costos</p></div><div class="panel"><h3>Garantías</h3><p class="ph">Plazos, cobertura, proceso de reclamo</p></div></div></div>`;
+}
+
+function systemView() {
+  const sws = [["Fondo", "--bg", "#101114"], ["Superficie", "--surface", "#191B20"], ["Texto", "--fg", "#F5F5F5"], ["Texto 2", "--fg-2", "#A7A9B0"], ["Acento", "--accent", "#B8FF32"], ["Borde", "--border", "#30323A"]];
+  const sem = [["Disponible", "--ok", "#5BD28A"], ["Pocas unidades", "--warn", "#F2B544"], ["Bajo pedido", "--info", "#7DB4FF"], ["Agotado", "--off", "#6B6E77"], ["Error", "--danger", "#FF6B5E"], ["Pozo foto", "--photo", "#E7E8EB"]];
+  const sample = PRODUCTS[0];
+  return `<div class="wrap sys">
+    <section><h2 class="disp">Color</h2><p class="lead">Base de la marca, configurable desde un único archivo de tokens. El verde eléctrico solo aparece en CTA, badges de carrito, descuentos y foco. La disponibilidad usa colores semánticos propios para no competir con el acento.</p>
+      <div class="swatches">${sws.map(([n, t, h]) => `<div class="sw"><div style="background:var(${t})"></div><p><b>${n}</b><span>${t} · ${h}</span></p></div>`).join("")}</div>
+      <h3 style="margin-top:var(--s5)">Semánticos</h3>
+      <div class="swatches">${sem.map(([n, t, h]) => `<div class="sw"><div style="background:var(${t})"></div><p><b>${n}</b><span>${t} · ${h}</span></p></div>`).join("")}</div>
+    </section>
+    <section><h2 class="disp">Tipografía</h2><p class="lead">Archivo (ancho expandido) para titulares en mayúsculas; Hanken Grotesk para lectura e interfaz; JetBrains Mono para referencias, SKU y especificaciones técnicas. Cifras tabulares en precios.</p>
+      <div class="typescale">
+        <div><span>Display · 56</span><p class="disp" style="font-size:var(--t-3xl)">Tu escenario</p></div>
+        <div><span>H2 · 28</span><p class="disp" style="font-size:var(--t-xl)">Productos destacados</p></div>
+        <div><span>Precio · 40</span><p style="font:800 var(--t-2xl) var(--f-display);font-stretch:105%" class="num">${fmt(3290000)}</p></div>
+        <div><span>Body · 16</span><p>Controlador compacto para empezar a mezclar con software.</p></div>
+        <div><span>Mono · 13</span><p class="mono" style="font-size:.8125rem">Ref. DEMO-CTR-004 · 20 Hz – 20 kHz · 500 W RMS</p></div>
+      </div>
+    </section>
+    <section><h2 class="disp">Componentes</h2>
+      <div class="compgrid">
+        <div class="panel"><h3>Botones</h3><div class="row-wrap"><button class="btn btn-primary">${ICON.cart} Primario</button><button class="btn btn-secondary">Secundario</button><button class="btn btn-ghost">Contorno</button><button class="btn btn-primary" disabled>Deshabilitado</button></div><p class="note">Altura táctil 48 px (40 px en compactos). Radio 4 px.</p></div>
+        <div class="panel"><h3>Disponibilidad</h3><div class="row-wrap">${Object.keys(AVAIL).map(availEl).join("")}</div><p class="note">Valor proviene del campo <span class="mono">availability</span>. Nunca se infiere.</p></div>
+        <div class="panel"><h3>Tarjeta de producto</h3><div style="max-width:260px">${card(sample)}</div></div>
+        <div class="panel"><h3>Precio</h3>${priceEl(PRODUCTS[1])}${priceEl(PRODUCTS[5])}${priceEl(PRODUCTS[4])}<p class="note">El precio anterior se muestra solo si <span class="mono">promoPrice</span> existe. El porcentaje se calcula, no se escribe a mano.</p></div>
+      </div>
+    </section>
+    <section><h2 class="disp">Estados</h2>
+      <div class="compgrid">
+        <div class="panel"><h3>Cargando</h3><div class="grid-p" style="grid-template-columns:repeat(2,minmax(0,1fr))">${[0, 1].map(() => `<div class="card"><div class="img sk" style="border-radius:0"></div><div class="body"><div class="sk" style="height:10px;width:40%"></div><div class="sk" style="height:14px;width:90%"></div><div class="sk" style="height:18px;width:60%"></div></div></div>`).join("")}</div></div>
+        <div class="panel"><h3>Vacío</h3><div class="empty" style="padding:var(--s5)">${ICON.cart}<b>Tu carrito está vacío</b><p>Explora el catálogo y añade los equipos que quieres consultar.</p></div></div>
+        <div class="panel"><h3>Error</h3><div class="alert err">${ICON.warn}<div><b>No pudimos cargar el catálogo</b><p>Revisa tu conexión y vuelve a intentarlo. Si el problema sigue, escríbenos por WhatsApp.</p></div></div><div class="alert warn">${ICON.warn}<div><b>El precio de 1 producto cambió</b><p>Antes ${fmt(1890000)}, ahora ${fmt(1690000)}. El subtotal ya está actualizado.</p></div></div></div>
+        <div class="panel"><h3>Éxito (tras abrir WhatsApp)</h3><div class="alert ok">${ICON.ok}<div><b>Abrimos WhatsApp con tu pedido VD-261028-4F7K</b><p>Envía el mensaje en WhatsApp para que un asesor lo reciba. Te confirmarán disponibilidad, envío y forma de pago.</p></div></div><p class="note">No decimos “pedido recibido”: la tienda no puede saber si el mensaje se envió.</p></div>
+      </div>
+    </section>
+  </div>`;
+}
+
+function mapView() {
+  return `<div class="wrap sys">
+    <section><h2 class="disp">Mapa de navegación</h2><p class="lead">Profundidad máxima de tres clics desde el inicio hasta el carrito. Las rutas en verde son las de la primera revisión.</p>
+      <div class="sitemap">
+        <div class="node"><span class="p">/</span><b>Inicio</b><ul><li>Categorías</li><li>Destacados</li><li>Ofertas</li><li>Marcas</li><li>Accesorios</li><li>Beneficios · Envíos · FAQ</li></ul></div>
+        <div class="node"><span class="p">/catalogo</span><b>Catálogo</b><ul><li>/catalogo/[categoria]</li><li>/buscar?q=</li><li>/ofertas</li><li>/marcas/[marca]</li></ul></div>
+        <div class="node"><span class="p">/producto/[slug]</span><b>Detalle</b><ul><li>Galería · precio · disponibilidad</li><li>Añadir al carrito</li><li>Consultar por WhatsApp</li><li>Especificaciones · relacionados</li></ul></div>
+        <div class="node"><span class="p">/carrito → /pedido</span><b>Compra</b><ul><li>Carrito</li><li>Resumen del pedido</li><li>Envío por WhatsApp</li></ul></div>
+        <div class="node"><b>Información</b><ul><li>/envios-y-garantias</li><li>/preguntas-frecuentes</li><li>/contacto</li></ul></div>
+        <div class="node"><b>Legal</b><ul><li>/privacidad</li><li>/terminos</li></ul></div>
+        <div class="node"><b>Administración</b><ul><li>/admin (CMS, autenticado)</li><li>Productos · categorías · marcas · promociones · configuración</li></ul></div>
+      </div>
+    </section>
+    <section><h2 class="disp">Flujo de pedido por WhatsApp</h2>
+      <ol class="flow">
+        <li><div><b>Elige un producto</b><p>Desde tarjeta, categoría o búsqueda. Acción rápida de consulta por WhatsApp para dudas puntuales.</p></div></li>
+        <li><div><b>Añade al carrito</b><p>Valida disponibilidad y cantidad máxima. Toast con acceso al carrito; no interrumpe la navegación.</p></div></li>
+        <li><div><b>Ajusta el carrito</b><p>Cambia cantidades, elimina o vacía. Persistencia en el navegador guardando solo ID y cantidad.</p></div></li>
+        <li><div><b>Recalcula con el catálogo</b><p>Precio vigente, promoción, productos retirados o agotados. Subtotal sin envío.</p></div></li>
+        <li><div><b>Revisa el resumen</b><p>Vista previa exacta del mensaje, ciudad opcional, identificador provisional.</p></div></li>
+        <li><div><b>Abre WhatsApp</b><p>Enlace wa.me con número configurado y texto codificado con encodeURIComponent.</p></div></li>
+        <li><div><b>El cliente envía; el asesor confirma</b><p>Disponibilidad, envío, forma de pago. La web nunca afirma que el pedido fue recibido.</p></div></li>
+      </ol>
+    </section>
+    <section><h2 class="disp">Wireframes (móvil)</h2>
+      <div class="wires">
+        <div><h3>Inicio</h3><div class="wire"><div>Barra info</div><div>Logo · 🔍 · carrito</div><div>Categorías ⇄</div><div style="height:70px">Hero + CTA</div><div class="g2"><div>Cat</div><div>Cat</div></div><div class="g2"><div style="height:50px">Prod</div><div style="height:50px">Prod</div></div><div>Ofertas · Marcas · FAQ</div></div></div>
+        <div><h3>Catálogo</h3><div class="wire"><div>Ruta</div><div>Título + conteo</div><div class="g2"><div>Filtros</div><div>Ordenar</div></div><div>Chips activos</div><div class="g2"><div style="height:60px">Prod</div><div style="height:60px">Prod</div></div><div class="g2"><div style="height:60px">Prod</div><div style="height:60px">Prod</div></div></div></div>
+        <div><h3>Producto</h3><div class="wire"><div style="height:80px">Foto 1:1</div><div>Miniaturas</div><div>Marca · Nombre</div><div>Ref · disponibilidad</div><div>Precio</div><div>Cantidad · Añadir</div><div>WhatsApp</div><div>Specs</div><div>Barra fija: precio · añadir</div></div></div>
+        <div><h3>Carrito</h3><div class="wire"><div>Pasos 1-2-3</div><div>Línea: foto · nombre · − 1 + · total</div><div>Línea</div><div>Vaciar</div><div>Subtotal · nota envío</div><div>Revisar pedido</div></div></div>
+        <div><h3>Pedido</h3><div class="wire"><div>Pasos 1-2-3</div><div>Líneas (solo lectura)</div><div>Ciudad (opcional)</div><div style="height:60px">Vista previa mensaje</div><div>ID provisional · subtotal</div><div>Enviar por WhatsApp</div><div>Copiar mensaje</div></div></div>
+      </div>
+    </section>
+  </div>`;
+}
+
+function footerHTML() {
+  return `<div class="wrap"><div class="cols">
+    <div style="display:grid;gap:12px;align-content:start"><span class="logo"><svg viewBox="0 0 28 28" width="28" height="28" aria-hidden="true"><rect x="1" y="1" width="26" height="26" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><rect x="12.5" y="5" width="3" height="18" rx="1.5" fill="var(--border)"/><rect x="8" y="9" width="12" height="5" rx="1" fill="var(--accent)"/></svg><b style="color:var(--fg)">VOLT<i> DJ</i></b></span><p>${STORE.tagline}</p><p><em class="ph">Razón social · NIT</em></p></div>
+    <div><h4>Tienda</h4><ul>${CATEGORIES.slice(0, 5).map((c) => `<li>${c.name}</li>`).join("")}<li>Ofertas</li></ul></div>
+    <div><h4>Ayuda</h4><ul><li>Envíos y garantías</li><li>Preguntas frecuentes</li><li>Cómo comprar</li><li>Contacto</li></ul></div>
+    <div><h4>Contacto</h4><ul><li><em class="ph">WhatsApp comercial</em></li><li><em class="ph">Correo</em></li><li><em class="ph">Dirección / showroom</em></li><li><em class="ph">Horario</em></li><li><em class="ph">Redes sociales</em></li></ul></div>
+  </div><div class="legal"><span>© 2026 ${STORE.name}. <em class="ph">Razón social</em></span><span>Política de privacidad · Términos y condiciones · <em class="ph">Enlace SIC / PQR</em></span></div></div>`;
+}
+
+/* ================= Router & eventos ================= */
+const ROUTES = { inicio: homeView, catalogo: catalogView, producto: productView, carrito: cartView, pedido: orderView, sistema: systemView, mapa: mapView, info: infoView };
+function render(scroll = true) {
+  let r = (location.hash || "#inicio").slice(1);
+  if (r === "ofertas") { state.onlyPromo = true; state.cat = null; r = "catalogo"; }
+  if (!ROUTES[r]) r = "inicio";
+  view.innerHTML = ROUTES[r]();
+  document.querySelectorAll(".tool nav a").forEach((a) => a.setAttribute("aria-current", a.getAttribute("href") === "#" + r ? "page" : "false"));
+  $("#catnav").innerHTML = `<button class="hot" data-go="ofertas">Ofertas</button>` + CATEGORIES.map((c) => `<button data-cat="${c.id}" aria-current="${r === "catalogo" && state.cat === c.id}">${c.name}</button>`).join("");
+  if (scroll) document.getElementById("device").scrollIntoView({ block: "start" });
+}
+function go(r) { if (location.hash === "#" + r) render(); else location.hash = r; }
+function updateBadge() { const n = cart.items.reduce((s, i) => s + i.qty, 0); const b = $("#cartcount"); b.textContent = n; b.hidden = !n; }
+let toastT;
+function toast(html) { const t = $("#toast"); t.innerHTML = html; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), 3200); }
+
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("button, a"); if (!t) return;
+  if (t.matches("[data-wa]") && !whatsapp.configured()) { e.preventDefault(); toast("Número de WhatsApp sin configurar en este prototipo"); return; }
+  if (t.dataset.go) { if (t.dataset.go === "ofertas") { resetFilters(); state.onlyPromo = true; go("catalogo"); render(); return; } if (t.dataset.go === "catalogo") { state.q = ""; } go(t.dataset.go); return; }
+  if (t.dataset.cat !== undefined) { resetFilters(); state.cat = t.dataset.cat || null; location.hash === "#catalogo" ? render() : go("catalogo"); return; }
+  if (t.dataset.open) { state.productId = t.dataset.open; location.hash === "#producto" ? render() : go("producto"); return; }
+  if (t.dataset.add) { const qty = t.hasAttribute("data-qty1") ? 1 : Math.max(1, parseInt($("#pqty")?.value, 10) || 1); const p = byId(t.dataset.add); const before = cart.items.find((i) => i.id === p.id)?.qty || 0; cart.add(p.id, qty); const after = cart.items.find((i) => i.id === p.id).qty; toast(after - before < qty ? `Límite de ${p.maxQty} unidades para este producto <button data-go="carrito">Ver carrito</button>` : `Añadido al carrito <button data-go="carrito">Ver carrito</button>`); render(false); return; }
+  if (t.dataset.pq) { const i = $("#pqty"); const p = byId(state.productId); i.value = Math.max(1, Math.min(p.maxQty, (parseInt(i.value, 10) || 1) + +t.dataset.pq)); return; }
+  if (t.dataset.q) { const l = cart.items.find((i) => i.id === t.dataset.q); cart.setQty(t.dataset.q, l.qty + +t.dataset.d); render(false); return; }
+  if (t.dataset.rm) { const removed = cart.items.find((i) => i.id === t.dataset.rm); cart.remove(t.dataset.rm); render(false); if (removed) { window._undo = removed; toast(`Producto eliminado <button data-act="undo">Deshacer</button>`); } return; }
+  if (t.dataset.unchip) { const k = t.dataset.unchip; if (k === "q") state.q = ""; else if (k === "promo") state.onlyPromo = false; else if (k === "price") { state.min = state.max = ""; } else if (k.startsWith("b:")) state.brands.delete(k.slice(2)); else if (k.startsWith("a:")) state.avail.delete(k.slice(2)); render(false); return; }
+  const act = t.dataset.act;
+  if (act === "undo" && window._undo) { cart.items.push(window._undo); window._undo = null; cart.save(); render(false); $("#toast").hidden = true; }
+  if (act === "clear") { const prev = cart.items.slice(); cart.clear(); render(false); window._undoAll = prev; toast(`Carrito vaciado <button data-act="undoall">Deshacer</button>`); }
+  if (act === "undoall" && window._undoAll) { cart.items = window._undoAll; window._undoAll = null; cart.save(); render(false); $("#toast").hidden = true; }
+  if (act === "filters") { state.filtersOpen = !state.filtersOpen; render(false); }
+  if (act === "clearf") { resetFilters(); render(false); }
+  if (act === "copy") { const txt = $("#msgprev").textContent; navigator.clipboard?.writeText(txt).then(() => toast("Mensaje copiado"), () => { const r = document.createRange(); r.selectNodeContents($("#msgprev")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Selecciona y copia el mensaje"); }); }
+  if (t.matches("[data-send]")) { if (!whatsapp.configured()) { e.preventDefault(); toast("Configura el número de WhatsApp para activar el envío"); } else { toast(`Abrimos WhatsApp con tu pedido ${orderId}. Envía el mensaje para que un asesor lo reciba.`); } }
+  if (t.closest(".tool .dev")) { const w = t.dataset.w; $("#device").dataset.w = w; document.querySelectorAll(".tool .dev button").forEach((b) => b.setAttribute("aria-pressed", b === t)); try { localStorage.setItem("voltdj.proto.w", w); } catch (e) {} }
+});
+function resetFilters() { state.cat = null; state.brands.clear(); state.avail.clear(); state.onlyPromo = false; state.min = state.max = ""; state.sort = "rel"; }
+document.addEventListener("change", (e) => {
+  const f = e.target.dataset.f; if (!f) { if (e.target.dataset.qi) { cart.setQty(e.target.dataset.qi, parseInt(e.target.value, 10)); render(false); } return; }
+  if (f === "cat") state.cat = e.target.value || null;
+  if (f === "brand") e.target.checked ? state.brands.add(e.target.value) : state.brands.delete(e.target.value);
+  if (f === "avail") e.target.checked ? state.avail.add(e.target.value) : state.avail.delete(e.target.value);
+  if (f === "promo") state.onlyPromo = e.target.checked;
+  if (f === "min" || f === "max") state[f] = e.target.value.replace(/\D/g, "");
+  if (f === "sort") state.sort = e.target.value;
+  render(false);
+});
+document.addEventListener("input", (e) => {
+  if (e.target.matches("[data-city]")) { state.city = e.target.value; const r = cart.resolve(); $("#msgprev").textContent = whatsapp.buildOrderMessage(r, { orderId, city: state.city }); }
+});
+document.querySelectorAll("[data-search]").forEach((f) => f.addEventListener("submit", (e) => { e.preventDefault(); resetFilters(); state.q = f.querySelector("input").value; document.querySelectorAll("[data-search] input").forEach((i) => (i.value = state.q)); location.hash === "#catalogo" ? render() : go("catalogo"); }));
+window.addEventListener("hashchange", () => render());
+
+/* Init */
+$("#topbar").innerHTML = STORE.topbar.map((t) => `<span class="ph">${t.replace(/[⟨⟩]/g, "")}</span>`).join("");
+$("#footer").innerHTML = footerHTML();
+cart.load();
+if (!cart.items.length) { cart.items = [{ id: "p01", qty: 1 }, { id: "p08", qty: 2 }, { id: "p12", qty: 2 }]; }
+updateBadge();
+try { const w = localStorage.getItem("voltdj.proto.w"); if (w) { $("#device").dataset.w = w; document.querySelectorAll(".tool .dev button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.w === w)); } } catch (e) {}
+render(false);
+</script>
