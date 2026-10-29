@@ -5,10 +5,12 @@ import { redirect } from "next/navigation";
 import { CATALOG_TAG } from "@/data/catalog";
 import { slugify } from "@/data/products";
 import type { ArtKind, Brand, Category, ProductImage, ProductRecord, PromotionScope, PublicationStatus, Spec, StockReason } from "@/data/types";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireAdmin, requireOwner } from "@/lib/admin-auth";
 import { DEFAULT_BRAND, DEFAULT_CATEGORY, parseImport, planImport, type ImportPlan, type PlannedRow } from "@/lib/catalog-import";
 import { catalogStore, isDuplicate, ReadOnlyCatalogError, type CatalogSnapshot } from "@/lib/catalog-store";
+import { audit } from "@/lib/audit";
 import { deleteMedia, importRemoteImage } from "@/lib/media";
+import { formatCOP } from "@/lib/pricing";
 import { promotionProblem } from "@/lib/promotions";
 
 export type FormState = { error?: string; ok?: string } | undefined;
@@ -25,6 +27,16 @@ const intOrNull = (raw: string) => {
   return d === "" ? null : Number(d);
 };
 const checked = (fd: FormData, key: string) => fd.get(key) === "on" || fd.get(key) === "true";
+const money = (n: number | null) => (n == null ? "por confirmar" : formatCOP(n));
+const STATUS_WORD: Record<PublicationStatus, string> = { published: "publicado", draft: "borrador", archived: "archivado" };
+const units = (n: number | null) => (n == null ? "sin control" : `${n} ${n === 1 ? "unidad" : "unidades"}`);
+
+/** Cambio de precio en el historial, con lo necesario para deshacerlo. */
+async function auditPrice(session: Awaited<ReturnType<typeof requireOwner>>, p: Pick<ProductRecord, "id" | "name" | "price" | "salePrice">, next: { price: number | null; salePrice: number | null }) {
+  if (p.price === next.price && p.salePrice === next.salePrice) return;
+  const parts = [p.price !== next.price && `precio ${money(p.price)} → ${money(next.price)}`, p.salePrice !== next.salePrice && `rebajado ${money(p.salePrice)} → ${money(next.salePrice)}`].filter(Boolean);
+  await audit(session, { entity: "producto", entityId: p.id, action: "precio", summary: `${p.name}: ${parts.join(", ")}`, before: { price: p.price, salePrice: p.salePrice }, after: next });
+}
 
 function invalidate() {
   // Expiración inmediata: el dueño recarga la tienda y ve su cambio, sin esperar a la revalidación.
@@ -87,7 +99,7 @@ function parseSpecs(raw: string): Spec[] {
 // ---------- Productos ----------
 
 export async function saveProduct(_: FormState, fd: FormData): Promise<FormState> {
-  await requireAdmin();
+  const session = await requireOwner();
   const store = catalogStore();
   const id = text(fd, "id", 120);
   const name = text(fd, "name", 160);
@@ -146,8 +158,12 @@ export async function saveProduct(_: FormState, fd: FormData): Promise<FormState
   try {
     if (!current) {
       await store.createProduct(record);
+      await audit(session, { entity: "producto", entityId: record.id, action: "crear", summary: `Creó ${record.name} (${money(record.price)}, ${STATUS_WORD[record.status]})` });
     } else {
       await store.updateProduct(record);
+      await auditPrice(session, current, { price: record.price, salePrice: record.salePrice });
+      if (current.status !== record.status) await audit(session, { entity: "producto", entityId: record.id, action: "estado", summary: `${record.name}: ${STATUS_WORD[current.status]} → ${STATUS_WORD[record.status]}` });
+      if (current.stock !== stock) await audit(session, { entity: "stock", entityId: record.id, action: "fijar", summary: `${record.name}: ${units(current.stock)} → ${units(stock)} (ficha del producto)`, before: { stock: current.stock }, after: { stock } });
       if (current.stock !== stock) await store.changeStock(record.id, { mode: "set", value: stock }, { reason: "ajuste", note: text(fd, "stockNote", 160) || "Desde la ficha del producto" });
       const kept = new Set(images.map((i) => i.src));
       await releaseMedia(
@@ -164,7 +180,7 @@ export async function saveProduct(_: FormState, fd: FormData): Promise<FormState
 }
 
 export async function duplicateProduct(id: string): Promise<void> {
-  await requireAdmin();
+  const session = await requireOwner();
   const store = catalogStore();
   const snapshot = await store.snapshot();
   const p = snapshot.products.find((x) => x.id === id);
@@ -181,18 +197,20 @@ export async function duplicateProduct(id: string): Promise<void> {
     featured: false,
   };
   await store.createProduct(copy);
+  await audit(session, { entity: "producto", entityId: copy.id, action: "crear", summary: `Duplicó ${p.name} como borrador` });
   invalidate();
   redirect(`/admin/productos/${copy.id}?duplicado=1`);
 }
 
 export async function setProductStatus(id: string, status: PublicationStatus): Promise<FormState> {
-  await requireAdmin();
+  const session = await requireOwner();
   if (!STATUSES.includes(status)) return { error: "Estado inválido." };
   const store = catalogStore();
   try {
     const p = await store.getProduct(id);
     if (!p) return { error: "Este producto ya no existe." };
     await store.updateProduct({ ...p, status });
+    if (p.status !== status) await audit(session, { entity: "producto", entityId: id, action: "estado", summary: `${p.name}: ${STATUS_WORD[p.status]} → ${STATUS_WORD[status]}` });
   } catch (e) {
     return failure(e, "cambiar el estado");
   }
@@ -201,11 +219,12 @@ export async function setProductStatus(id: string, status: PublicationStatus): P
 }
 
 export async function deleteProduct(id: string): Promise<void> {
-  await requireAdmin();
+  const session = await requireOwner();
   const store = catalogStore();
   const p = await store.getProduct(id);
   if (p) {
     await store.deleteProduct(id);
+    await audit(session, { entity: "producto", entityId: id, action: "eliminar", summary: `Eliminó ${p.name}` });
     await releaseMedia(p.images.map((i) => i.src), await store.snapshot());
     invalidate();
   }
@@ -214,7 +233,7 @@ export async function deleteProduct(id: string): Promise<void> {
 
 /** Edición en la fila de la lista: precio y stock sin abrir la ficha. */
 export async function quickUpdate(_: FormState, fd: FormData): Promise<FormState> {
-  await requireAdmin();
+  const session = await requireOwner();
   const store = catalogStore();
   const id = text(fd, "id", 120);
   try {
@@ -224,11 +243,15 @@ export async function quickUpdate(_: FormState, fd: FormData): Promise<FormState
     if (price != null && price !== p.price) {
       if (p.salePrice != null && p.salePrice >= price) return { error: "El precio debe ser mayor que el precio rebajado." };
       await store.updateProduct({ ...p, price });
+      await auditPrice(session, p, { price, salePrice: p.salePrice });
     }
     const stockRaw = text(fd, "stock", 10);
     if (stockRaw !== "" && p.stock !== null) {
       const stock = intOrNull(stockRaw);
-      if (stock != null && stock !== p.stock) await store.changeStock(id, { mode: "set", value: stock }, { reason: "ajuste", note: "Edición rápida" });
+      if (stock != null && stock !== p.stock) {
+        await store.changeStock(id, { mode: "set", value: stock }, { reason: "ajuste", note: "Edición rápida" });
+        await audit(session, { entity: "stock", entityId: id, action: "fijar", summary: `${p.name}: ${units(p.stock)} → ${units(stock)} (edición rápida)`, before: { stock: p.stock }, after: { stock } });
+      }
     }
   } catch (e) {
     return failure(e, "guardar el cambio");
@@ -240,7 +263,7 @@ export async function quickUpdate(_: FormState, fd: FormData): Promise<FormState
 // ---------- Inventario ----------
 
 export async function adjustStock(_: FormState, fd: FormData): Promise<FormState> {
-  await requireAdmin();
+  const session = await requireAdmin();
   const id = text(fd, "id", 120);
   const mode = text(fd, "mode", 6);
   const amount = intOrNull(text(fd, "amount", 6));
@@ -249,11 +272,16 @@ export async function adjustStock(_: FormState, fd: FormData): Promise<FormState
   if (amount == null) return { error: "Escribe la cantidad." };
   if (mode !== "add" && mode !== "remove" && mode !== "set") return { error: "Elige si sumas, restas o fijas el stock." };
   try {
+    const before = await catalogStore().getProduct(id);
     const after = await catalogStore().changeStock(
       id,
       mode === "set" ? { mode: "set", value: amount } : { mode: "add", delta: mode === "add" ? amount : -amount },
       { reason, note: text(fd, "note", 160) || null, ref: text(fd, "ref", 40) || null },
     );
+    if (before) {
+      const note = text(fd, "note", 160);
+      await audit(session, { entity: "stock", entityId: id, action: "ajuste", summary: `${before.name}: ${units(before.stock)} → ${units(after)}${note ? ` (${note})` : ""}`, before: { stock: before.stock }, after: { stock: after } });
+    }
     invalidate();
     return { ok: `Stock actualizado: ${after ?? 0} ${after === 1 ? "unidad" : "unidades"}.` };
   } catch (e) {
@@ -263,11 +291,12 @@ export async function adjustStock(_: FormState, fd: FormData): Promise<FormState
 
 /** Activa o desactiva el control de inventario de un producto. */
 export async function setStockTracking(id: string, tracked: boolean): Promise<FormState> {
-  await requireAdmin();
+  const session = await requireAdmin();
   try {
     const p = await catalogStore().getProduct(id);
     if (!p) return { error: "Este producto ya no existe." };
     await catalogStore().changeStock(id, { mode: "set", value: tracked ? (p.stock ?? 0) : null }, { reason: "ajuste", note: tracked ? "Activó el control de inventario" : "Quitó el control de inventario" });
+    await audit(session, { entity: "stock", entityId: id, action: "control", summary: `${p.name}: ${tracked ? "activó" : "quitó"} el control de inventario` });
   } catch (e) {
     return failure(e, "cambiar el control de inventario");
   }
@@ -283,7 +312,7 @@ function imageFrom(raw: string, alt: string): ProductImage | undefined {
 }
 
 export async function saveCategory(_: FormState, fd: FormData): Promise<FormState> {
-  await requireAdmin();
+  const session = await requireOwner();
   const store = catalogStore();
   const name = text(fd, "name", 60);
   if (!name) return { error: "Escribe el nombre de la categoría." };
@@ -306,6 +335,7 @@ export async function saveCategory(_: FormState, fd: FormData): Promise<FormStat
       visible: checked(fd, "visible"),
     };
     await store.saveCategory(category);
+    await audit(session, { entity: "categoria", entityId: category.id, action: current ? "editar" : "crear", summary: `${current ? "Editó" : "Creó"} la categoría ${category.name}${category.visible ? "" : " (oculta)"}` });
     if (current?.image && current.image.src !== category.image?.src) await releaseMedia([current.image.src], await store.snapshot());
   } catch (e) {
     return failure(e, "guardar la categoría");
@@ -315,7 +345,7 @@ export async function saveCategory(_: FormState, fd: FormData): Promise<FormStat
 }
 
 export async function deleteCategory(id: string): Promise<FormState> {
-  await requireAdmin();
+  const session = await requireOwner();
   const store = catalogStore();
   try {
     const snap = await store.snapshot();
@@ -332,7 +362,7 @@ export async function deleteCategory(id: string): Promise<FormState> {
 }
 
 export async function saveBrand(_: FormState, fd: FormData): Promise<FormState> {
-  await requireAdmin();
+  const session = await requireOwner();
   const store = catalogStore();
   const name = text(fd, "name", 60);
   if (!name) return { error: "Escribe el nombre de la marca." };
@@ -352,6 +382,7 @@ export async function saveBrand(_: FormState, fd: FormData): Promise<FormState> 
       visible: checked(fd, "visible"),
     };
     await store.saveBrand(brand);
+    await audit(session, { entity: "marca", entityId: brand.id, action: current ? "editar" : "crear", summary: `${current ? "Editó" : "Creó"} la marca ${brand.name}${brand.visible ? "" : " (oculta)"}` });
     if (current?.logo && current.logo.src !== brand.logo?.src) await releaseMedia([current.logo.src], await store.snapshot());
   } catch (e) {
     return failure(e, "guardar la marca");
@@ -361,7 +392,7 @@ export async function saveBrand(_: FormState, fd: FormData): Promise<FormState> 
 }
 
 export async function deleteBrand(id: string): Promise<FormState> {
-  await requireAdmin();
+  const session = await requireOwner();
   const store = catalogStore();
   try {
     const snap = await store.snapshot();
@@ -382,7 +413,7 @@ export async function deleteBrand(id: string): Promise<FormState> {
 export type PreviewResult = { error: string } | { plan: ImportPlan };
 
 export async function previewImport(csv: string): Promise<PreviewResult> {
-  await requireAdmin();
+  const session = await requireOwner();
   const parsed = parseImport(csv);
   if ("error" in parsed) return parsed;
   try {
@@ -488,7 +519,7 @@ async function applyRow(r: PlannedRow, snap: CatalogSnapshot): Promise<ChunkResu
  * importación de cientos de productos no choca con el tiempo máximo de una función en Vercel.
  */
 export async function applyImportChunk(csv: string, from: number, to: number): Promise<{ error: string } | { results: ChunkResult[] }> {
-  await requireAdmin();
+  const session = await requireOwner();
   const parsed = parseImport(csv);
   if ("error" in parsed) return parsed;
   const store = catalogStore();
@@ -509,13 +540,15 @@ export async function applyImportChunk(csv: string, from: number, to: number): P
       results.push({ line: r.line, ok: false, error: failure(e, "importar esta fila")?.error });
     }
   }
+  const done = results.filter((r) => r.ok).length;
+  if (done) await audit(session, { entity: "importacion", action: "importar", summary: `Importó ${done} ${done === 1 ? "producto" : "productos"} desde CSV` });
   invalidate();
   return { results };
 }
 
 /** Descarga las fotos de un producto importado y las agrega a su galería. */
 export async function importProductImages(productId: string, urls: string[]): Promise<{ added: number; failed: { url: string; error: string }[] }> {
-  await requireAdmin();
+  const session = await requireOwner();
   const store = catalogStore();
   const p = await store.getProduct(productId);
   if (!p) return { added: 0, failed: urls.map((url) => ({ url, error: "El producto ya no existe." })) };
@@ -545,7 +578,7 @@ const dayOrNull = (fd: FormData, key: string) => {
 };
 
 export async function savePromotion(_: FormState, fd: FormData): Promise<FormState> {
-  await requireAdmin();
+  const session = await requireOwner();
   const store = catalogStore();
   const scopeIn = text(fd, "scope", 20) as PromotionScope;
   const scope = SCOPES.includes(scopeIn) ? scopeIn : "tienda";
@@ -567,6 +600,7 @@ export async function savePromotion(_: FormState, fd: FormData): Promise<FormSta
     const id = text(fd, "id", 80);
     const current = id ? snap.promotions.find((p) => p.id === id) : undefined;
     const now = new Date().toISOString();
+    await audit(session, { entity: "promocion", entityId: current?.id ?? null, action: current ? "editar" : "crear", summary: `${current ? "Editó" : "Creó"} la promoción ${draft.name} (−${draft.percent} %)` });
     await store.savePromotion({
       ...draft,
       id: current?.id ?? uniqueSlug(slugify(draft.name), snap.promotions.map((p) => p.id)),
@@ -581,12 +615,13 @@ export async function savePromotion(_: FormState, fd: FormData): Promise<FormSta
 }
 
 export async function setPromotionActive(id: string, active: boolean): Promise<FormState> {
-  await requireAdmin();
+  const session = await requireOwner();
   const store = catalogStore();
   try {
     const current = (await store.snapshot()).promotions.find((p) => p.id === id);
     if (!current) return { error: "La promoción ya no existe." };
     await store.savePromotion({ ...current, active, updatedAt: new Date().toISOString() });
+    await audit(session, { entity: "promocion", entityId: id, action: active ? "reanudar" : "pausar", summary: `${active ? "Reanudó" : "Pausó"} la promoción ${current.name}` });
   } catch (e) {
     return failure(e, active ? "reanudar la promoción" : "pausar la promoción");
   }
@@ -595,9 +630,11 @@ export async function setPromotionActive(id: string, active: boolean): Promise<F
 }
 
 export async function deletePromotion(id: string): Promise<FormState> {
-  await requireAdmin();
+  const session = await requireOwner();
   try {
+    const gone = (await catalogStore().snapshot()).promotions.find((x) => x.id === id);
     await catalogStore().deletePromotion(id);
+    if (gone) await audit(session, { entity: "promocion", entityId: id, action: "eliminar", summary: `Eliminó la promoción ${gone.name}` });
   } catch (e) {
     return failure(e, "eliminar la promoción");
   }

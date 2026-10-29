@@ -7,7 +7,8 @@ import type { ShippingZone } from "@/lib/shipping";
 import { DEFAULT_THEME, isThemeId, THEMES } from "@/config/themes";
 import { SETTINGS_TAG } from "@/data/store";
 import type { ProductImage } from "@/data/types";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireOwner } from "@/lib/admin-auth";
+import { audit } from "@/lib/audit";
 import { catalogStore, ReadOnlyCatalogError } from "@/lib/catalog-store";
 import { contrast, MIN_ACCENT_CONTRAST, normalizeHex, readableAccent } from "@/lib/color";
 import { deleteMedia } from "@/lib/media";
@@ -36,7 +37,7 @@ function parseImage(raw: FormDataEntryValue | null): ProductImage | null {
 }
 
 async function save(patch: (current: StoreSettings) => StoreSettings | SettingsState, what: string): Promise<SettingsState> {
-  await requireAdmin();
+  const session = await requireOwner();
   const store = settingsStore();
   try {
     const current = await store.get();
@@ -50,6 +51,7 @@ async function save(patch: (current: StoreSettings) => StoreSettings | SettingsS
     return { error: `No se pudo guardar ${what}. Intenta de nuevo en un momento.` };
   }
   // Expiración inmediata: el dueño recarga la tienda y ve su cambio.
+  await audit(session, { entity: "configuracion", action: "editar", summary: `Cambió ${what}` });
   revalidateTag(SETTINGS_TAG, { expire: 0 });
   return { ok: "Guardado. Ya se ve en la tienda." };
 }

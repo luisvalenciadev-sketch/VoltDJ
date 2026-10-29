@@ -66,13 +66,24 @@ function MoneyInput({ id, name, label, value, onChange, hint }: { id: string; na
 
 // ---------- Ingreso ----------
 
-export function LoginForm() {
+/**
+ * Con usuarios creados se entra con correo y contraseña. Antes de crear el primer dueño, solo con la
+ * contraseña única. En modo recuperación, el correo es opcional (vacío = contraseña única).
+ */
+export function LoginForm({ withEmail, emailOptional }: { withEmail: boolean; emailOptional?: boolean }) {
   const [state, action, pending] = useActionState(login, undefined);
   return (
     <form action={action} className="stack">
+      {withEmail && (
+        <div className="field">
+          <label htmlFor="email">Correo</label>
+          <input id="email" name="email" type="email" className="input" autoComplete="username" required={!emailOptional} autoFocus />
+          {emailOptional && <span className="note">Modo recuperación: deja el correo vacío para entrar con la contraseña única.</span>}
+        </div>
+      )}
       <div className="field">
-        <label htmlFor="password">Contraseña del panel</label>
-        <input id="password" name="password" type="password" className="input" autoComplete="current-password" required autoFocus />
+        <label htmlFor="password">{withEmail ? "Contraseña" : "Contraseña del panel"}</label>
+        <input id="password" name="password" type="password" className="input" autoComplete="current-password" required autoFocus={!withEmail} />
       </div>
       <Message state={state} />
       <button type="submit" className="btn btn-primary" disabled={pending}>

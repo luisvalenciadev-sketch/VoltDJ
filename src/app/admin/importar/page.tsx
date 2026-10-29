@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ImportWizard } from "@/components/admin/CatalogForms";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireOwner } from "@/lib/admin-auth";
 import { MAX_IMPORT_ROWS, TEMPLATE_COLUMNS } from "@/lib/catalog-import";
 import { catalogStore } from "@/lib/catalog-store";
 import { uploadMode } from "@/lib/media";
@@ -8,7 +8,7 @@ import { uploadMode } from "@/lib/media";
 export const metadata: Metadata = { title: "Importar y exportar" };
 
 export default async function ImportPage() {
-  await requireAdmin();
+  await requireOwner();
   const store = catalogStore();
   return (
     <>

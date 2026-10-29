@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { BrandEditor } from "@/components/admin/CatalogForms";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireOwner } from "@/lib/admin-auth";
 import { catalogStore } from "@/lib/catalog-store";
 import { uploadMode } from "@/lib/media";
 
 export const metadata: Metadata = { title: "Marcas" };
 
 export default async function BrandsPage() {
-  await requireAdmin();
+  await requireOwner();
   const store = catalogStore();
   const { brands, products } = await store.snapshot();
   const mode = uploadMode();

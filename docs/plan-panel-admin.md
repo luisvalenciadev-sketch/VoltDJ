@@ -1,6 +1,14 @@
 # Plan técnico — Panel de administración completo
 
-Estado: **fases 1 a 3 en producción** (`main`) · **fase 4** construida en `feat/panel-fase-4` · 2026-10-29
+Estado: **fases 1 a 4 en producción** (`main`) · **fase 5** construida en `feat/panel-fase-5` · 2026-10-29
+
+### Cambios respecto al plan en la fase 5
+
+- **Sesión verificada contra la base en cada página y acción:** usuario activo y `session_version` igual a la del token. Cambiar contraseña, rol o desactivar sube la versión y cierra las sesiones abiertas al instante.
+- **El asesor no exporta ni sube archivos:** las rutas `/admin/exportar` y `/admin/subir` responden 403 a un asesor.
+- **Recuperación** con `ADMIN_RECOVERY=1` en lugar de dejar la contraseña única activa para siempre.
+- **Deshacer** solo precio y stock, y solo si el valor actual sigue siendo el que dejó ese cambio (si no, pisaría uno más reciente). Las ventas por guías no se deshacen desde el historial: se cancelan en la guía.
+- **Pruebas:** la de usuarios corre al final de todo, porque crear el primer dueño apaga la contraseña única con la que entran las demás.
 
 ### Cambios respecto al plan en la fase 4
 

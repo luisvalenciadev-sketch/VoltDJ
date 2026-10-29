@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { logout } from "./actions";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { LogoMark } from "@/components/icons";
-import { SESSION_COOKIE, verifyAdminToken } from "@/lib/admin-auth";
+import { getSession } from "@/lib/admin-auth";
+import { ROLE_LABEL } from "@/lib/permissions";
 
 // El panel nunca se indexa.
 export const metadata: Metadata = { title: { default: "Panel", template: "%s · Panel" }, robots: { index: false, follow: false } };
 
 /** Barra propia del panel: lo justo para trabajar (marca, volver a la tienda, salir). */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const signedIn = await verifyAdminToken((await cookies()).get(SESSION_COOKIE)?.value);
+  const session = await getSession();
+  const signedIn = Boolean(session);
   // El panel siempre usa el tema base (oscuro), elija la tienda el que elija: es una herramienta de trabajo.
   return (
     <div className="admin-root" data-theme="escenario">
@@ -27,6 +28,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link className="textbtn" href="/" target="_blank">
               Ver tienda ↗
             </Link>
+            {session && (
+              <Link className="textbtn who" href="/admin/cuenta" title="Mi cuenta">
+                {session.name} · {ROLE_LABEL[session.role]}
+              </Link>
+            )}
             {signedIn && (
               <form action={logout}>
                 <button type="submit" className="textbtn">
@@ -37,7 +43,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </nav>
         </div>
       </header>
-      {signedIn && <AdminNav />}
+      {session && <AdminNav role={session.role} master={!session.userId} />}
       <div className="wrap admin">{children}</div>
     </div>
   );

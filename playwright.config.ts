@@ -19,9 +19,9 @@ export default defineConfig({
   reporter: [["list"]],
   use: { baseURL: `http://localhost:${PORT}`, trace: "retain-on-failure" },
   projects: [
-    { name: "escritorio", testIgnore: /(catalogo|configuracion|ventas|guias|contenido)\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } } },
-    { name: "tablet", testIgnore: /(catalogo|configuracion|temas|ventas|guias|contenido)\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 820, height: 1180 }, hasTouch: true } },
-    { name: "movil", testIgnore: /(catalogo|configuracion|ventas|guias|contenido)\.spec/, use: { ...devices["Pixel 7"] } },
+    { name: "escritorio", testIgnore: /(catalogo|configuracion|ventas|guias|contenido|usuarios)\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } } },
+    { name: "tablet", testIgnore: /(catalogo|configuracion|temas|ventas|guias|contenido|usuarios)\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 820, height: 1180 }, hasTouch: true } },
+    { name: "movil", testIgnore: /(catalogo|configuracion|ventas|guias|contenido|usuarios)\.spec/, use: { ...devices["Pixel 7"] } },
     // Las guías apartan stock de los productos que llevan (el catálogo inicial tiene 1 unidad de cada uno):
     // corren después de la tienda para no agotar lo que el flujo de compra está probando.
     { name: "guias-escritorio", testMatch: /guias\.spec/, dependencies: ["escritorio", "tablet", "movil"], use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } } },
@@ -54,6 +54,14 @@ export default defineConfig({
       name: "panel-ventas",
       testMatch: /ventas\.spec/,
       dependencies: ["escritorio", "tablet", "movil"],
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } },
+    },
+    // Usuarios y roles: crear el primer dueño apaga la contraseña única con la que entran las demás pruebas
+    // del panel, así que va al final de todo.
+    {
+      name: "panel-usuarios",
+      testMatch: /usuarios\.spec/,
+      dependencies: ["panel-catalogo", "panel-contenido", "panel-ventas", "guias-escritorio", "guias-movil"],
       use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } },
     },
   ],

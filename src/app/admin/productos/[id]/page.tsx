@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductActions, ProductForm } from "@/components/admin/CatalogForms";
 import { bestPromotion } from "@/lib/promotions";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireOwner } from "@/lib/admin-auth";
 import { catalogStore } from "@/lib/catalog-store";
 import { uploadMode } from "@/lib/media";
 import { formatTrackingDate } from "@/lib/tracking";
@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 }
 
 export default async function EditProductPage({ params, searchParams }: { params: Params; searchParams: Search }) {
-  await requireAdmin();
+  await requireOwner();
   const { id } = await params;
   const sp = await searchParams;
   const store = catalogStore();

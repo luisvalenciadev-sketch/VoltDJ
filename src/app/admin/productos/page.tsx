@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { QuickEdit } from "@/components/admin/CatalogForms";
 import { ProductArt } from "@/components/ProductArt";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireOwner } from "@/lib/admin-auth";
 import { catalogStore } from "@/lib/catalog-store";
 import { stockLevel } from "@/lib/inventory";
 
@@ -19,7 +19,7 @@ const TABS: { id: Tab; label: string }[] = [
 const STATUS_LABEL = { published: "Publicado", draft: "Borrador", archived: "Archivado" } as const;
 
 export default async function ProductsPage({ searchParams }: { searchParams: Search }) {
-  await requireAdmin();
+  await requireOwner();
   const sp = await searchParams;
   const one = (k: string) => (typeof sp[k] === "string" ? (sp[k] as string) : "");
   const q = one("q").trim().toLowerCase();

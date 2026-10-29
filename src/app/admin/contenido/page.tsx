@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BannersForm, FaqsForm, HomeForm, ReviewsForm, VideosForm } from "@/components/admin/ContentForms";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireOwner } from "@/lib/admin-auth";
 import { catalogStore } from "@/lib/catalog-store";
 import { uploadMode } from "@/lib/media";
 import { contentStore } from "@/lib/settings-store";
@@ -18,7 +18,7 @@ const TABS = [
 type Tab = (typeof TABS)[number]["id"];
 
 export default async function ContentPage({ searchParams }: { searchParams: Promise<{ s?: string }> }) {
-  await requireAdmin();
+  await requireOwner();
   const s = (await searchParams).s;
   const tab: Tab = TABS.some((t) => t.id === s) ? (s as Tab) : "inicio";
   const store = contentStore();

@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ProductForm } from "@/components/admin/CatalogForms";
 import { storewidePromotion } from "@/lib/promotions";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireOwner } from "@/lib/admin-auth";
 import { catalogStore } from "@/lib/catalog-store";
 import { uploadMode } from "@/lib/media";
 
 export const metadata: Metadata = { title: "Nuevo producto" };
 
 export default async function NewProductPage() {
-  await requireAdmin();
+  await requireOwner();
   const store = catalogStore();
   const { categories, brands, promotions } = await store.snapshot();
   return (

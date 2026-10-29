@@ -810,7 +810,7 @@ img.cover { width: 100% !important; height: 100% !important; object-fit: cover; 
 .mode-card { position: relative; display: grid; gap: 4px; padding: var(--s4); border: 1px solid var(--border); border-radius: var(--r); background: var(--bg); cursor: pointer; transition: border-color var(--d-hover) var(--ease); }
 .mode-card input { position: absolute; opacity: 0; }
 .mode-card span { font-size: var(--t-sm); color: var(--fg-2); }
-.mode-card[data-on] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.mode-card[data-on], .mode-card:has(input:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 .mode-card:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* Guía: lo que pasa ahora, grande */
@@ -1126,3 +1126,10 @@ label.btn:has(input:focus-visible) { outline: 2px solid var(--accent); outline-o
 .section-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); counter-reset: sec; }
 .section-rows li { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); padding: var(--s2) var(--s3); border: 1px solid var(--border); border-radius: var(--r); transition: opacity var(--d-hover) var(--ease); }
 .section-rows li[data-off] { opacity: 0.55; }
+
+/* Usuarios e historial (fase 5) */
+.admin-bar .who { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.master-note { margin-top: var(--s4); }
+.atable.history td:last-child { white-space: nowrap; text-align: right; }
+.atable.history tr[data-undone] td:nth-child(3) { color: var(--fg-2); text-decoration: line-through; text-decoration-color: var(--border-strong); }
+.undo { display: inline-flex; flex-direction: column; align-items: end; gap: 2px; }

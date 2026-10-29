@@ -3,7 +3,9 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { adminConfigured, clearLoginAttempts, createAdminSession, deleteAdminSession, loginBlocked, passwordMatches, recordFailedLogin, requireAdmin } from "@/lib/admin-auth";
+import { adminConfigured, clearLoginAttempts, createMasterSession, createUserSession, deleteAdminSession, loginBlocked, masterPasswordEnabled, passwordMatches, recordFailedLogin, requireAdmin } from "@/lib/admin-auth";
+import { hashPassword, verifyPassword } from "@/lib/passwords";
+import { usersStore } from "@/lib/users-store";
 import { syncGuideStock } from "@/lib/guide-stock";
 import { guidesStore, type GuidesStore } from "@/lib/guides-store";
 import {
@@ -62,17 +64,38 @@ function scheduleFrom(fd: FormData): TrackingEvent[] | string {
 
 // ---------- Sesión ----------
 
+let dummy: Promise<string> | null = null;
+const dummyHash = () => (dummy ??= hashPassword("contraseña que nadie usa"));
+
 export async function login(_: FormState, fd: FormData): Promise<FormState> {
   if (!adminConfigured()) return { error: "El panel no está configurado: faltan ADMIN_PASSWORD o SESSION_SECRET en Vercel." };
   const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
   if (loginBlocked(ip)) return { error: "Demasiados intentos. Espera 15 minutos e inténtalo de nuevo." };
-  if (!passwordMatches(String(fd.get("password") ?? ""))) {
+  const email = text(fd, "email", 160).toLowerCase();
+  const password = String(fd.get("password") ?? "");
+  const fail = async (message: string): Promise<FormState> => {
     recordFailedLogin(ip);
     await new Promise((r) => setTimeout(r, 600)); // encarece probar contraseñas en serie
-    return { error: "Contraseña incorrecta." };
+    return { error: message };
+  };
+
+  if (email) {
+    const user = await usersStore().byEmail(email);
+    // El mismo mensaje y el mismo tiempo si el correo no existe o la clave no coincide: sin cuenta también se
+    // calcula un hash, para no revelar por la demora qué correos están registrados.
+    const ok = await verifyPassword(password, user?.passwordHash ?? (await dummyHash()));
+    if (!user || !user.active || !ok) return fail("Correo o contraseña incorrectos.");
+    clearLoginAttempts(ip);
+    await usersStore().update(user.id, { lastLoginAt: new Date().toISOString() });
+    await createUserSession(user);
+    redirect("/admin");
   }
+
+  // Contraseña única: solo mientras no exista un dueño (o en modo recuperación).
+  if (!(await masterPasswordEnabled())) return fail("Escribe tu correo y tu contraseña.");
+  if (!passwordMatches(password)) return fail("Contraseña incorrecta.");
   clearLoginAttempts(ip);
-  await createAdminSession();
+  await createMasterSession();
   redirect("/admin");
 }
 

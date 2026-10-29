@@ -4,7 +4,8 @@ import { revalidateTag } from "next/cache";
 import { HOME_SECTION_IDS, type Banner, type FaqItem, type HomeContent, type HomeSectionId, type Review, type Video } from "@/config/content";
 import { CONTENT_TAG } from "@/data/content";
 import type { ProductImage } from "@/data/types";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireOwner } from "@/lib/admin-auth";
+import { audit } from "@/lib/audit";
 import { catalogStore, ReadOnlyCatalogError } from "@/lib/catalog-store";
 import { safeHref, youtubeId } from "@/lib/home-content";
 import { deleteMedia } from "@/lib/media";
@@ -53,7 +54,7 @@ async function releaseRemoved(before: HomeContent, after: HomeContent) {
 }
 
 async function save(patch: (c: HomeContent) => HomeContent, what: string): Promise<ContentState> {
-  await requireAdmin();
+  const session = await requireOwner();
   const store = contentStore();
   try {
     const before = await store.get();
@@ -65,6 +66,7 @@ async function save(patch: (c: HomeContent) => HomeContent, what: string): Promi
     console.error(`[panel] guardar ${what}`, e);
     return { error: `No se pudo guardar ${what}. Intenta de nuevo en un momento.` };
   }
+  await audit(session, { entity: "contenido", action: "editar", summary: `Cambió ${what}` });
   revalidateTag(CONTENT_TAG, { expire: 0 });
   return { ok: "Guardado. Ya se ve en la tienda." };
 }

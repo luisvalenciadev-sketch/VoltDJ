@@ -43,6 +43,16 @@ Se editan en el panel, en **Configuración** (`/admin/configuracion`), y se guar
 
 `src/config/store.ts` guarda solo los valores iniciales (`initialStore`, o `blankStore` con `CATALOG_SEED=none`) y lo que no cambia desde el panel (`SITE`: URL, idioma y moneda). Un valor vacío se muestra como "pendiente".
 
+### Usuarios y permisos
+
+Se administran en `/admin/usuarios` (solo el dueño):
+
+- **Dueño:** todo el panel. **Asesor:** pedidos y guías, e inventario (ajustar stock); no abre productos, precios, promociones, configuración, contenido, usuarios ni historial. Las acciones del servidor lo vuelven a verificar, no solo el menú (`src/lib/permissions.ts`).
+- **Primer ingreso:** se entra con `ADMIN_PASSWORD` y se crea el usuario del dueño. Desde ese momento la contraseña única deja de funcionar y cada persona entra con su correo.
+- **Contraseñas:** scrypt de `node:crypto` (`src/lib/passwords.ts`), mínimo 10 caracteres. Cambiar la contraseña, el rol o desactivar a alguien cierra sus sesiones abiertas.
+- **Historial** (`/admin/historial`): quién cambió qué y cuándo (precios, estado, stock, promociones, configuración, contenido, usuarios). Los cambios de precio y de stock se pueden deshacer si nadie los cambió después.
+- **Recuperación:** si el único dueño pierde su contraseña, `ADMIN_RECOVERY=1` vuelve a habilitar la contraseña única (ver `.env.example`).
+
 ### Contenido del inicio
 
 Se edita en el panel, en **Contenido** (`/admin/contenido`), y se guarda en Neon (fila `content` de `settings`):
@@ -134,8 +144,8 @@ src/
 
 ```bash
 npm run typecheck
-npm test            # Vitest: lógica, componentes y contraste de los temas (207 pruebas)
-npm run test:e2e    # Playwright: escritorio, tablet, móvil, los cinco temas, panel de catálogo, configuración, ventas y contenido (132 pruebas)
+npm test            # Vitest: lógica, componentes y contraste de los temas (211 pruebas)
+npm run test:e2e    # Playwright: escritorio, tablet, móvil, los cinco temas, panel de catálogo, configuración, ventas, contenido y usuarios (136 pruebas)
 ```
 
 La primera vez, para las pruebas e2e: `npx playwright install chromium`. Usan el puerto 3217 y un número de WhatsApp ficticio de prueba.
@@ -157,7 +167,7 @@ npm run start   # puerto 3000 por defecto; -p para cambiarlo
 
 Antes de publicar:
 1. Configura `NEXT_PUBLIC_WHATSAPP_NUMBER` y `NEXT_PUBLIC_SITE_URL` en el hosting.
-2. Conecta en Vercel las integraciones **Neon** (catálogo y guías) y **Blob** (fotos del panel), y define `ADMIN_PASSWORD` y `SESSION_SECRET`. Para una tienda nueva que debe arrancar vacía, define también `CATALOG_SEED=none` antes del primer despliegue.
+2. Conecta en Vercel las integraciones **Neon** (catálogo y guías) y **Blob** (fotos del panel), y define `ADMIN_PASSWORD` y `SESSION_SECRET`. Al primer ingreso, crea el usuario del dueño en `/admin/usuarios`. Para una tienda nueva que debe arrancar vacía, define también `CATALOG_SEED=none` antes del primer despliegue.
 3. Completa los datos en `/admin/configuracion`, incluidos los textos legales de privacidad y términos aprobados por la tienda.
 4. Reemplaza la ilustración del hero por una fotografía autorizada.
 

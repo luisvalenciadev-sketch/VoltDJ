@@ -1,7 +1,6 @@
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { SESSION_COOKIE, verifyAdminToken } from "@/lib/admin-auth";
+import { getSession } from "@/lib/admin-auth";
 import { IMAGE_TYPES, MAX_IMAGE_BYTES, MAX_VIDEO_BYTES, saveLocalMedia, uploadMode, VIDEO_TYPES } from "@/lib/media";
 
 /**
@@ -10,9 +9,10 @@ import { IMAGE_TYPES, MAX_IMAGE_BYTES, MAX_VIDEO_BYTES, saveLocalMedia, uploadMo
  * Sin Blob (desarrollo y pruebas), recibe el archivo ya optimizado por el navegador y lo guarda en memoria.
  */
 export async function POST(request: Request): Promise<NextResponse> {
-  if (!(await verifyAdminToken((await cookies()).get(SESSION_COOKIE)?.value))) {
-    return NextResponse.json({ error: "Tu sesión expiró. Vuelve a ingresar al panel." }, { status: 401 });
-  }
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Tu sesión expiró. Vuelve a ingresar al panel." }, { status: 401 });
+  // Subir fotos y videos es editar el catálogo o el contenido: solo el dueño.
+  if (session.role !== "dueno") return NextResponse.json({ error: "Tu usuario no tiene permiso para subir archivos." }, { status: 403 });
   const mode = uploadMode();
 
   if (mode === "blob") {

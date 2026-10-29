@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PromotionEditor, PromotionToggle } from "@/components/admin/PromotionForms";
 import type { Category, ProductRecord, Promotion } from "@/data/types";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireOwner } from "@/lib/admin-auth";
 import { catalogStore } from "@/lib/catalog-store";
 import { formatDay } from "@/lib/tracking";
 import { promotionState, SCOPE_LABEL, type PromotionState } from "@/lib/promotions";
@@ -25,7 +25,7 @@ function dates(p: Promotion) {
 }
 
 export default async function PromotionsPage() {
-  await requireAdmin();
+  await requireOwner();
   const store = catalogStore();
   const { promotions, categories, products } = await store.snapshot();
   const now = new Date();

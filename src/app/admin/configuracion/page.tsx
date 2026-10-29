@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BrandForm, PaymentsForm, PoliciesForm, SeoForm, ShippingForm, StoreDataForm, ThemeForm } from "@/components/admin/SettingsForms";
 import { SITE } from "@/config/store";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireOwner } from "@/lib/admin-auth";
 import { uploadMode } from "@/lib/media";
 import { settingsStore } from "@/lib/settings-store";
 
@@ -20,7 +20,7 @@ const TABS = [
 type Tab = (typeof TABS)[number]["id"];
 
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ s?: string }> }) {
-  await requireAdmin();
+  await requireOwner();
   const s = (await searchParams).s;
   const tab: Tab = TABS.some((t) => t.id === s) ? (s as Tab) : "tienda";
   const settings = settingsStore();

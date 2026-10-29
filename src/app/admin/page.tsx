@@ -49,6 +49,11 @@ export default async function AdminHome({ searchParams }: { searchParams: Search
         </Link>
       </div>
 
+      {sp.permiso === "0" && (
+        <p className="alert warn" role="alert">
+          <span>Tu usuario de asesor no puede abrir esa sección. Pídele al dueño de la tienda el cambio que necesitas.</span>
+        </p>
+      )}
       {sp.eliminada && (
         <p className="alert ok" role="status">
           <span>Guía eliminada.</span>

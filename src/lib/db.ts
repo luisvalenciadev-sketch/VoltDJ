@@ -161,6 +161,44 @@ const MIGRATIONS: Migration[] = [
       }
     },
   },
+  {
+    // Usuarios con rol (dueño / asesor) e historial de cambios. Sin usuarios, el panel sigue entrando con
+    // la contraseña única; al crear el primer dueño, esa contraseña deja de servir.
+    id: "005_usuarios",
+    async run(sql) {
+      await sql`
+        create table if not exists users (
+          id text primary key,
+          email text not null,
+          name text not null,
+          role text not null check (role in ('dueno', 'asesor')),
+          password_hash text not null,
+          active boolean not null default true,
+          -- Sube al cambiar la contraseña o desactivar: las sesiones abiertas dejan de valer.
+          session_version int not null default 1,
+          last_login_at timestamptz,
+          created_at timestamptz not null default now(),
+          updated_at timestamptz not null default now()
+        )`;
+      await sql`create unique index if not exists users_email_idx on users (lower(email))`;
+      await sql`
+        create table if not exists audit_log (
+          id bigserial primary key,
+          at timestamptz not null default now(),
+          user_id text,
+          user_name text not null,
+          entity text not null,
+          entity_id text,
+          action text not null,
+          summary text not null,
+          before jsonb,
+          after jsonb,
+          undone_at timestamptz,
+          undone_by text
+        )`;
+      await sql`create index if not exists audit_log_at_idx on audit_log (at desc)`;
+    },
+  },
 ];
 
 let ready: Promise<void> | null = null;

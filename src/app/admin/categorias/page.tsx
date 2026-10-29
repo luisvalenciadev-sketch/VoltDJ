@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { CategoryEditor } from "@/components/admin/CatalogForms";
 import { ProductArt } from "@/components/ProductArt";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireOwner } from "@/lib/admin-auth";
 import { catalogStore } from "@/lib/catalog-store";
 import { uploadMode } from "@/lib/media";
 
 export const metadata: Metadata = { title: "Categorías" };
 
 export default async function CategoriesPage() {
-  await requireAdmin();
+  await requireOwner();
   const store = catalogStore();
   const { categories, products } = await store.snapshot();
   const mode = uploadMode();
