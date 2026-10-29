@@ -39,6 +39,10 @@ export function CatalogShell({ query: serverQuery, categories, brands, lockedPro
   // Los controles reflejan el cambio al instante mientras llega la página filtrada.
   const [query, setOptimisticQuery] = useOptimistic(serverQuery);
   const [open, setOpen] = useState(false);
+  // Los controles se habilitan al hidratar: antes, un toque marcaría la casilla sin aplicar el filtro
+  // (pasa en celulares lentos). Deshabilitados, el toque temprano simplemente no hace nada.
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
   const [min, setMin] = useState(query.min?.toString() ?? "");
   const [max, setMax] = useState(query.max?.toString() ?? "");
   useEffect(() => {
@@ -83,7 +87,7 @@ export function CatalogShell({ query: serverQuery, categories, brands, lockedPro
             <legend>Marca</legend>
             {brands.map((b) => (
               <label key={b.id} className="check">
-                <input type="checkbox" checked={query.brands.includes(b.id)} onChange={() => apply({ brands: toggle(query.brands, b.id) })} />
+                <input type="checkbox" disabled={!ready} checked={query.brands.includes(b.id)} onChange={() => apply({ brands: toggle(query.brands, b.id) })} />
                 {b.name}
                 <span className="n">{b.count}</span>
               </label>
@@ -111,7 +115,7 @@ export function CatalogShell({ query: serverQuery, categories, brands, lockedPro
                 <input id="pmax" className="input num" inputMode="numeric" placeholder="Sin límite" value={max} onChange={(e) => setMax(e.target.value)} />
               </div>
             </div>
-            <button type="submit" className="btn btn-secondary btn-sm">Aplicar precio</button>
+            <button type="submit" className="btn btn-secondary btn-sm" disabled={!ready}>Aplicar precio</button>
           </form>
         </fieldset>
 
@@ -119,7 +123,7 @@ export function CatalogShell({ query: serverQuery, categories, brands, lockedPro
           <legend>Disponibilidad</legend>
           {(Object.keys(AVAILABILITY_LABEL) as Availability[]).map((a) => (
             <label key={a} className="check">
-              <input type="checkbox" checked={query.availability.includes(a)} onChange={() => apply({ availability: toggle(query.availability, a) })} />
+              <input type="checkbox" disabled={!ready} checked={query.availability.includes(a)} onChange={() => apply({ availability: toggle(query.availability, a) })} />
               {AVAILABILITY_LABEL[a]}
             </label>
           ))}
@@ -129,7 +133,7 @@ export function CatalogShell({ query: serverQuery, categories, brands, lockedPro
           <fieldset className="fgroup">
             <legend>Promociones</legend>
             <label className="check">
-              <input type="checkbox" checked={query.promo} onChange={() => apply({ promo: !query.promo })} />
+              <input type="checkbox" disabled={!ready} checked={query.promo} onChange={() => apply({ promo: !query.promo })} />
               Solo con precio promocional
             </label>
           </fieldset>
@@ -142,11 +146,11 @@ export function CatalogShell({ query: serverQuery, categories, brands, lockedPro
             {resultCount} {resultCount === 1 ? "producto" : "productos"}
           </span>
           <div className="r">
-            <button type="button" className="btn btn-ghost btn-sm fbtn" aria-expanded={open} aria-controls="filtros" onClick={() => setOpen((o) => !o)}>
+            <button type="button" className="btn btn-ghost btn-sm fbtn" disabled={!ready} aria-expanded={open} aria-controls="filtros" onClick={() => setOpen((o) => !o)}>
               <FilterIcon /> Filtros{activeCount ? ` (${activeCount})` : ""}
             </button>
             <label className="sr-only" htmlFor="orden">Ordenar por</label>
-            <select id="orden" className="input" value={query.sort} onChange={(e) => apply({ sort: e.target.value as SortKey })}>
+            <select id="orden" className="input" disabled={!ready} value={query.sort} onChange={(e) => apply({ sort: e.target.value as SortKey })}>
               {(Object.keys(SORT_LABEL) as SortKey[]).map((k) => (
                 <option key={k} value={k}>{SORT_LABEL[k]}</option>
               ))}
