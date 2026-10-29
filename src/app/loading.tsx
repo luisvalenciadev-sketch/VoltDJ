@@ -1,19 +1,17 @@
+/**
+ * Cargador: el medidor del logo en vivo. Aparece con 150 ms de retraso: si la página llega
+ * antes, el usuario nunca ve un parpadeo de carga. Ciclo corto (0.9 s): un indicador rápido
+ * hace que la espera se perciba más corta.
+ */
 export default function Loading() {
   return (
-    <div className="wrap" style={{ paddingBlock: "var(--s6)" }} aria-busy="true" aria-label="Cargando">
-      <div className="sk" style={{ height: 36, width: "40%", marginBottom: 24 }} />
-      <div className="grid-p">
-        {Array.from({ length: 8 }, (_, i) => (
-          <div className="card" key={i}>
-            <div className="img sk" style={{ borderRadius: 0 }} />
-            <div className="body">
-              <div className="sk" style={{ height: 10, width: "40%" }} />
-              <div className="sk" style={{ height: 14, width: "90%" }} />
-              <div className="sk" style={{ height: 18, width: "60%" }} />
-            </div>
-          </div>
+    <div className="loader" role="status">
+      <span className="eqload" aria-hidden="true">
+        {Array.from({ length: 7 }, (_, i) => (
+          <i key={i} style={{ "--i": i } as React.CSSProperties} />
         ))}
-      </div>
+      </span>
+      <span className="eyebrow">Cargando</span>
     </div>
   );
 }

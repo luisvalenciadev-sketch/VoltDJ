@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { STORE, TOPBAR_PLACEHOLDERS } from "@/config/store";
+import { PROMO, STORE, TOPBAR_PLACEHOLDERS } from "@/config/store";
 import type { Category } from "@/data/types";
 import { CartButton, CategoryNav, SearchForm } from "./HeaderClient";
 import { LogoMark, WhatsAppIcon } from "./icons";
+import { Marquee } from "./Marquee";
 import { Pending } from "./ui";
 
 export function Logo() {
@@ -19,16 +20,36 @@ export function Logo() {
   );
 }
 
+/**
+ * Cinta superior: la promoción manda (primero y enlazada a ofertas); detrás, los datos de
+ * servicio que antes vivían en una barra fija. Una sola banda en lugar de dos apiladas.
+ */
+function PromoTicker() {
+  const info = STORE.topbar.map((text, i) => text ?? <Pending>{TOPBAR_PLACEHOLDERS[i]}</Pending>);
+  return (
+    <Marquee label="cinta de promociones" seconds={38} className="ticker">
+      {PROMO && (
+        <>
+          <Link className="tick hot" href="/ofertas">
+            −{PROMO.percent}% en todo el catálogo
+          </Link>
+          <span className="tick">El descuento ya está aplicado en cada precio</span>
+        </>
+      )}
+      <span className="tick">Arma tu pedido y confírmalo por WhatsApp</span>
+      {info.map((item, i) => (
+        <span className="tick" key={i}>
+          {item}
+        </span>
+      ))}
+    </Marquee>
+  );
+}
+
 export function Header({ categories, showOffers }: { categories: Category[]; showOffers: boolean }) {
   return (
     <>
-      <div className="topbar">
-        <div className="wrap">
-          {STORE.topbar.map((text, i) => (
-            <span key={i}>{text ?? <Pending>{TOPBAR_PLACEHOLDERS[i]}</Pending>}</span>
-          ))}
-        </div>
-      </div>
+      <PromoTicker />
       <header className="hdr">
         <div className="wrap">
           <div className="row">

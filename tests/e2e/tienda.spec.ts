@@ -38,10 +38,10 @@ test("flujo completo: categoría → producto → carrito → pedido por WhatsAp
   await page.getByRole("button", { name: "Añadir al carrito", exact: true }).click();
 
   await page.goto("/carrito");
-  await expect(page.getByTestId("subtotal")).toHaveText("$ 2.900.000"); // 1.300.000 + 1.600.000
+  await expect(page.getByTestId("subtotal")).toHaveText("$ 2.465.000"); // 1.105.000 + 1.360.000 (precios de lista − 15 %)
   // Persistencia tras recargar.
   await page.reload();
-  await expect(page.getByTestId("subtotal")).toHaveText("$ 2.900.000");
+  await expect(page.getByTestId("subtotal")).toHaveText("$ 2.465.000");
   await expectInside(page, ".summary", ".summary .btn-primary");
 
   await page.getByRole("link", { name: "Revisar pedido" }).click();
@@ -56,9 +56,9 @@ test("flujo completo: categoría → producto → carrito → pedido por WhatsAp
   expect(url.pathname).toBe("/570000000000");
   const text = url.searchParams.get("text")!;
   expect(text).toBe(await preview.textContent());
-  expect(text).toContain("Pioneer DJ DDJ-FLX4\n   Ref.: DDJ-FLX4\n   Cantidad: 1\n   Precio unitario: $ 1.300.000 · Total: $ 1.300.000");
+  expect(text).toContain("Pioneer DJ DDJ-FLX4\n   Ref.: DDJ-FLX4\n   Cantidad: 1\n   Precio unitario: $ 1.105.000 · Total: $ 1.105.000");
   expect(text).toContain("Yamaha HS5\n   Ref.: HS5\n   Cantidad: 1");
-  expect(text).toContain("Subtotal estimado: $ 2.900.000");
+  expect(text).toContain("Subtotal estimado: $ 2.465.000");
   expect(text).toMatch(/Pedido provisional: VD-\d{6}-[A-Z2-9]{4}/);
   expect(href).not.toMatch(/[\s\n]/);
 
@@ -90,12 +90,23 @@ test("filtros del catálogo se reflejan en la URL y en los resultados", async ({
   await expect(page.getByRole("status").filter({ hasText: "28 productos" })).toBeVisible();
 });
 
-test("sin promociones cargadas no se anuncian ofertas", async ({ page }) => {
+test("la promoción global del 15 % se anuncia y se aplica a todo el catálogo", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("link", { name: "Ofertas", exact: true })).toHaveCount(0);
-  await expect(page.locator(".card s")).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "Categorías" }).getByRole("link", { name: "Ofertas", exact: true })).toBeVisible();
+  await expect(page.locator(".ticker .marquee-group:not([aria-hidden]) .tick.hot")).toHaveText("−15% en todo el catálogo");
+  await page.goto("/producto/pioneer-dj-cdj-3000");
+  await expect(page.locator(".buy .price b")).toHaveText("$ 8.500.000");
+  await expect(page.locator(".buy .price s")).toContainText("$ 10.000.000");
   await page.goto("/ofertas");
-  await expect(page.getByText("No encontramos productos con esos criterios")).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "28 productos" })).toBeVisible();
+});
+
+test("las cintas infinitas se pueden pausar", async ({ page }) => {
+  await page.goto("/");
+  const toggle = page.getByRole("button", { name: "Pausar cinta de marcas" });
+  await toggle.click();
+  await expect(page.getByRole("button", { name: "Reanudar cinta de marcas" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".logos .marquee-track")).toHaveCSS("animation-play-state", "paused");
 });
 
 test("producto inexistente devuelve 404", async ({ page }) => {

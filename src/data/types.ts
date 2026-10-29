@@ -74,6 +74,8 @@ export interface Brand {
   /** Solo marcas con distribución o autorización confirmada deben tener `authorized: true`. */
   authorized: boolean;
   isDemo: boolean;
+  /** Logotipo en public/img/marcas. Sin logo confiable se muestra el nombre como texto. */
+  logo?: { src: string; width: number; height: number };
 }
 
 /** Vista mínima de producto que el carrito necesita en el cliente. */

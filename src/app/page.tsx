@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ProductArt } from "@/components/ProductArt";
 import { ProductCard } from "@/components/ProductCard";
 import { CartIcon, ChatIcon, ShieldIcon, TruckIcon } from "@/components/icons";
+import { Marquee } from "@/components/Marquee";
 import { PauseOffscreen, Tilt } from "@/components/Tilt";
 import { Meter, Pending, Price, ProductMedia } from "@/components/ui";
 import { FaqList } from "@/components/Content";
@@ -204,14 +205,14 @@ export default async function HomePage() {
               <h2 className="disp" id="h-brands">Las marcas de la cabina</h2>
             </div>
           </div>
-          <div className="brands">
-            {catalogBrands.map((b) => (
-              <Link key={b.id} href={`/catalogo?marca=${b.id}`}>
-                {b.name}
-              </Link>
-            ))}
-          </div>
         </div>
+        <Marquee label="cinta de marcas" seconds={32} className="logos">
+          {catalogBrands.map((b) => (
+            <Link key={b.id} className="logo-item" href={`/catalogo?marca=${b.id}`} aria-label={`Ver productos ${b.name}`}>
+              {b.logo ? <Image src={b.logo.src} alt="" width={b.logo.width} height={b.logo.height} unoptimized /> : <span className="wordmark">{b.name}</span>}
+            </Link>
+          ))}
+        </Marquee>
       </section>
 
       <section className="band" aria-labelledby="h-how">

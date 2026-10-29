@@ -84,10 +84,41 @@ main { min-height: 60vh; }
 .textbtn.danger:hover { color: var(--danger); }
 
 /* ---------- Barra superior y header ---------- */
-.topbar { background: var(--surface); border-bottom: 1px solid var(--border); font-size: var(--t-xs); color: var(--fg-2); }
-.topbar .wrap { display: flex; gap: var(--s5); justify-content: center; padding-block: 8px; overflow-x: auto; white-space: nowrap; }
-.topbar .wrap > :nth-child(n + 2) { display: none; }
-@media (min-width: 720px) { .topbar .wrap { justify-content: space-between; } .topbar .wrap > :nth-child(n + 2) { display: inline; } }
+/* ---------- Cintas infinitas (Marquee) ----------
+ * Movimiento constante → curva lineal. Los elementos se separan con padding (no gap) para que
+ * cada copia mida lo mismo y el -50% cierre el ciclo sin salto. */
+.marquee { position: relative; display: flex; align-items: center; }
+.marquee-viewport { flex: 1; min-width: 0; overflow: hidden; mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent); }
+.marquee-track { display: flex; width: max-content; animation: marquee var(--marquee-s) linear infinite; }
+.marquee-group { display: flex; flex-shrink: 0; align-items: center; }
+.marquee[data-paused] .marquee-track, .marquee:focus-within .marquee-track { animation-play-state: paused; }
+@media (hover: hover) and (pointer: fine) { .marquee:hover .marquee-track { animation-play-state: paused; } }
+@keyframes marquee { to { transform: translateX(-50%); } }
+.marquee-toggle { flex-shrink: 0; display: inline-grid; place-items: center; width: 28px; height: 28px; margin-inline: 8px max(12px, env(safe-area-inset-right, 0px)); padding: 0; border: 1px solid currentColor; border-radius: var(--r); background: none; color: inherit; opacity: 0.65; transition: opacity var(--d-hover) var(--ease), transform var(--d-press) var(--ease-out); }
+.marquee-toggle svg { width: 10px; height: 10px; }
+.marquee-toggle:active { transform: scale(0.94); }
+@media (hover: hover) and (pointer: fine) { .marquee-toggle:hover { opacity: 1; } }
+/* Sin movimiento: la cinta se vuelve una fila desplazable a mano, sin copia ni botón. */
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { animation: none; }
+  .marquee-viewport { overflow-x: auto; scrollbar-width: none; }
+  .marquee-group[aria-hidden], .marquee-toggle { display: none; }
+}
+
+/* Cinta de promociones: el único bloque de color sólido del encabezado, porque es la noticia. */
+.ticker { background: var(--accent); color: var(--accent-ink); font-size: var(--t-xs); font-weight: 600; min-height: 36px; }
+.ticker .tick { display: inline-flex; align-items: center; white-space: nowrap; padding-block: 9px; }
+.ticker .tick::after { content: ""; width: 5px; height: 5px; margin-inline: 22px; background: currentColor; transform: rotate(45deg); opacity: 0.55; }
+.ticker .tick.hot { font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
+/* Cinta de marcas: logos en un solo tono para que ninguna marca grite más que otra. */
+.logos { margin-top: var(--s2); border-block: 1px solid var(--border); }
+.logo-item { display: grid; place-items: center; height: 96px; padding-inline: clamp(28px, 4vw, 56px); color: var(--fg); text-decoration: none; opacity: 0.62; transition: opacity var(--d-hover) var(--ease), transform var(--d-press) var(--ease-out); }
+.logo-item img { width: auto; height: 26px; max-width: 200px; filter: brightness(0) invert(1); }
+.logo-item .wordmark { font-family: var(--f-display); font-stretch: 115%; font-weight: 800; font-size: 1.35rem; letter-spacing: 0.01em; text-transform: uppercase; white-space: nowrap; }
+.logo-item:active { transform: scale(0.97); }
+@media (hover: hover) and (pointer: fine) { .logo-item:hover { opacity: 1; } }
+.logos .marquee-toggle { color: var(--fg-2); }
 
 .hdr { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
 .hdr .row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--s3); padding-block: var(--s3); }
@@ -260,8 +291,8 @@ img.cover { width: 100% !important; height: 100% !important; object-fit: cover; 
 @keyframes lift { from { transform: translateY(calc(var(--rise) * 1.6)); } }
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    .sec .sechead, .band .sechead, .grid-p > *, .cats > *, .benefit, .brands > * { animation: lift linear both; animation-timeline: view(); animation-range: entry 0% entry 60%; }
-    .grid-p > :nth-child(4n + 2), .cats > :nth-child(3n + 2), .brands > :nth-child(even), .benefit:nth-child(2) { animation-range: entry 8% entry 68%; }
+    .sec .sechead, .band .sechead, .grid-p > *, .cats > *, .benefit { animation: lift linear both; animation-timeline: view(); animation-range: entry 0% entry 60%; }
+    .grid-p > :nth-child(4n + 2), .cats > :nth-child(3n + 2), .benefit:nth-child(2) { animation-range: entry 8% entry 68%; }
     .grid-p > :nth-child(4n + 3), .cats > :nth-child(3n + 3), .benefit:nth-child(3) { animation-range: entry 16% entry 76%; }
     .grid-p > :nth-child(4n + 4), .benefit:nth-child(4) { animation-range: entry 24% entry 84%; }
   }
@@ -319,11 +350,6 @@ img.cover { width: 100% !important; height: 100% !important; object-fit: cover; 
 .avail[data-a="agotado"] { color: var(--off); }
 
 /* ---------- Bloques de inicio ---------- */
-.brands { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s2); }
-@media (min-width: 720px) { .brands { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
-.brands > * { min-height: 72px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: var(--r); font-family: var(--f-display); font-stretch: 112%; font-weight: 700; font-size: var(--t-md); color: var(--fg-2); text-align: center; padding: var(--s2); text-decoration: none; transition: color var(--d-hover) var(--ease), border-color var(--d-hover) var(--ease), transform var(--d-press) var(--ease-out); }
-.brands > a:active { transform: scale(0.97); }
-@media (hover: hover) and (pointer: fine) { .brands > a:hover { color: var(--fg); border-color: var(--fg-2); } }
 .benefits { display: grid; gap: var(--s5); }
 @media (min-width: 720px) { .benefits { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1080px) { .benefits { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
@@ -403,7 +429,18 @@ img.cover { width: 100% !important; height: 100% !important; object-fit: cover; 
 .empty { display: grid; justify-items: center; text-align: center; gap: var(--s3); padding: var(--s7) var(--s4); border: 1px dashed var(--border); border-radius: var(--r); }
 .empty > svg { width: 40px; height: 40px; color: var(--fg-2); }
 .empty p { color: var(--fg-2); max-width: 44ch; }
-.sk { background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-hover) 50%, var(--surface-2) 100%); background-size: 200% 100%; animation: sk 1.4s linear infinite; border-radius: 3px; }
+/* Cargador: barras del medidor; la sexta en acento, como el pico del logo. */
+.loader { min-height: 60vh; display: grid; place-content: center; justify-items: center; gap: var(--s4); animation: fade var(--d-ui) var(--ease-out) 150ms both; }
+.eqload { display: flex; align-items: flex-end; gap: 5px; height: 44px; }
+.eqload i { width: 6px; height: 100%; border-radius: 1px; background: var(--fg-2); transform-origin: 50% 100%; transform: scaleY(0.25); animation: eqload 0.9s var(--ease-in-out) infinite; animation-delay: calc(var(--i) * -0.12s); }
+.eqload i:nth-child(6) { background: var(--accent); }
+@keyframes eqload { 50% { transform: scaleY(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .eqload i { animation: none; transform: scaleY(calc(0.3 + var(--i) * 0.1)); }
+  .loader .eyebrow { animation: pulse 1.6s ease infinite; }
+}
+@keyframes pulse { 50% { opacity: 0.4; } }
+.sk { background:linear-gradient(90deg, var(--surface-2) 0%, var(--surface-hover) 50%, var(--surface-2) 100%); background-size: 200% 100%; animation: sk 1.4s linear infinite; border-radius: 3px; }
 @keyframes sk { to { background-position: -200% 0; } }
 .alert { display: grid; grid-template-columns: auto 1fr; gap: var(--s3); align-items: start; padding: var(--s3) var(--s4); border-radius: var(--r); border: 1px solid var(--border); background: var(--surface); font-size: var(--t-sm); }
 .alert > svg { width: 20px; height: 20px; margin-top: 1px; color: var(--fg-2); }
