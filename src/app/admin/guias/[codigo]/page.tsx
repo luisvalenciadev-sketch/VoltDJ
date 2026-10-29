@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CopyLink, DeleteGuideButton, DetailsForm, ManualStatusForm, ScheduleForm } from "@/components/admin/AdminForms";
+import { AdvanceForm, CopyLink, DeleteGuideButton, EditDetailsForm, PaymentForm, StatusModes } from "@/components/admin/AdminForms";
 import { WhatsAppIcon } from "@/components/icons";
 import { TrackingTimeline } from "@/components/TrackingTimeline";
 import { STORE } from "@/config/store";
 import { requireAdmin } from "@/lib/admin-auth";
+import { adminCatalog } from "@/lib/admin-catalog";
 import { guidesStore } from "@/lib/guides-store";
-import { currentStatus, formatTrackingDate, isoToLocalInput, nextScheduled, normalizeGuideCode, STATUS_LABEL, timeline } from "@/lib/tracking";
+import { formatCOP } from "@/lib/pricing";
+import { currentStatus, formatTrackingDate, isoToLocalInput, nextScheduled, nextStep, normalizeGuideCode, orderTotals, PAYMENT_LABEL, STATUS_LABEL, timeline } from "@/lib/tracking";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 
 type Params = Promise<{ codigo: string }>;
@@ -17,6 +19,10 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   return { title: `Guía ${(await params).codigo}` };
 }
 
+/**
+ * Jerarquía de la guía: arriba qué pasa ahora y el siguiente paso con un clic; luego el dinero
+ * (lo pendiente por cobrar), compartir con el cliente y, plegado, lo que rara vez se edita.
+ */
 export default async function GuideAdminPage({ params, searchParams }: { params: Params; searchParams: Search }) {
   await requireAdmin();
   const code = normalizeGuideCode((await params).codigo);
@@ -28,11 +34,14 @@ export default async function GuideAdminPage({ params, searchParams }: { params:
   const now = new Date();
   const cur = currentStatus(guide, now);
   const next = nextScheduled(guide, now);
+  const advance = nextStep(cur?.status ?? null);
+  const totals = orderTotals(guide);
   const publicUrl = new URL(`/seguimiento/${guide.code}`, STORE.siteUrl).toString();
   const firstName = guide.customerName.split(" ")[0];
+  const pendingLine = totals.pending > 0 ? `\nSaldo pendiente para la entrega: ${formatCOP(totals.pending)}` : "";
   // Mensaje listo para el cliente: el asesor solo pulsa enviar en WhatsApp.
   const toCustomer = guide.phone
-    ? buildWhatsAppLink(`Hola ${firstName}, tu pedido en ${STORE.name} ya tiene guía de seguimiento.\nCódigo: ${guide.code}\nConsúltalo aquí: ${publicUrl}`, guide.phone)
+    ? buildWhatsAppLink(`Hola ${firstName}, tu pedido en ${STORE.name} ya tiene guía de seguimiento.\nCódigo: ${guide.code}${pendingLine}\nConsúltalo aquí: ${publicUrl}`, guide.phone)
     : null;
 
   return (
@@ -43,9 +52,15 @@ export default async function GuideAdminPage({ params, searchParams }: { params:
             ← Guías
           </Link>
           <h1 className="disp mono-title">{guide.code}</h1>
-          <p className="muted">
-            {guide.customerName}
-            {guide.city && ` · ${guide.city}`}
+          <p className="guide-meta">
+            <b>{guide.customerName}</b>
+            {guide.city && <span>{guide.city}</span>}
+            <span className="status-chip" data-s={cur?.status ?? "none"}>
+              {cur ? STATUS_LABEL[cur.status] : "Sin iniciar"}
+            </span>
+            <span className="pay-chip" data-state={totals.state}>
+              {PAYMENT_LABEL[totals.state]}
+            </span>
           </p>
         </div>
       </div>
@@ -56,58 +71,84 @@ export default async function GuideAdminPage({ params, searchParams }: { params:
         </p>
       )}
 
-      <section className="panel share" aria-label="Compartir con el cliente">
-        <div className="share-url">
-          <span className="eyebrow">Enlace para el cliente</span>
-          <a href={publicUrl} target="_blank" rel="noopener noreferrer" className="mono">
-            {publicUrl}
-          </a>
-        </div>
-        <div className="row-wrap">
-          {toCustomer ? (
-            <a className="btn btn-primary" href={toCustomer} target="_blank" rel="noopener noreferrer">
-              <WhatsAppIcon /> Enviar al cliente
-            </a>
-          ) : (
-            <span className="note">Agrega el celular del cliente para enviarlo por WhatsApp.</span>
-          )}
-          <CopyLink url={publicUrl} />
-        </div>
-      </section>
-
       <div className="admin-cols">
         <div className="stack">
-          <section className="panel" aria-labelledby="h-state">
-            <h2 id="h-state">Estado</h2>
-            <p>
-              <span className="status-chip" data-s={cur?.status ?? "none"}>
-                {cur ? STATUS_LABEL[cur.status] : "Sin iniciar"}
-              </span>{" "}
-              <span className="note">
-                {guide.mode === "auto" ? "Automático" : "Manual"}
-                {next && ` · siguiente: ${STATUS_LABEL[next.status]} el ${formatTrackingDate(next.at)}`}
-              </span>
+          <section className="panel" aria-labelledby="h-now">
+            <span className="eyebrow">Estado actual · {guide.mode === "auto" ? "automático" : "manual"}</span>
+            <h2 id="h-now" className="now-title">
+              {cur ? STATUS_LABEL[cur.status] : "Sin iniciar"}
+            </h2>
+            <p className="note">
+              {cur ? `Desde el ${formatTrackingDate(cur.at)}` : "Aún no llega la primera fecha del calendario"}
+              {next && ` · Siguiente automático: ${STATUS_LABEL[next.status]} el ${formatTrackingDate(next.at)}`}
             </p>
-            <details className="admin-acc" open={guide.mode === "manual"}>
-              <summary>Cambiar estado manualmente</summary>
-              <p className="note">Si la guía está en automático, al cambiarla a mano el calendario se detiene y desde ahí avanza solo con tus cambios.</p>
-              <ManualStatusForm code={guide.code} current={cur?.status ?? null} />
-            </details>
-            <details className="admin-acc" open={guide.mode === "auto"}>
-              <summary>{guide.mode === "auto" ? "Calendario automático" : "Pasar a automático por fechas"}</summary>
-              <ScheduleForm code={guide.code} events={guide.events} isAuto={guide.mode === "auto"} defaultStart={isoToLocalInput(now.toISOString())} />
+            {advance && <AdvanceForm code={guide.code} next={advance} />}
+            <details className="admin-acc">
+              <summary>Otro estado o calendario</summary>
+              <StatusModes code={guide.code} mode={guide.mode} events={guide.events} current={cur?.status ?? null} defaultStart={isoToLocalInput(now.toISOString())} />
             </details>
           </section>
 
-          <section className="panel" aria-labelledby="h-data">
-            <h2 id="h-data">Datos del pedido</h2>
-            <DetailsForm guide={guide} />
+          <section className="panel" aria-labelledby="h-money">
+            <h2 id="h-money">Pedido y pago</h2>
+            {guide.lines.length > 0 ? (
+              <ul className="order-summary">
+                {guide.lines.map((l, i) => (
+                  <li key={i}>
+                    <span>
+                      {l.qty} × {l.name}
+                    </span>
+                    <span className="num">{formatCOP(l.qty * l.unitPrice)}</span>
+                  </li>
+                ))}
+                {guide.shipping > 0 && (
+                  <li>
+                    <span>Envío</span>
+                    <span className="num">{formatCOP(guide.shipping)}</span>
+                  </li>
+                )}
+              </ul>
+            ) : (
+              guide.items && <p className="note pre">{guide.items}</p>
+            )}
+            <PaymentForm code={guide.code} total={totals.total} paid={guide.paid} />
+            {totals.pending > 0 && cur?.status === "entregado" && (
+              <p className="alert warn" role="status">
+                <span>Marcado como entregado con {formatCOP(totals.pending)} pendientes: registra el pago si ya se cobró.</span>
+              </p>
+            )}
           </section>
+
+          <section className="panel share" aria-label="Compartir con el cliente">
+            <div className="share-url">
+              <span className="eyebrow">Enlace para el cliente</span>
+              <a href={publicUrl} target="_blank" rel="noopener noreferrer" className="mono">
+                {publicUrl}
+              </a>
+            </div>
+            <div className="row-wrap">
+              {toCustomer ? (
+                <a className="btn btn-primary" href={toCustomer} target="_blank" rel="noopener noreferrer">
+                  <WhatsAppIcon /> Enviar al cliente
+                </a>
+              ) : (
+                <span className="note">Agrega el celular del cliente para enviarlo por WhatsApp.</span>
+              )}
+              <CopyLink url={publicUrl} />
+            </div>
+          </section>
+
+          <details className="panel admin-acc">
+            <summary>Editar datos del pedido</summary>
+            <EditDetailsForm guide={guide} catalog={await adminCatalog()} />
+          </details>
           <DeleteGuideButton code={guide.code} />
         </div>
 
-        <aside className="panel" aria-labelledby="h-preview">
-          <h2 id="h-preview">Lo que ve el cliente</h2>
+        <aside className="panel preview" aria-labelledby="h-preview">
+          <span className="eyebrow" id="h-preview">
+            Lo que ve el cliente
+          </span>
           <TrackingTimeline items={timeline(guide, now)} />
         </aside>
       </div>

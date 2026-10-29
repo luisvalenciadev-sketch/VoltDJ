@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { StoreChrome } from "@/components/StoreChrome";
 import { STORE } from "@/config/store";
 import { getCategories, getProducts } from "@/data/catalog";
 import { hasPromo } from "@/lib/pricing";
@@ -39,9 +40,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </a>
         <CartProvider>
           <ToastProvider>
-            <Header categories={categories} showOffers={showOffers} />
+            <StoreChrome>
+              <Header categories={categories} showOffers={showOffers} />
+            </StoreChrome>
             <main id="contenido">{children}</main>
-            <Footer categories={categories} showOffers={showOffers} />
+            <StoreChrome>
+              <Footer categories={categories} showOffers={showOffers} />
+            </StoreChrome>
           </ToastProvider>
         </CartProvider>
       </body>

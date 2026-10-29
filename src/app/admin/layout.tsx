@@ -1,8 +1,41 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { cookies } from "next/headers";
+import { logout } from "./actions";
+import { LogoMark } from "@/components/icons";
+import { SESSION_COOKIE, verifyAdminToken } from "@/lib/admin-auth";
 
-// El panel nunca se indexa ni se guarda en caché compartida.
+// El panel nunca se indexa.
 export const metadata: Metadata = { title: { default: "Panel", template: "%s · Panel VOLT DJ" }, robots: { index: false, follow: false } };
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <div className="wrap admin">{children}</div>;
+/** Barra propia del panel: lo justo para trabajar (marca, volver a la tienda, salir). */
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const signedIn = await verifyAdminToken((await cookies()).get(SESSION_COOKIE)?.value);
+  return (
+    <>
+      <header className="admin-bar">
+        <div className="wrap">
+          <Link className="logo" href={signedIn ? "/admin" : "/"} aria-label="Panel de guías">
+            <LogoMark />
+            <b>
+              VOLT <i>Panel</i>
+            </b>
+          </Link>
+          <nav className="row-wrap" aria-label="Panel">
+            <Link className="textbtn" href="/" target="_blank">
+              Ver tienda ↗
+            </Link>
+            {signedIn && (
+              <form action={logout}>
+                <button type="submit" className="textbtn">
+                  Cerrar sesión
+                </button>
+              </form>
+            )}
+          </nav>
+        </div>
+      </header>
+      <div className="wrap admin">{children}</div>
+    </>
+  );
 }

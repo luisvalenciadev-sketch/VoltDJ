@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { LoginForm } from "@/components/admin/AdminForms";
 import { adminConfigured } from "@/lib/admin-auth";
 
 export const metadata: Metadata = { title: "Ingresar" };
 
-export default function AdminLoginPage() {
+export default async function AdminLoginPage() {
+  // Se evalúa en cada visita: si la página quedara prerenderizada, mostraría "sin configurar"
+  // hasta el siguiente build aunque las variables ya existan.
+  await connection();
   return (
     <div className="admin-login">
       <span className="eyebrow">Panel de la tienda</span>
