@@ -75,7 +75,7 @@ export interface Brand {
   authorized: boolean;
   isDemo: boolean;
   /** Logotipo en public/img/marcas. Sin logo confiable se muestra el nombre como texto. */
-  logo?: { src: string; width: number; height: number };
+  logo?: { src: string; width: number; height: number; /** El logo es solo un símbolo: mostrar el nombre al lado. */ withName?: boolean };
 }
 
 /** Vista mínima de producto que el carrito necesita en el cliente. */

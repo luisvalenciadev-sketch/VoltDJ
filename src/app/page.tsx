@@ -209,7 +209,8 @@ export default async function HomePage() {
         <Marquee label="cinta de marcas" seconds={32} className="logos">
           {catalogBrands.map((b) => (
             <Link key={b.id} className="logo-item" href={`/catalogo?marca=${b.id}`} aria-label={`Ver productos ${b.name}`}>
-              {b.logo ? <Image src={b.logo.src} alt="" width={b.logo.width} height={b.logo.height} unoptimized /> : <span className="wordmark">{b.name}</span>}
+              {b.logo && <Image src={b.logo.src} alt="" width={b.logo.width} height={b.logo.height} unoptimized className={b.logo.withName ? "mark" : undefined} />}
+              {(!b.logo || b.logo.withName) && <span className="wordmark">{b.name}</span>}
             </Link>
           ))}
         </Marquee>
