@@ -41,7 +41,7 @@ export function CartButton() {
       <CartIcon />
       <span className="lbl">Carrito</span>
       {ready && count > 0 && (
-        <span className="badge" aria-hidden="true">
+        <span className="badge" aria-hidden="true" key={count}>
           {count > 99 ? "99+" : count}
         </span>
       )}
