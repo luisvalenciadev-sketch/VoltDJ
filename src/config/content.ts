@@ -30,7 +30,7 @@ export const FAQ: FaqItem[] = [
     a: "No. El carrito se guarda en este navegador y no pedimos datos personales en la página.",
   },
   { q: "¿Los equipos son nuevos?", a: "Sí, todos los equipos del catálogo son nuevos." },
-  { q: "¿Puedo cambiar o devolver un producto?", a: "Sí, dentro de los 3 días siguientes a la entrega. Escríbenos por WhatsApp con tu número de pedido para gestionarlo." },
+  { q: "¿Puedo cambiar o devolver un producto?", a: "Sí, dentro de los 5 días hábiles siguientes a la entrega. Escríbenos por WhatsApp con tu número de pedido para gestionarlo." },
   { q: "¿Qué formas de pago aceptan?", a: "Transferencia bancaria. El asesor te comparte los datos por WhatsApp cuando confirme tu pedido." },
   { q: "¿Hacen envíos a todo el país?", a: "Sí, enviamos a todo Colombia. El costo y el tiempo de entrega se confirman por WhatsApp según tu ciudad." },
   { q: "¿Los productos tienen garantía?", a: "Sí, los equipos tienen 12 meses de garantía. Para solicitarla, escríbenos por WhatsApp con tu número de pedido." },

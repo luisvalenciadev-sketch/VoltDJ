@@ -45,7 +45,7 @@ export const STORE: StoreConfig = {
   phone: "324 203 8766",
   address: "Calle 17 #4-91, Centro, Ibagué, Tolima",
   hours: "Tienda online 24/7. Local: lunes a viernes de 8:00 a. m. a 5:00 p. m.; sábados y domingos de 9:00 a. m. a 2:00 p. m.",
-  returnsPolicy: "Cambios y devoluciones dentro de los 3 días siguientes a la entrega.",
+  returnsPolicy: "Cambios y devoluciones dentro de los 5 días hábiles siguientes a la entrega.",
   social: [{ label: "Instagram @cdrsdjcolombia", url: "https://www.instagram.com/cdrsdjcolombia" }],
   shipping: {
     summary: "Envíos a todo Colombia. El costo y el tiempo de entrega se confirman por WhatsApp según tu ciudad.",
