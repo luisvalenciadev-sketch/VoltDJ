@@ -96,18 +96,21 @@ export function CartView({ catalog }: { catalog: CartProduct[] }) {
             </div>
           ))}
           <SavingsRows summary={s} />
-          <div className="sumrow total">
-            <span>Subtotal estimado</span>
-            <span data-testid="subtotal">{formatCOP(s.subtotal)}</span>
-          </div>
           <p className="note">
             No incluye envío.{s.hasUnpriced && " Hay productos con precio por confirmar."} El asesor confirma el valor final por WhatsApp.
           </p>
-          {s.orderable.length > 0 ? (
-            <Link className="btn btn-primary btn-block" href="/pedido">Revisar pedido</Link>
-          ) : (
-            <button type="button" className="btn btn-primary btn-block" disabled>Revisar pedido</button>
-          )}
+          {/* En celular este bloque queda fijo abajo: el siguiente paso siempre está al alcance del pulgar. */}
+          <div className="dock">
+            <div className="sumrow total">
+              <span>Subtotal estimado</span>
+              <span data-testid="subtotal">{formatCOP(s.subtotal)}</span>
+            </div>
+            {s.orderable.length > 0 ? (
+              <Link className="btn btn-primary btn-block" href="/pedido">Revisar pedido</Link>
+            ) : (
+              <button type="button" className="btn btn-primary btn-block" disabled>Revisar pedido</button>
+            )}
+          </div>
         </aside>
       </div>
     </>

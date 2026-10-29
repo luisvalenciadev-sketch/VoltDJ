@@ -102,27 +102,30 @@ export function OrderView({ catalog }: { catalog: CartProduct[] }) {
           <h2 className="disp" id="h-send">Pedido {orderId}</h2>
           <div className="sumrow"><span>Unidades</span><span>{s.units}</span></div>
           <SavingsRows summary={s} />
-          <div className="sumrow total"><span>Subtotal estimado</span><span>{formatCOP(s.subtotal)}</span></div>
           <p className="note">El identificador es provisional y sirve para que el asesor ubique tu consulta. No es una confirmación de compra.</p>
 
-          {link ? (
-            <a className="btn btn-primary btn-block" href={link} target="_blank" rel="noopener noreferrer" data-testid="send-whatsapp" onClick={() => setOpened(true)}>
-              <WhatsAppIcon /> Enviar pedido por WhatsApp
-            </a>
-          ) : (
-            <>
-              <div className="alert warn">
-                <WarnIcon />
-                <div>
-                  <b>WhatsApp no está configurado</b>
-                  <p>La tienda aún no ha configurado su número. Copia el mensaje y envíalo por el canal de contacto disponible.</p>
-                </div>
+          {!link && (
+            <div className="alert warn">
+              <WarnIcon />
+              <div>
+                <b>WhatsApp no está configurado</b>
+                <p>La tienda aún no ha configurado su número. Copia el mensaje y envíalo por el canal de contacto disponible.</p>
               </div>
+            </div>
+          )}
+          {/* En celular este bloque queda fijo abajo: enviar el pedido nunca exige buscar el botón. */}
+          <div className="dock">
+            <div className="sumrow total"><span>Subtotal estimado</span><span>{formatCOP(s.subtotal)}</span></div>
+            {link ? (
+              <a className="btn btn-primary btn-block" href={link} target="_blank" rel="noopener noreferrer" data-testid="send-whatsapp" onClick={() => setOpened(true)}>
+                <WhatsAppIcon /> Enviar pedido por WhatsApp
+              </a>
+            ) : (
               <button type="button" className="btn btn-primary btn-block" disabled data-testid="send-whatsapp">
                 <WhatsAppIcon /> Enviar pedido por WhatsApp
               </button>
-            </>
-          )}
+            )}
+          </div>
 
           {opened && (
             <div className="alert ok" role="status">
