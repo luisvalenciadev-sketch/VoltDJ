@@ -1,6 +1,6 @@
 import { STORE } from "@/config/store";
 import type { CartSummary } from "./cart";
-import { formatCOP, unitPrice } from "./pricing";
+import { discountPercent, formatCOP, unitPrice } from "./pricing";
 
 /**
  * Servicio centralizado de WhatsApp. Construye mensajes legibles y enlaces
@@ -23,7 +23,7 @@ export function sanitizeCity(city: string | undefined): string {
 }
 
 export function buildOrderMessage(
-  summary: Pick<CartSummary, "orderable" | "subtotal" | "hasUnpriced">,
+  summary: Pick<CartSummary, "orderable" | "subtotal" | "hasUnpriced"> & Partial<Pick<CartSummary, "listSubtotal" | "savings">>,
   opts: { orderId: string; city?: string; storeName?: string },
 ): string {
   const storeName = opts.storeName ?? STORE.name;
@@ -37,8 +37,14 @@ export function buildOrderMessage(
         ? "   Precio: por confirmar"
         : `   Precio unitario: ${formatCOP(line.unit)} · Total: ${formatCOP(line.total as number)}`,
     );
+    // El asesor ve de dónde sale el precio: sin esto, el valor rebajado parece un error.
+    if (line.listUnit != null && line.discount > 0) out.push(`   Precio normal: ${formatCOP(line.listUnit)} (−${line.discount}% de descuento)`);
   });
   out.push("");
+  if (summary.savings && summary.listSubtotal) {
+    out.push(`Precio normal: ${formatCOP(summary.listSubtotal)}`);
+    out.push(`Descuento: −${formatCOP(summary.savings)}`);
+  }
   out.push(
     `Subtotal estimado: ${formatCOP(summary.subtotal)}${summary.hasUnpriced ? " (sin incluir productos con precio por confirmar)" : ""}`,
   );
@@ -58,7 +64,9 @@ export function buildProductMessage(
     `Hola ${storeName}, quiero información sobre este producto:`,
     p.name,
     `Ref.: ${p.sku}`,
-    u == null ? "Precio: por confirmar" : `Precio publicado: ${formatCOP(u)}`,
+    u == null
+      ? "Precio: por confirmar"
+      : `Precio publicado: ${formatCOP(u)}${p.price != null && u < p.price ? ` (precio normal ${formatCOP(p.price)}, −${discountPercent(p)}%)` : ""}`,
     "",
     "¿Está disponible y cuánto cuesta el envío?",
   ].join("\n");

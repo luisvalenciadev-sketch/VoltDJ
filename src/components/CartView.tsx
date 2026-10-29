@@ -6,7 +6,7 @@ import { summarize } from "@/lib/cart";
 import { formatCOP } from "@/lib/pricing";
 import { useCart } from "@/store/cart-store";
 import { useToast } from "@/store/toast";
-import { CartLines, Steps } from "./CartLines";
+import { CartLines, SavingsRows, Steps } from "./CartLines";
 import { CartIcon, WarnIcon } from "./icons";
 
 export function CartSkeleton() {
@@ -95,6 +95,7 @@ export function CartView({ catalog }: { catalog: CartProduct[] }) {
               <span>{l.total == null ? "Por confirmar" : formatCOP(l.total)}</span>
             </div>
           ))}
+          <SavingsRows summary={s} />
           <div className="sumrow total">
             <span>Subtotal estimado</span>
             <span data-testid="subtotal">{formatCOP(s.subtotal)}</span>

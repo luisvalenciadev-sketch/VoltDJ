@@ -8,7 +8,7 @@ import { formatCOP } from "@/lib/pricing";
 import { buildOrderMessage, buildWhatsAppLink, createOrderId, MAX_CITY_LENGTH } from "@/lib/whatsapp";
 import { useCart } from "@/store/cart-store";
 import { useToast } from "@/store/toast";
-import { CartLines, Steps } from "./CartLines";
+import { CartLines, SavingsRows, Steps } from "./CartLines";
 import { CartSkeleton, EmptyCart } from "./CartView";
 import { OkIcon, WarnIcon, WhatsAppIcon } from "./icons";
 
@@ -101,6 +101,7 @@ export function OrderView({ catalog }: { catalog: CartProduct[] }) {
         <aside className="summary" aria-labelledby="h-send">
           <h2 className="disp" id="h-send">Pedido {orderId}</h2>
           <div className="sumrow"><span>Unidades</span><span>{s.units}</span></div>
+          <SavingsRows summary={s} />
           <div className="sumrow total"><span>Subtotal estimado</span><span>{formatCOP(s.subtotal)}</span></div>
           <p className="note">El identificador es provisional y sirve para que el asesor ubique tu consulta. No es una confirmación de compra.</p>
 

@@ -55,11 +55,14 @@ describe("buildOrderMessage", () => {
         "   Ref.: VD-CTR-002",
         "   Cantidad: 1",
         "   Precio unitario: $ 1.690.000 · Total: $ 1.690.000",
+        "   Precio normal: $ 1.890.000 (−11% de descuento)",
         "2. Producto b",
         "   Ref.: REF-b",
         "   Cantidad: 2",
         "   Precio unitario: $ 590.000 · Total: $ 1.180.000",
         "",
+        "Precio normal: $ 3.070.000",
+        "Descuento: −$ 200.000",
         "Subtotal estimado: $ 2.870.000",
         "No incluye envío.",
         "Ciudad de envío: Medellín",
@@ -67,6 +70,12 @@ describe("buildOrderMessage", () => {
         "¿Me confirman disponibilidad, costo de envío y tiempo de entrega?",
       ].join("\n"),
     );
+  });
+
+  it("sin promociones no agrega líneas de descuento", () => {
+    const summary = summarize([{ id: "b", qty: 1, seenPrice: null }], catalog);
+    expect(summary.savings).toBe(0);
+    expect(buildOrderMessage(summary, { orderId: "VD-261028-ABCD", storeName: "VOLT DJ" })).not.toMatch(/Precio normal|Descuento/);
   });
 
   it("marca precio por confirmar y omite agotados", () => {

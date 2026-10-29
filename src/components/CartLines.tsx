@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { CartLine } from "@/lib/cart";
+import type { CartLine, CartSummary } from "@/lib/cart";
 import { formatCOP } from "@/lib/pricing";
 import { QtyStepper } from "./AddToCart";
 import { AvailabilityBadge, ProductMedia } from "./ui";
@@ -47,7 +47,19 @@ export function CartLines({ lines, editable, onQty, onRemove }: Props) {
               {l.unit == null ? (
                 <span className="note">Precio por confirmar · no suma al subtotal</span>
               ) : (
-                <span className="note num">{formatCOP(l.unit)} c/u</span>
+                <span className="note num unitp">
+                  {formatCOP(l.unit)} c/u
+                  {l.listUnit != null && (
+                    <>
+                      {" "}
+                      <s>
+                        <span className="sr-only">Precio normal: </span>
+                        {formatCOP(l.listUnit)}
+                      </s>{" "}
+                      <span className="save">−{l.discount}%</span>
+                    </>
+                  )}
+                </span>
               )}
               {l.kind === "soldout" && <span className="warn-text">Se agotó después de añadirlo. No se incluirá en el pedido.</span>}
               {l.priceChangedFrom != null && l.unit != null && (
@@ -64,6 +76,7 @@ export function CartLines({ lines, editable, onQty, onRemove }: Props) {
                 <span className="note num">× {l.qty}</span>
               )}
               <span className="lt">{l.kind === "ok" && l.total != null ? formatCOP(l.total) : "—"}</span>
+              {l.kind === "ok" && l.saving > 0 && <span className="saving-text num">Ahorras {formatCOP(l.saving)}</span>}
               {editable && (
                 <button type="button" className="textbtn danger" onClick={() => onRemove?.(p.id)} aria-label={`Eliminar ${p.name}`}>
                   Eliminar
@@ -74,6 +87,26 @@ export function CartLines({ lines, editable, onQty, onRemove }: Props) {
         );
       })}
     </ul>
+  );
+}
+
+/** Filas de precio normal y descuento del resumen; no aparecen si no hay promociones en el pedido. */
+export function SavingsRows({ summary: s }: { summary: Pick<CartSummary, "listSubtotal" | "savings"> }) {
+  if (s.savings <= 0) return null;
+  return (
+    <>
+      <div className="sumrow">
+        <span>Precio normal</span>
+        <s>
+          <span className="sr-only">Precio normal: </span>
+          {formatCOP(s.listSubtotal)}
+        </s>
+      </div>
+      <div className="sumrow saving">
+        <span>Descuento</span>
+        <span data-testid="savings">−{formatCOP(s.savings)}</span>
+      </div>
+    </>
   );
 }
 

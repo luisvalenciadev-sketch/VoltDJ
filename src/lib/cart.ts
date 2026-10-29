@@ -1,5 +1,5 @@
 import type { CartProduct } from "@/data/types";
-import { canAddToCart, unitPrice } from "./pricing";
+import { canAddToCart, discountPercent, hasPromo, unitPrice } from "./pricing";
 
 /**
  * Lógica pura del carrito. El navegador guarda solo id, cantidad y el último
@@ -20,6 +20,12 @@ export interface ProductLine {
   qty: number;
   unit: number | null;
   total: number | null;
+  /** Precio unitario normal cuando hay promoción (para mostrar el tachado); si no, null. */
+  listUnit: number | null;
+  /** Porcentaje de descuento de la línea; 0 sin promoción. */
+  discount: number;
+  /** Ahorro de la línea (precio normal − precio con descuento) × cantidad. */
+  saving: number;
   priceChangedFrom: number | null;
   qtyClamped: boolean;
 }
@@ -29,6 +35,10 @@ export type CartLine = { kind: "missing"; id: string; qty: number } | ProductLin
 export interface CartSummary {
   lines: CartLine[];
   subtotal: number;
+  /** Suma a precio normal de las líneas con precio; igual a subtotal si no hay promociones. */
+  listSubtotal: number;
+  /** Descuento total del pedido (listSubtotal − subtotal). */
+  savings: number;
   units: number;
   hasUnpriced: boolean;
   hasIssues: boolean;
@@ -77,21 +87,29 @@ export function summarize(items: CartItem[], catalog: CartProduct[]): CartSummar
     if (!product) return { kind: "missing", id: item.id, qty: item.qty };
     const qty = clampQty(item.qty, product.maxQtyPerOrder);
     const unit = unitPrice(product);
+    const promo = hasPromo(product);
     return {
       kind: canAddToCart(product.availability) ? "ok" : "soldout",
       product,
       qty,
       unit,
       total: unit == null ? null : unit * qty,
+      listUnit: promo ? product.price : null,
+      discount: discountPercent(product),
+      saving: promo && unit != null ? ((product.price as number) - unit) * qty : 0,
       priceChangedFrom: item.seenPrice != null && unit != null && item.seenPrice !== unit ? item.seenPrice : null,
       qtyClamped: qty !== item.qty,
     };
   });
   const orderable = lines.filter((l): l is ProductLine => l.kind === "ok");
+  const subtotal = orderable.reduce((sum, l) => sum + (l.total ?? 0), 0);
+  const savings = orderable.reduce((sum, l) => sum + l.saving, 0);
   return {
     lines,
     orderable,
-    subtotal: orderable.reduce((sum, l) => sum + (l.total ?? 0), 0),
+    subtotal,
+    listSubtotal: subtotal + savings,
+    savings,
     units: orderable.reduce((sum, l) => sum + l.qty, 0),
     hasUnpriced: orderable.some((l) => l.unit == null),
     hasIssues: lines.some((l) => l.kind !== "ok" || l.priceChangedFrom != null || l.qtyClamped),
