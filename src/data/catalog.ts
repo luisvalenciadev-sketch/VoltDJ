@@ -1,6 +1,7 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
 import { activePromo } from "@/config/store";
+import { cacheScope } from "@/lib/cache-scope";
 import { catalogStore } from "@/lib/catalog-store";
 import { toPublicProduct } from "@/lib/inventory";
 import type { Brand, CartProduct, Category, Product } from "./types";
@@ -12,7 +13,7 @@ import type { Brand, CartProduct, Category, Product } from "./types";
  */
 export const CATALOG_TAG = "catalog";
 
-const snapshot = unstable_cache(() => catalogStore().snapshot(), ["catalog-snapshot-v1"], { tags: [CATALOG_TAG] });
+const snapshot = unstable_cache(() => catalogStore().snapshot(), ["catalog-snapshot-v1", cacheScope()], { tags: [CATALOG_TAG] });
 
 /**
  * La promoción general se aplica en cada lectura, no dentro de la caché: un servidor que sigue
