@@ -1,10 +1,10 @@
-import { PRODUCT_PHOTOS } from "./product-photos";
+import { productPhoto } from "./product-photos";
 import type { ArtKind, Product } from "./types";
 
 /**
  * CATÁLOGO REAL de la tienda (lista entregada el 2026-10-28).
  * Precios en COP, sin precios de oferta. Una unidad de cada producto. Todos nuevos.
- * Fotos pendientes: mientras no haya fotos reales se muestra la ilustración del tipo de equipo.
+ * Fotos: las del fabricante en public/img/productos; sin foto se muestra la ilustración del tipo de equipo.
  */
 interface Seed {
   model: string;
@@ -76,7 +76,7 @@ const SEEDS: Seed[] = [
 export const PRODUCTS: Product[] = SEEDS.map((s) => {
   const brand = BRAND_NAME[s.brandId];
   const name = `${brand} ${s.model}`;
-  const photo = PRODUCT_PHOTOS[slugify(name)];
+  const photo = productPhoto(slugify(name), name);
   return {
     id: slugify(name),
     slug: slugify(name),

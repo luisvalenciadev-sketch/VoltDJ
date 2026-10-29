@@ -51,6 +51,15 @@ Requiere `PEXELS_API_KEY` en `.env.local`. La clave solo la usa el script: nunca
 
 Son **fotos de referencia, no del producto exacto**: la tienda lo indica junto a cada foto, con crédito al fotógrafo y enlace a Pexels. Algunas muestran logos de marcas reales. Antes de vender, reemplázalas por fotos del producto real (campo `images` del producto).
 
+### Fotos de producto
+
+Las fotos están en `public/img/productos/<id-del-producto>.webp`. Para cambiar o agregar una:
+
+1. Copia la imagen (jpg, png o webp) a `public/img/productos/` con el id del producto como nombre (p. ej. `pioneer-dj-cdj-3000.jpg`; el id está en la URL de la ficha).
+2. Ejecuta `node scripts/optimize-photos.mjs`: la convierte a WebP de 1200 px y la registra.
+
+`scripts/fetch-official-photos.mjs` vuelve a descargar las fotos oficiales de Pioneer DJ y AlphaTheta. Son imágenes del fabricante, usadas para vender el producto original; si el fabricante o un distribuidor pide retirarlas, basta con reemplazar el archivo.
+
 ### Identidad visual
 
 Los colores, la tipografía, el espaciado y los radios están en `src/styles/tokens.css`. Las fuentes se cargan en `src/app/fonts.ts`.
