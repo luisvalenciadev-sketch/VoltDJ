@@ -14,9 +14,13 @@ export default defineConfig({
   reporter: [["list"]],
   use: { baseURL: `http://localhost:${PORT}`, trace: "retain-on-failure" },
   projects: [
-    { name: "escritorio", testIgnore: /(catalogo|configuracion)\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } } },
-    { name: "tablet", testIgnore: /(catalogo|configuracion|temas)\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 820, height: 1180 }, hasTouch: true } },
-    { name: "movil", testIgnore: /(catalogo|configuracion)\.spec/, use: { ...devices["Pixel 7"] } },
+    { name: "escritorio", testIgnore: /(catalogo|configuracion|ventas|guias)\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } } },
+    { name: "tablet", testIgnore: /(catalogo|configuracion|temas|ventas|guias)\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 820, height: 1180 }, hasTouch: true } },
+    { name: "movil", testIgnore: /(catalogo|configuracion|ventas|guias)\.spec/, use: { ...devices["Pixel 7"] } },
+    // Las guías apartan stock de los productos que llevan (el catálogo inicial tiene 1 unidad de cada uno):
+    // corren después de la tienda para no agotar lo que el flujo de compra está probando.
+    { name: "guias-escritorio", testMatch: /guias\.spec/, dependencies: ["escritorio", "tablet", "movil"], use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } } },
+    { name: "guias-movil", testMatch: /guias\.spec/, dependencies: ["escritorio", "tablet", "movil"], use: { ...devices["Pixel 7"] } },
     // El panel de catálogo crea productos en el catálogo compartido (memoria del servidor): corre al final,
     // cuando las pruebas de la tienda (que cuentan los 28 productos) ya terminaron.
     {
@@ -29,6 +33,13 @@ export default defineConfig({
     {
       name: "panel-configuracion",
       testMatch: /configuracion\.spec/,
+      dependencies: ["escritorio", "tablet", "movil"],
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } },
+    },
+    // Promociones, pagos, envíos y stock de pedidos: cambian precios y mensajes de toda la tienda.
+    {
+      name: "panel-ventas",
+      testMatch: /ventas\.spec/,
       dependencies: ["escritorio", "tablet", "movil"],
       use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } },
     },

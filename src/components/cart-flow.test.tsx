@@ -17,7 +17,7 @@ const catalog: CartProduct[] = [
 
 // Número ficticio solo para pruebas: activa el enlace de WhatsApp.
 const wrap = (ui: React.ReactNode) => (
-  <StoreInfoProvider value={{ name: "VOLT DJ", whatsappNumber: "570000000000", orderIdPrefix: "VD" }}>
+  <StoreInfoProvider value={{ name: "VOLT DJ", whatsappNumber: "570000000000", orderIdPrefix: "VD", payments: [], shippingZones: [], sameDay: { enabled: false, cutoff: "", area: "" } }}>
     <CartProvider>
       <ToastProvider>{ui}</ToastProvider>
     </CartProvider>

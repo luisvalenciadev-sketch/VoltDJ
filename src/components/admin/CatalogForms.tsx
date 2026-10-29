@@ -72,7 +72,7 @@ export function Section({ id, title, hint, children }: { id: string; title: stri
 }
 
 /** Botón de dos pasos para lo que no se puede deshacer. */
-function ConfirmAction({ label, confirm, onConfirm, pending }: { label: string; confirm: string; onConfirm: () => void; pending?: boolean }) {
+export function ConfirmAction({ label, confirm, onConfirm, pending }: { label: string; confirm: string; onConfirm: () => void; pending?: boolean }) {
   const [asking, setAsking] = useState(false);
   if (!asking)
     return (
@@ -329,7 +329,10 @@ export function ProductForm({ product, categories, brands, mode, promoPercent, w
   const [dirty, setDirty] = useState(false);
 
   const availability = availabilityFor({ stock: tracked ? stock : null, lowStockAt, allowBackorder: backorder });
-  const effective = salePrice != null && price != null && salePrice < price ? salePrice : promoPercent && price != null ? Math.round((price * (1 - promoPercent / 100)) / 1000) * 1000 : null;
+  // Misma regla que la tienda (toPublicProduct): entre el rebajado propio y la promoción, el más bajo.
+  const own = salePrice != null && price != null && salePrice < price ? salePrice : null;
+  const fromPromo = promoPercent && price != null ? Math.round((price * (1 - promoPercent / 100)) / 1000) * 1000 : null;
+  const effective = own != null && fromPromo != null ? Math.min(own, fromPromo) : (own ?? fromPromo);
   const brandName = brands.find((b) => b.id === product?.brandId)?.name;
   const slugBase = useMemo(() => name.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""), [name]);
 
@@ -399,7 +402,7 @@ export function ProductForm({ product, categories, brands, mode, promoPercent, w
           </div>
         </Section>
 
-        <Section id="precio" title="Precio" hint={promoPercent ? `La promoción general (${promoPercent} %) se aplica sola a los productos sin precio rebajado propio.` : undefined}>
+        <Section id="precio" title="Precio" hint={promoPercent ? `Hoy le aplica una promoción del ${promoPercent} %. Si también tiene precio rebajado, la tienda muestra el más bajo.` : undefined}>
           <div className="admin-grid">
             <MoneyInput id="price" name="price" label="Precio" value={price} onChange={setPrice} placeholder="Por confirmar" hint="Vacío = la tienda muestra “precio por confirmar”." />
             <MoneyInput id="salePrice" name="salePrice" label="Precio rebajado (opcional)" value={salePrice} onChange={setSalePrice} placeholder="Sin rebaja" hint={salePrice != null && price != null && salePrice < price ? `${Math.round((1 - salePrice / price) * 100)} % de descuento` : "Debe ser menor que el precio."} />

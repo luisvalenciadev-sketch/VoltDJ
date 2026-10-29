@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Product } from "@/data/types";
-import { discountPercent } from "@/lib/pricing";
+import { discountPercent, unitPrice } from "@/lib/pricing";
+import { ProductInstallments } from "./ProductInstallments";
 import { ProductWhatsApp } from "./ProductWhatsApp";
 import { Tilt } from "./Tilt";
 import { AvailabilityBadge, Price, ProductMedia } from "./ui";
@@ -22,7 +23,10 @@ export function ProductCard({ product: p, brand }: { product: Product; brand: st
         </Link>
         <AvailabilityBadge value={p.availability} />
         <div className="foot">
-          <Price price={p.price} promoPrice={p.promoPrice} />
+          <span className="price-col">
+            <Price price={p.price} promoPrice={p.promoPrice} />
+            <ProductInstallments price={unitPrice(p)} />
+          </span>
           <ProductWhatsApp product={{ name: p.name, sku: p.sku, price: p.price, promoPrice: p.promoPrice }} />
         </div>
       </div>

@@ -4,11 +4,12 @@ import { revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { CATALOG_TAG } from "@/data/catalog";
 import { slugify } from "@/data/products";
-import type { ArtKind, Brand, Category, ProductImage, ProductRecord, PublicationStatus, Spec, StockReason } from "@/data/types";
+import type { ArtKind, Brand, Category, ProductImage, ProductRecord, PromotionScope, PublicationStatus, Spec, StockReason } from "@/data/types";
 import { requireAdmin } from "@/lib/admin-auth";
 import { DEFAULT_BRAND, DEFAULT_CATEGORY, parseImport, planImport, type ImportPlan, type PlannedRow } from "@/lib/catalog-import";
 import { catalogStore, isDuplicate, ReadOnlyCatalogError, type CatalogSnapshot } from "@/lib/catalog-store";
 import { deleteMedia, importRemoteImage } from "@/lib/media";
+import { promotionProblem } from "@/lib/promotions";
 
 export type FormState = { error?: string; ok?: string } | undefined;
 
@@ -533,4 +534,73 @@ export async function importProductImages(productId: string, urls: string[]): Pr
     invalidate();
   }
   return { added: added.length, failed };
+}
+
+// ---------- Promociones ----------
+
+const SCOPES: PromotionScope[] = ["tienda", "categoria", "producto"];
+const dayOrNull = (fd: FormData, key: string) => {
+  const v = text(fd, key, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null;
+};
+
+export async function savePromotion(_: FormState, fd: FormData): Promise<FormState> {
+  await requireAdmin();
+  const store = catalogStore();
+  const scopeIn = text(fd, "scope", 20) as PromotionScope;
+  const scope = SCOPES.includes(scopeIn) ? scopeIn : "tienda";
+  const draft = {
+    name: text(fd, "name", 80),
+    percent: Number(text(fd, "percent", 3).replace(/\D/g, "") || 0),
+    scope,
+    targetId: scope === "tienda" ? null : text(fd, scope === "categoria" ? "categoryId" : "productId", 120) || null,
+    startsAt: dayOrNull(fd, "startsAt"),
+    endsAt: dayOrNull(fd, "endsAt"),
+    active: checked(fd, "active"),
+  };
+  const problem = promotionProblem(draft);
+  if (problem) return { error: problem };
+  try {
+    const snap = await store.snapshot();
+    if (draft.scope === "categoria" && !snap.categories.some((c) => c.id === draft.targetId)) return { error: "Esa categoría ya no existe." };
+    if (draft.scope === "producto" && !snap.products.some((p) => p.id === draft.targetId)) return { error: "Ese producto ya no existe." };
+    const id = text(fd, "id", 80);
+    const current = id ? snap.promotions.find((p) => p.id === id) : undefined;
+    const now = new Date().toISOString();
+    await store.savePromotion({
+      ...draft,
+      id: current?.id ?? uniqueSlug(slugify(draft.name), snap.promotions.map((p) => p.id)),
+      createdAt: current?.createdAt ?? now,
+      updatedAt: now,
+    });
+  } catch (e) {
+    return failure(e, "guardar la promoción");
+  }
+  invalidate();
+  return { ok: "Promoción guardada. Los precios de la tienda ya la reflejan." };
+}
+
+export async function setPromotionActive(id: string, active: boolean): Promise<FormState> {
+  await requireAdmin();
+  const store = catalogStore();
+  try {
+    const current = (await store.snapshot()).promotions.find((p) => p.id === id);
+    if (!current) return { error: "La promoción ya no existe." };
+    await store.savePromotion({ ...current, active, updatedAt: new Date().toISOString() });
+  } catch (e) {
+    return failure(e, active ? "reanudar la promoción" : "pausar la promoción");
+  }
+  invalidate();
+  return { ok: active ? "Promoción reanudada." : "Promoción pausada." };
+}
+
+export async function deletePromotion(id: string): Promise<FormState> {
+  await requireAdmin();
+  try {
+    await catalogStore().deletePromotion(id);
+  } catch (e) {
+    return failure(e, "eliminar la promoción");
+  }
+  invalidate();
+  return { ok: "Promoción eliminada." };
 }

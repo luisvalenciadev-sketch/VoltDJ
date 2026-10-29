@@ -33,10 +33,13 @@ describe("producto de la tienda", () => {
     expect(p.promoPrice).toBe(1105000);
     expect(p.promoEndsAt).toBe("2026-11-30");
   });
-  it("el precio rebajado propio gana sobre la promoción general y no tiene fecha", () => {
-    const p = toPublicProduct(rec({ price: 1300000, salePrice: 1000000 }), promo);
-    expect(p.promoPrice).toBe(1000000);
-    expect(p.promoEndsAt).toBeNull();
+  it("entre el precio rebajado propio y la promoción se muestra el más bajo", () => {
+    const own = toPublicProduct(rec({ price: 1300000, salePrice: 1000000 }), promo);
+    expect(own.promoPrice).toBe(1000000);
+    expect(own.promoEndsAt).toBeNull();
+    const deeper = toPublicProduct(rec({ price: 1300000, salePrice: 1200000 }), promo);
+    expect(deeper.promoPrice).toBe(1105000);
+    expect(deeper.promoEndsAt).toBe("2026-11-30");
   });
   it("ignora un precio rebajado mayor o igual al de lista", () => {
     expect(toPublicProduct(rec({ price: 1300000, salePrice: 1400000 }), null).promoPrice).toBeNull();

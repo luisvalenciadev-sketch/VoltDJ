@@ -112,6 +112,11 @@ export interface Guide {
   events: TrackingEvent[];
   /** Nota visible para el cliente (p. ej. "Llega en la tarde"). */
   publicNote: string | null;
+  /**
+   * Unidades que este pedido tiene apartadas del inventario (src/lib/order-stock.ts). Sin valor = guía creada
+   * antes de conectar el inventario: no aparta ni devuelve nada, porque su stock ya se ajustó a mano.
+   */
+  stockApplied?: { productId: string; qty: number }[];
   createdAt: string;
   updatedAt: string;
 }

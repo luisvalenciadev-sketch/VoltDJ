@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AddToCart, StickyAddBar } from "@/components/AddToCart";
 import { Gallery } from "@/components/Gallery";
-import { ChatIcon, InfoIcon, ShieldIcon, TruckIcon, WarnIcon, WhatsAppIcon } from "@/components/icons";
+import { CardIcon, ChatIcon, InfoIcon, ShieldIcon, TruckIcon, WarnIcon, WhatsAppIcon } from "@/components/icons";
 import { ProductCard } from "@/components/ProductCard";
 import { AvailabilityBadge, Breadcrumbs, Pending } from "@/components/ui";
 import { SITE } from "@/config/store";
@@ -10,6 +10,8 @@ import { getStore } from "@/data/store";
 import { getBrands, getCategories, getProductBySlug, getProducts, toCartProduct } from "@/data/catalog";
 import type { Product } from "@/data/types";
 import { canAddToCart, discountPercent, formatCOP, hasPromo, unitPrice } from "@/lib/pricing";
+import { enabledPayments, installmentOffer, paymentLabel } from "@/lib/payments";
+import { sameDayText } from "@/lib/shipping";
 import { buildProductMessage, buildWhatsAppLink } from "@/lib/whatsapp";
 
 type Params = Promise<{ slug: string }>;
@@ -75,6 +77,9 @@ export default async function ProductPage({ params }: { params: Params }) {
   const wa = buildWhatsAppLink(buildProductMessage(p, store.name), store.whatsappNumber);
   const cartProduct = toCartProduct(p, brands);
   const promo = hasPromo(p);
+  const offer = installmentOffer(unitPrice(p), store.payments);
+  const payments = enabledPayments(store.payments).map(paymentLabel);
+  const sameDay = sameDayText(store.sameDay);
 
   return (
     <>
@@ -110,6 +115,11 @@ export default async function ProductPage({ params }: { params: Params }) {
                 <b>{formatCOP(p.price)}</b>
               )}
             </div>
+            {offer && (
+              <p className="installments">
+                Desde <b>{formatCOP(offer.monthly)}</b> al mes con {offer.method} ({offer.months} cuotas, sujeto a aprobación)
+              </p>
+            )}
             {/* Solo la promoción general tiene fecha de fin; un precio rebajado propio del producto no la necesita. */}
             {promo && p.promoEndsAt && (
               <p className="note">
@@ -141,7 +151,15 @@ export default async function ProductPage({ params }: { params: Params }) {
               </a>
             )}
             <div className="assure">
-              <div><TruckIcon /><span><b>Envío:</b> {store.shipping.summary ?? <Pending>condiciones de envío</Pending>}</span></div>
+              <div><TruckIcon /><span><b>Envío:</b> {store.shipping.summary ?? <Pending>condiciones de envío</Pending>}{sameDay && <> {sameDay}</>}</span></div>
+              {payments.length > 0 && (
+                <div>
+                  <CardIcon />
+                  <span>
+                    <b>Pagos:</b> {payments.join(" · ")}. <a className="link" href="/envios-y-garantias#pagos">Cómo pagar</a>
+                  </span>
+                </div>
+              )}
               <div><ShieldIcon /><span><b>Garantía:</b> {store.warranty.summary ?? <Pending>política de garantía</Pending>}</span></div>
               <div><ChatIcon /><span><b>Confirmación:</b> el asesor confirma disponibilidad y costo de envío antes de que pagues.</span></div>
             </div>

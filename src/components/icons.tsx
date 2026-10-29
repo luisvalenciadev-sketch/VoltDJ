@@ -35,6 +35,12 @@ export const ShieldIcon = (p: P) => (
     <path d="m8.5 12 2.5 2.5 4.5-5" />
   </svg>
 );
+export const CardIcon = (p: P) => (
+  <svg viewBox="0 0 24 24" {...base} strokeWidth={1.6} {...p}>
+    <rect x="2.5" y="5" width="19" height="14" rx="2" />
+    <path d="M2.5 10h19M6 15h4" />
+  </svg>
+);
 export const ChatIcon = (p: P) => (
   <svg viewBox="0 0 24 24" {...base} strokeWidth={1.6} {...p}>
     <path d="M4 5h16v11H9l-5 4z" />

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { activePromo, TOPBAR_PLACEHOLDERS, type StoreSettings } from "@/config/store";
+import { TOPBAR_PLACEHOLDERS, type StoreSettings } from "@/config/store";
+import { getDealHeadline } from "@/data/catalog";
 import { getStore } from "@/data/store";
 import type { Category } from "@/data/types";
 import { CartButton, CategoryNav, SearchForm } from "./HeaderClient";
@@ -46,15 +47,14 @@ export function Logo({ store }: { store: StoreSettings }) {
  * Cinta superior: la promoción manda (primero y enlazada a ofertas); detrás, los datos de
  * servicio que antes vivían en una barra fija. Una sola banda en lugar de dos apiladas.
  */
-function PromoTicker({ store }: { store: StoreSettings }) {
-  const PROMO = activePromo();
+function PromoTicker({ store, deal }: { store: StoreSettings; deal: string | null }) {
   const info = store.topbar.map((text, i) => text ?? <Pending>{TOPBAR_PLACEHOLDERS[i]}</Pending>);
   return (
     <Marquee label="cinta de promociones" seconds={38} className="ticker">
-      {PROMO && (
+      {deal && (
         <>
           <Link className="tick hot" href="/ofertas">
-            −{PROMO.percent}% en todo el catálogo
+            {deal}
           </Link>
           <span className="tick">El descuento ya está aplicado en cada precio</span>
         </>
@@ -73,10 +73,10 @@ function PromoTicker({ store }: { store: StoreSettings }) {
 }
 
 export async function Header({ categories, showOffers }: { categories: Category[]; showOffers: boolean }) {
-  const store = await getStore();
+  const [store, deal] = await Promise.all([getStore(), getDealHeadline()]);
   return (
     <>
-      <PromoTicker store={store} />
+      <PromoTicker store={store} deal={deal} />
       <header className="hdr">
         <div className="wrap">
           <div className="row">

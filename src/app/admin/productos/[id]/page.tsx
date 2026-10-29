@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductActions, ProductForm } from "@/components/admin/CatalogForms";
-import { activePromo } from "@/config/store";
+import { bestPromotion } from "@/lib/promotions";
 import { requireAdmin } from "@/lib/admin-auth";
 import { catalogStore } from "@/lib/catalog-store";
 import { uploadMode } from "@/lib/media";
@@ -22,7 +22,7 @@ export default async function EditProductPage({ params, searchParams }: { params
   const { id } = await params;
   const sp = await searchParams;
   const store = catalogStore();
-  const [{ products, categories, brands }, movements] = await Promise.all([store.snapshot(), store.movements(id, 5)]);
+  const [{ products, categories, brands, promotions }, movements] = await Promise.all([store.snapshot(), store.movements(id, 5)]);
   const product = products.find((p) => p.id === id);
   if (!product) notFound();
 
@@ -43,7 +43,7 @@ export default async function EditProductPage({ params, searchParams }: { params
           <span>{sp.creado ? "Producto creado." : "Copia creada como borrador: revisa el nombre, el SKU y el stock antes de publicarla."}</span>
         </p>
       )}
-      <ProductForm key={product.updatedAt} product={product} categories={categories} brands={brands} mode={uploadMode()} promoPercent={activePromo()?.percent ?? null} writable={store.writable} />
+      <ProductForm key={product.updatedAt} product={product} categories={categories} brands={brands} mode={uploadMode()} promoPercent={bestPromotion(product, promotions)?.percent ?? null} writable={store.writable} />
       {movements.length > 0 && (
         <section className="aform-sec">
           <div className="row-wrap between">

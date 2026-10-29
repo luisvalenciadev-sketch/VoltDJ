@@ -16,4 +16,12 @@ const read = unstable_cache(() => settingsStore().get(), ["store-settings-v1", c
 
 export const getStore = cache((): Promise<StoreSettings> => read());
 
-export const toStoreInfo = (s: StoreSettings): StoreInfo => ({ name: s.name, whatsappNumber: s.whatsappNumber, orderIdPrefix: s.orderIdPrefix });
+export const toStoreInfo = (s: StoreSettings): StoreInfo => ({
+  name: s.name,
+  whatsappNumber: s.whatsappNumber,
+  orderIdPrefix: s.orderIdPrefix,
+  // Solo lo activo viaja al navegador: las instrucciones (cuentas, números) se ven en Envíos y pagos.
+  payments: s.payments.filter((p) => p.enabled).map((p) => ({ ...p, instructions: null })),
+  shippingZones: s.shippingZones,
+  sameDay: s.sameDay,
+});

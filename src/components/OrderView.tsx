@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { CartProduct } from "@/data/types";
 import { summarize, type CartItem } from "@/lib/cart";
+import { enabledPayments, paymentLabel } from "@/lib/payments";
 import { formatCOP } from "@/lib/pricing";
+import { zoneCostLabel } from "@/lib/shipping";
 import { buildOrderMessage, buildWhatsAppLink, createOrderId, MAX_CITY_LENGTH } from "@/lib/whatsapp";
 import { useCart } from "@/store/cart-store";
 import { useStoreInfo } from "@/store/store-info";
@@ -40,11 +42,14 @@ export function OrderView({ catalog }: { catalog: CartProduct[] }) {
   const cart = useCart();
   const toast = useToast();
   const [city, setCity] = useState("");
+  const [zoneId, setZoneId] = useState("");
   const [opened, setOpened] = useState(false);
   const store = useStoreInfo();
   const orderId = useOrderId(cart.items, cart.ready, store.orderIdPrefix);
   const s = useMemo(() => summarize(cart.items, catalog), [cart.items, catalog]);
-  const message = orderId ? buildOrderMessage(s, { orderId, city, storeName: store.name }) : "";
+  const zone = store.shippingZones.find((z) => z.id === zoneId) ?? null;
+  const payments = enabledPayments(store.payments).map(paymentLabel);
+  const message = orderId ? buildOrderMessage(s, { orderId, city, storeName: store.name, zone, payments }) : "";
   const link = message ? buildWhatsAppLink(message, store.whatsappNumber) : null;
 
   if (!cart.ready || (cart.items.length > 0 && !orderId)) return <><Steps current={1} /><CartSkeleton /></>;
@@ -88,6 +93,24 @@ export function OrderView({ catalog }: { catalog: CartProduct[] }) {
             </div>
           )}
           <CartLines lines={s.lines} editable={false} />
+          {store.shippingZones.length > 0 && (
+            <div className="field" style={{ maxWidth: 360 }}>
+              <label htmlFor="zone">¿A dónde lo enviamos?</label>
+              <select id="zone" className="input" value={zoneId} onChange={(e) => setZoneId(e.target.value)}>
+                <option value="">Elige tu zona (opcional)</option>
+                {store.shippingZones.map((z) => (
+                  <option key={z.id} value={z.id}>
+                    {z.name}
+                  </option>
+                ))}
+              </select>
+              {zone && (
+                <span className="note">
+                  {zone.days} · {zoneCostLabel(zone.cost, formatCOP)}. El asesor confirma el valor final.
+                </span>
+              )}
+            </div>
+          )}
           <div className="field" style={{ maxWidth: 360 }}>
             <label htmlFor="city">Ciudad de envío (opcional, para cotizar el envío)</label>
             <input id="city" className="input" maxLength={MAX_CITY_LENGTH} value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ej.: Medellín" autoComplete="address-level2" />

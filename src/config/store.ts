@@ -1,4 +1,6 @@
 import type { ProductImage } from "@/data/types";
+import type { SameDay, ShippingZone } from "@/lib/shipping";
+import { defaultPayments, type PaymentSetting } from "./payments";
 import { DEFAULT_THEME, type ThemeId } from "./themes";
 
 /**
@@ -60,7 +62,11 @@ export interface StoreSettings {
   social: SocialLink[];
   shipping: Policy;
   warranty: Policy;
+  /** Texto libre de los términos. Los medios que ve el cliente salen de `payments`. */
   paymentMethods: string | null;
+  payments: PaymentSetting[];
+  shippingZones: ShippingZone[];
+  sameDay: SameDay;
   returnsPolicy: string | null;
   /** Texto propio de las páginas legales; null = la página explica cómo funciona el sitio y marca lo pendiente. */
   privacyText: string | null;
@@ -102,6 +108,9 @@ export function initialStore(): StoreSettings {
       details: ["12 meses de garantía en los equipos.", "Para solicitarla, escríbenos por WhatsApp con tu número de pedido."],
     },
     paymentMethods: "Transferencia bancaria",
+    payments: defaultPayments(["transferencia"]),
+    shippingZones: [],
+    sameDay: { enabled: false, cutoff: "14:00", area: "Ibagué" },
     privacyText: null,
     termsText: null,
     brand: { theme: DEFAULT_THEME, logoOnDark: null, logoOnLight: null, favicon: null, accent: null },
@@ -128,6 +137,9 @@ export function blankStore(): StoreSettings {
     shipping: { summary: null, details: null },
     warranty: { summary: null, details: null },
     paymentMethods: null,
+    payments: defaultPayments(),
+    shippingZones: [],
+    sameDay: { enabled: false, cutoff: "14:00", area: "" },
     returnsPolicy: null,
     privacyText: null,
     termsText: null,
@@ -150,29 +162,11 @@ export function mergeStore(base: StoreSettings, saved: Partial<StoreSettings> | 
     shipping: { ...base.shipping, ...saved.shipping },
     warranty: { ...base.warranty, ...saved.warranty },
     brand: { ...base.brand, ...saved.brand },
+    sameDay: { ...base.sameDay, ...saved.sameDay },
+    // Un medio de pago que el código agregue después aparece (apagado) también en tiendas que ya guardaron.
+    payments: base.payments.map((p) => ({ ...p, ...saved.payments?.find((x) => x.id === p.id) })),
     seo: { ...base.seo, ...saved.seo },
   };
-}
-
-/**
- * Promoción global: descuento sobre el precio de lista en todo el catálogo.
- * `null` desactiva la promoción en toda la tienda (precios, cinta superior y página de ofertas).
- * `endsAt` (fecha "AAAA-MM-DD") es el último día de la promoción, inclusive, en hora de Colombia;
- * sin fecha, la ficha la marca como pendiente. Al vencer se apaga sola (ver promoIsActive).
- * Pasa al panel en la fase 3 (promociones).
- */
-export const PROMO: { percent: number; endsAt: string | null } | null = { percent: 15, endsAt: "2026-11-30" };
-
-/** La promoción vale hasta el final del día `endsAt` en Colombia (UTC−5, sin horario de verano). */
-export function promoIsActive(endsAt: string | null, now: Date = new Date()): boolean {
-  if (!endsAt) return true;
-  const lastDayStart = Date.parse(`${endsAt}T00:00:00-05:00`);
-  return now.getTime() < lastDayStart + 24 * 60 * 60 * 1000;
-}
-
-/** Promoción vigente en este momento, o null. Usar esto en la UI, no PROMO directamente. */
-export function activePromo(now: Date = new Date()) {
-  return PROMO && promoIsActive(PROMO.endsAt, now) ? PROMO : null;
 }
 
 /** Etiquetas de los marcadores para datos pendientes, en el mismo orden que `topbar`. */

@@ -2,7 +2,8 @@ import "server-only";
 import { BRANDS } from "@/data/brands";
 import { CATEGORIES } from "@/data/categories";
 import { SEED_PRODUCTS } from "@/data/products";
-import type { Brand, Category, ProductImage, ProductRecord, Spec, StockMovement, StockReason } from "@/data/types";
+import { SEED_PROMOTIONS } from "@/data/promotions";
+import type { Brand, Category, ProductImage, ProductRecord, Promotion, Spec, StockMovement, StockReason } from "@/data/types";
 import { db, migrate, type Sql } from "./db";
 
 /**
@@ -14,6 +15,7 @@ export interface CatalogSnapshot {
   products: ProductRecord[];
   categories: Category[];
   brands: Brand[];
+  promotions: Promotion[];
 }
 
 export type StockChange = { mode: "add"; delta: number } | { mode: "set"; value: number | null };
@@ -37,6 +39,8 @@ export interface CatalogStore {
   deleteCategory(id: string): Promise<void>;
   saveBrand(b: Brand): Promise<void>;
   deleteBrand(id: string): Promise<void>;
+  savePromotion(p: Promotion): Promise<void>;
+  deletePromotion(id: string): Promise<void>;
 }
 
 export class ReadOnlyCatalogError extends Error {
@@ -75,6 +79,7 @@ type ProductRow = {
 };
 type CategoryRow = { id: string; slug: string; name: string; description: string; art: Category["art"]; image: ProductImage | null; sort: number; visible: boolean };
 type BrandRow = { id: string; name: string; logo: Brand["logo"] | null; authorized: boolean; sort: number; visible: boolean };
+type PromotionRow = { id: string; name: string; percent: number; scope: Promotion["scope"]; target_id: string | null; starts_at: string | Date | null; ends_at: string | Date | null; active: boolean; created_at: string | Date; updated_at: string | Date };
 type MovementRow = { id: string | number; product_id: string; delta: number; stock_after: number | null; reason: StockReason; ref: string | null; note: string | null; created_at: string | Date };
 
 const iso = (d: string | Date) => new Date(d).toISOString();
@@ -106,6 +111,9 @@ const toProduct = (r: ProductRow): ProductRecord => ({
 });
 const toCategory = (r: CategoryRow): Category => ({ id: r.id, slug: r.slug, name: r.name, description: r.description, art: r.art, image: r.image ?? undefined, order: r.sort, visible: r.visible });
 const toBrand = (r: BrandRow): Brand => ({ id: r.id, name: r.name, logo: r.logo ?? undefined, authorized: r.authorized, isDemo: false, order: r.sort, visible: r.visible });
+// Las columnas date llegan como Date a medianoche UTC o como texto según el driver: se normalizan a "AAAA-MM-DD".
+const day = (d: string | Date | null) => (d == null ? null : typeof d === "string" ? d.slice(0, 10) : d.toISOString().slice(0, 10));
+const toPromotion = (r: PromotionRow): Promotion => ({ id: r.id, name: r.name, percent: r.percent, scope: r.scope, targetId: r.target_id, startsAt: day(r.starts_at), endsAt: day(r.ends_at), active: r.active, createdAt: iso(r.created_at), updatedAt: iso(r.updated_at) });
 const toMovement = (r: MovementRow): StockMovement => ({ id: String(r.id), productId: r.product_id, delta: r.delta, stockAfter: r.stock_after, reason: r.reason, ref: r.ref, note: r.note, createdAt: iso(r.created_at) });
 
 function neonStore(sql: Sql): CatalogStore {
@@ -114,12 +122,18 @@ function neonStore(sql: Sql): CatalogStore {
     writable: true,
     async snapshot() {
       await ready();
-      const [p, c, b] = await Promise.all([
+      const [p, c, b, pr] = await Promise.all([
         sql`select * from products order by updated_at desc`,
         sql`select * from categories order by sort, name`,
         sql`select * from brands order by sort, name`,
+        sql`select * from promotions order by created_at desc`,
       ]);
-      return { products: (p as ProductRow[]).map(toProduct), categories: (c as CategoryRow[]).map(toCategory), brands: (b as BrandRow[]).map(toBrand) };
+      return {
+        products: (p as ProductRow[]).map(toProduct),
+        categories: (c as CategoryRow[]).map(toCategory),
+        brands: (b as BrandRow[]).map(toBrand),
+        promotions: (pr as PromotionRow[]).map(toPromotion),
+      };
     },
     async getProduct(id) {
       await ready();
@@ -210,6 +224,19 @@ function neonStore(sql: Sql): CatalogStore {
       await ready();
       await sql`delete from brands where id = ${id}`;
     },
+    async savePromotion(p) {
+      await ready();
+      await sql`
+        insert into promotions (id, name, percent, scope, target_id, starts_at, ends_at, active)
+        values (${p.id}, ${p.name}, ${p.percent}, ${p.scope}, ${p.targetId}, ${p.startsAt}, ${p.endsAt}, ${p.active})
+        on conflict (id) do update set
+          name = excluded.name, percent = excluded.percent, scope = excluded.scope, target_id = excluded.target_id,
+          starts_at = excluded.starts_at, ends_at = excluded.ends_at, active = excluded.active, updated_at = now()`;
+    },
+    async deletePromotion(id) {
+      await ready();
+      await sql`delete from promotions where id = ${id}`;
+    },
   };
 }
 
@@ -219,6 +246,7 @@ interface MemoryState {
   products: Map<string, ProductRecord>;
   categories: Map<string, Category>;
   brands: Map<string, Brand>;
+  promotions: Map<string, Promotion>;
   movements: StockMovement[];
   seq: number;
 }
@@ -228,6 +256,7 @@ function seedState(): MemoryState {
     products: new Map(SEED_PRODUCTS.map((p) => [p.id, structuredClone(p)])),
     categories: new Map(seedCategories().map((c) => [c.id, structuredClone(c)])),
     brands: new Map(seedBrands().map((b) => [b.id, structuredClone(b)])),
+    promotions: new Map(SEED_PROMOTIONS.map((p) => [p.id, structuredClone(p)])),
     movements: [],
     seq: 0,
   };
@@ -249,6 +278,7 @@ function memoryStore(state: MemoryState, writable: boolean): CatalogStore {
         products: [...state.products.values()].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).map((p) => structuredClone(p)),
         categories: [...state.categories.values()].sort(byOrder).map((c) => structuredClone(c)),
         brands: [...state.brands.values()].sort(byOrder).map((b) => structuredClone(b)),
+        promotions: [...state.promotions.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((p) => structuredClone(p)),
       };
     },
     async getProduct(id) {
@@ -301,6 +331,15 @@ function memoryStore(state: MemoryState, writable: boolean): CatalogStore {
     async deleteBrand(id) {
       guard();
       state.brands.delete(id);
+    },
+    async savePromotion(p) {
+      guard();
+      const cur = state.promotions.get(p.id);
+      state.promotions.set(p.id, { ...structuredClone(p), createdAt: cur?.createdAt ?? now(), updatedAt: now() });
+    },
+    async deletePromotion(id) {
+      guard();
+      state.promotions.delete(id);
     },
   };
 }

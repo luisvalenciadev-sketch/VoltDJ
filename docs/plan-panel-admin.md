@@ -1,6 +1,15 @@
 # Plan técnico — Panel de administración completo
 
-Estado: **fase 1** construida en `feat/panel-fase-1` · **fase 2** en `feat/panel-fase-2` · **fase 2b** en `feat/panel-fase-2b` · 2026-10-29
+Estado: **fases 1, 2 y 2b en producción** (`main`) · **fase 3** construida en `feat/panel-fase-3` · 2026-10-29
+
+### Cambios respecto al plan en la fase 3
+
+- **Promociones dentro del almacén del catálogo** (tabla `promotions`, migración `004_promociones`), en la misma caché `catalog`. La constante `PROMO` desapareció: el 15 % de temporada se copió a la base como primera promoción.
+- **Precio rebajado propio y promoción:** gana el más bajo (antes ganaba siempre el propio).
+- **Pagos y envíos dentro de `settings`** (fila `store`), no en tablas propias: son pocos datos y se editan juntos.
+- **Sin logos de las marcas de pago:** se muestran sus nombres. Usar logos de Addi, Nequi, etc. requiere su permiso.
+- **Stock de pedidos:** al crear la guía (no al confirmarla), porque una guía solo se crea cuando el pedido ya está confirmado por WhatsApp. Cada guía guarda lo que tiene apartado (`stock_applied`), así que repetir una operación nunca descuenta dos veces.
+- **Pendiente:** el texto libre de "medios de pago" de los términos y la pregunta frecuente sobre pagos siguen escritos a mano (fase 4).
 
 ### Cambios respecto al plan en la fase 2b
 

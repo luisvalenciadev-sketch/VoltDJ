@@ -1,14 +1,18 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
-import { saveBrandSettings, savePolicies, saveSeo, saveStoreData, saveTheme, type SettingsState } from "@/app/admin/configuracion/actions";
+import { saveBrandSettings, savePayments, savePolicies, saveSeo, saveShipping, saveStoreData, saveTheme, type SettingsState } from "@/app/admin/configuracion/actions";
 import { RichText } from "@/components/RichText";
 import { LogoMark } from "@/components/icons";
+import { PAYMENT_METHODS, type PaymentId, type PaymentSetting } from "@/config/payments";
 import type { SocialLink, StoreSettings } from "@/config/store";
 import { DEFAULT_THEME, THEME_IDS, THEMES, type ThemeId } from "@/config/themes";
 import type { ProductImage } from "@/data/types";
 import { contrast, MIN_ACCENT_CONTRAST, inkFor, normalizeHex, readableAccent } from "@/lib/color";
 import type { UploadMode } from "@/lib/media";
+import { enabledPayments, installmentOffer, paymentLabel } from "@/lib/payments";
+import { formatCOP } from "@/lib/pricing";
+import { sameDayText, type ShippingZone, zoneCostLabel } from "@/lib/shipping";
 import { normalizeWhatsApp } from "@/lib/whatsapp";
 import { Message, Section, SingleImage } from "./CatalogForms";
 
@@ -444,6 +448,138 @@ export function ThemeForm({ store, writable }: { store: StoreSettings; writable:
         })}
       </ul>
       <p className="note">La vista previa solo la ves tú, en esa pestaña. Tu color de acento se aplica en cualquier tema, ajustado para leerse sobre su fondo.</p>
+      <SaveBar state={state} pending={pending} dirty={dirty} writable={writable} />
+    </form>
+  );
+}
+
+// ---------- Pagos ----------
+
+export function PaymentsForm({ store, writable }: { store: StoreSettings; writable: boolean }) {
+  const { state, pending, dirty, setDirty, onSubmit } = useSave(savePayments);
+  const [payments, setPayments] = useState<PaymentSetting[]>(store.payments);
+  const edit = (id: PaymentId, patch: Partial<PaymentSetting>) => (setPayments(payments.map((p) => (p.id === id ? { ...p, ...patch } : p))), setDirty(true));
+  const offer = installmentOffer(1_500_000, payments);
+
+  return (
+    <form onSubmit={onSubmit} className="aform" onChange={() => setDirty(true)}>
+      <div className="aform-main">
+        <ReadOnlyNotice writable={writable} />
+        <Section id="medios" title="Medios de pago" hint="Activa los que aceptas. La tienda muestra solo los activos: en la ficha, en Envíos y pagos y en el mensaje de cada pedido.">
+          <ul className="pay-edit">
+            {payments.map((p) => {
+              const m = PAYMENT_METHODS[p.id];
+              return (
+                <li key={p.id} data-on={p.enabled || undefined}>
+                  <label className="step-toggle">
+                    <input type="checkbox" name={`pay-${p.id}`} checked={p.enabled} onChange={(e) => edit(p.id, { enabled: e.target.checked })} />
+                    <b>{m.name}</b>
+                  </label>
+                  {/* Apagado se oculta pero sigue en el formulario: sus datos no se pierden al guardar. */}
+                  <div className="pay-fields" hidden={!p.enabled}>
+                    {m.installments && (
+                      <div className="field narrow">
+                        <label htmlFor={`pay-${p.id}-cuotas`}>Máximo de cuotas</label>
+                        <input id={`pay-${p.id}-cuotas`} name={`pay-${p.id}-cuotas`} className="input num" inputMode="numeric" maxLength={2} value={p.installments ?? ""} onChange={(e) => edit(p.id, { installments: Number(e.target.value.replace(/\D/g, "")) || null })} />
+                      </div>
+                    )}
+                    <div className="field">
+                      <label htmlFor={`pay-${p.id}-info`}>Instrucciones para el cliente</label>
+                      <input id={`pay-${p.id}-info`} name={`pay-${p.id}-info`} className="input" maxLength={400} defaultValue={p.instructions ?? ""} placeholder={m.hint} />
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </Section>
+      </div>
+      <aside className="preview" aria-label="Vista previa">
+        <span className="eyebrow">Ficha de un equipo de $ 1.500.000</span>
+        <div className="set-preview">
+          {offer ? (
+            <p>
+              Desde <b>{formatCOP(offer.monthly)}</b> al mes con {offer.method} ({offer.months} cuotas, sujeto a aprobación)
+            </p>
+          ) : (
+            <p className="note">Sin medios a cuotas activos no se muestra cuota mensual.</p>
+          )}
+          <p className="note">Pagos: {enabledPayments(payments).map(paymentLabel).join(" · ") || "ninguno"}</p>
+        </div>
+      </aside>
+      <SaveBar state={state} pending={pending} dirty={dirty} writable={writable} />
+    </form>
+  );
+}
+
+// ---------- Envíos ----------
+
+export function ShippingForm({ store, writable }: { store: StoreSettings; writable: boolean }) {
+  const { state, pending, dirty, setDirty, onSubmit } = useSave(saveShipping);
+  const [zones, setZones] = useState<ShippingZone[]>(store.shippingZones);
+  const [sameDay, setSameDay] = useState(store.sameDay);
+  const edit = (next: ShippingZone[]) => (setZones(next), setDirty(true));
+  const patch = (i: number, p: Partial<ShippingZone>) => edit(zones.map((z, j) => (j === i ? { ...z, ...p } : z)));
+  const money = (raw: string) => {
+    const d = raw.replace(/\D/g, "");
+    return d === "" ? null : Number(d);
+  };
+  const preview = sameDayText(sameDay);
+
+  return (
+    <form onSubmit={onSubmit} className="aform" onChange={() => setDirty(true)}>
+      <input type="hidden" name="zones" value={JSON.stringify(zones)} />
+      <div className="aform-main">
+        <ReadOnlyNotice writable={writable} />
+        <Section id="zonas" title="Zonas de envío" hint="El cliente elige su zona al enviar el pedido y ve el tiempo y el costo. Costo vacío = se cotiza por WhatsApp; 0 = gratis.">
+          <ul className="zone-rows">
+            {zones.map((z, i) => (
+              <li key={z.id}>
+                <input className="input" aria-label={`Zona ${i + 1}`} placeholder="Ibagué" maxLength={60} value={z.name} onChange={(e) => patch(i, { name: e.target.value })} />
+                <input className="input" aria-label={`Tiempo de entrega de la zona ${i + 1}`} placeholder="1 día hábil" maxLength={60} value={z.days} onChange={(e) => patch(i, { days: e.target.value })} />
+                <input className="input num" aria-label={`Costo de la zona ${i + 1}`} placeholder="Se cotiza" inputMode="numeric" value={z.cost == null ? "" : z.cost.toLocaleString("es-CO")} onChange={(e) => patch(i, { cost: money(e.target.value) })} />
+                <button type="button" className="iconbtn" aria-label={`Quitar la zona ${i + 1}`} onClick={() => edit(zones.filter((_, j) => j !== i))}>
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => edit([...zones, { id: `zona-${Date.now().toString(36)}`, name: "", days: "", cost: null }])} disabled={zones.length >= 30}>
+            + Agregar zona
+          </button>
+        </Section>
+        <Section id="mismo-dia" title="Despacho el mismo día">
+          <label className="step-toggle">
+            <input type="checkbox" name="sameDay" checked={sameDay.enabled} onChange={(e) => setSameDay({ ...sameDay, enabled: e.target.checked })} />
+            Despachamos el mismo día los pedidos confirmados antes de la hora de corte
+          </label>
+          <div className="admin-grid">
+            <Field id="cutoff" label="Hora de corte">
+              <input id="cutoff" name="cutoff" type="time" className="input" value={sameDay.cutoff} onChange={(e) => setSameDay({ ...sameDay, cutoff: e.target.value })} />
+            </Field>
+            <Field id="sameDayArea" label="Dónde aplica" hint="Vacío = donde despaches.">
+              <input id="sameDayArea" name="sameDayArea" className="input" maxLength={60} value={sameDay.area} onChange={(e) => setSameDay({ ...sameDay, area: e.target.value })} />
+            </Field>
+          </div>
+        </Section>
+      </div>
+      <aside className="preview" aria-label="Vista previa">
+        <span className="eyebrow">En Envíos y pagos</span>
+        <div className="set-preview">
+          {preview && <p className="note-strong">{preview}</p>}
+          {zones
+            .filter((z) => z.name)
+            .map((z) => (
+              <p key={z.id} className="row-wrap between">
+                <span>{z.name}</span>
+                <span className="note">
+                  {z.days || "…"} · {zoneCostLabel(z.cost, formatCOP)}
+                </span>
+              </p>
+            ))}
+          {!preview && !zones.some((z) => z.name) && <p className="note">Sin zonas: el envío se cotiza por WhatsApp.</p>}
+        </div>
+      </aside>
       <SaveBar state={state} pending={pending} dirty={dirty} writable={writable} />
     </form>
   );

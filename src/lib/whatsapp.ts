@@ -34,7 +34,15 @@ export function sanitizeCity(city: string | undefined): string {
 
 export function buildOrderMessage(
   summary: Pick<CartSummary, "orderable" | "subtotal" | "hasUnpriced"> & Partial<Pick<CartSummary, "listSubtotal" | "savings">>,
-  opts: { orderId: string; city?: string; storeName: string },
+  opts: {
+    orderId: string;
+    city?: string;
+    storeName: string;
+    /** Zona elegida en el pedido: el asesor ve el tiempo y el costo que el cliente leyó. */
+    zone?: { name: string; days: string; cost: number | null } | null;
+    /** Medios de pago activos de la tienda ("Addi (hasta 6 cuotas)"). */
+    payments?: string[];
+  },
 ): string {
   const out: string[] = [`Hola ${opts.storeName}, quiero consultar este pedido.`, `Pedido provisional: ${opts.orderId}`, ""];
   summary.orderable.forEach((line, i) => {
@@ -57,9 +65,16 @@ export function buildOrderMessage(
   out.push(
     `Subtotal estimado: ${formatCOP(summary.subtotal)}${summary.hasUnpriced ? " (sin incluir productos con precio por confirmar)" : ""}`,
   );
-  out.push("No incluye envío.");
+  const zone = opts.zone;
+  if (zone) {
+    const cost = zone.cost == null ? "costo por cotizar" : zone.cost === 0 ? "envío gratis" : `envío ${formatCOP(zone.cost)}`;
+    out.push(`Envío a ${zone.name}: ${zone.days}, ${cost}.`);
+  } else {
+    out.push("No incluye envío.");
+  }
   const city = sanitizeCity(opts.city);
   if (city) out.push(`Ciudad de envío: ${city}`);
+  if (opts.payments?.length) out.push(`Medios de pago de la tienda: ${opts.payments.join(", ")}.`);
   out.push("", "¿Me confirman disponibilidad, costo de envío y tiempo de entrega?");
   return out.join("\n");
 }

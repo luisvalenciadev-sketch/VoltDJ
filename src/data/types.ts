@@ -74,7 +74,7 @@ export interface ProductRecord {
   description: string;
   /** Precio de lista en COP enteros. `null` = precio por confirmar. */
   price: number | null;
-  /** Precio rebajado propio del producto; tiene prioridad sobre la promoción general. */
+  /** Precio rebajado propio del producto. Si también aplica una promoción, la tienda muestra el precio más bajo. */
   salePrice: number | null;
   keyFigure: string | null;
   specs: Spec[];
@@ -94,6 +94,25 @@ export interface ProductRecord {
 }
 
 export type StockReason = "ajuste" | "pedido" | "cancelacion" | "importacion" | "inicial";
+
+export type PromotionScope = "tienda" | "categoria" | "producto";
+
+/** Descuento por porcentaje con fechas. Se aplica al leer el catálogo (src/lib/promotions.ts). */
+export interface Promotion {
+  id: string;
+  /** Solo para el panel. */
+  name: string;
+  percent: number;
+  scope: PromotionScope;
+  /** Id de la categoría o del producto; null para toda la tienda. */
+  targetId: string | null;
+  /** "AAAA-MM-DD" en hora de Colombia, ambos días incluidos. null = sin límite. */
+  startsAt: string | null;
+  endsAt: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface StockMovement {
   id: string;

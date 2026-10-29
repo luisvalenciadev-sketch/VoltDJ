@@ -1,4 +1,4 @@
-import type { Availability, Product, ProductRecord } from "@/data/types";
+import type { Availability, Product, ProductRecord, Promotion } from "@/data/types";
 
 type StockFields = Pick<ProductRecord, "stock" | "lowStockAt" | "allowBackorder">;
 
@@ -22,21 +22,18 @@ export function stockLevel({ stock, lowStockAt }: Pick<ProductRecord, "stock" | 
   return "ok";
 }
 
-export interface GlobalPromo {
-  percent: number;
-  endsAt: string | null;
-}
-
 /** Redondeado al millar: en COP no se publican precios con centenas sueltas. */
 const promoFrom = (price: number, percent: number) => Math.round((price * (1 - percent / 100)) / 1000) * 1000;
 
 /**
- * Producto de la tienda a partir del registro del panel. El precio rebajado propio gana sobre la
- * promoción general; la promoción general solo aplica mientras está vigente (`promo` ya filtrado).
+ * Producto de la tienda a partir del registro del panel. `promo` es la mejor promoción vigente para este
+ * producto (ya elegida con bestPromotion). Entre el precio rebajado propio y el de la promoción se
+ * muestra el más bajo: al cliente nunca se le cobra de más porque haya dos descuentos.
  */
-export function toPublicProduct(r: ProductRecord, promo: GlobalPromo | null): Product {
+export function toPublicProduct(r: ProductRecord, promo: Pick<Promotion, "percent" | "endsAt"> | null): Product {
   const ownSale = r.price != null && r.salePrice != null && r.salePrice > 0 && r.salePrice < r.price ? r.salePrice : null;
-  const general = ownSale == null && promo && r.price != null ? promoFrom(r.price, promo.percent) : null;
+  const fromPromo = promo && r.price != null ? promoFrom(r.price, promo.percent) : null;
+  const general = fromPromo != null && (ownSale == null || fromPromo < ownSale) ? fromPromo : null;
   const tracked = r.stock != null && r.stock > 0;
   return {
     id: r.id,
@@ -48,7 +45,7 @@ export function toPublicProduct(r: ProductRecord, promo: GlobalPromo | null): Pr
     images: r.images,
     art: r.art,
     price: r.price,
-    promoPrice: ownSale ?? general,
+    promoPrice: general ?? ownSale,
     promoEndsAt: general != null ? (promo?.endsAt ?? null) : null,
     sku: r.sku,
     availability: availabilityFor(r),

@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidateTag } from "next/cache";
+import { PAYMENT_IDS, PAYMENT_METHODS, type PaymentSetting } from "@/config/payments";
 import type { SocialLink, StoreSettings } from "@/config/store";
+import type { ShippingZone } from "@/lib/shipping";
 import { DEFAULT_THEME, isThemeId, THEMES } from "@/config/themes";
 import { SETTINGS_TAG } from "@/data/store";
 import type { ProductImage } from "@/data/types";
@@ -158,4 +160,40 @@ export async function saveSeo(_: SettingsState, fd: FormData): Promise<SettingsS
     }),
     "el SEO",
   );
+}
+
+export async function savePayments(_: SettingsState, fd: FormData): Promise<SettingsState> {
+  const payments: PaymentSetting[] = [];
+  for (const id of PAYMENT_IDS) {
+    const m = PAYMENT_METHODS[id];
+    const enabled = fd.get(`pay-${id}`) === "on";
+    let installments: number | null = null;
+    if (m.installments) {
+      installments = Number(text(fd, `pay-${id}-cuotas`, 3).replace(/\D/g, "")) || null;
+      if (enabled && (!installments || installments < 2 || installments > 48)) return { error: `Las cuotas de ${m.name} deben ser un número entre 2 y 48.`, field: `pay-${id}-cuotas` };
+    }
+    payments.push({ id, enabled, instructions: orNull(longText(fd, `pay-${id}-info`, 400)), installments });
+  }
+  if (!payments.some((p) => p.enabled)) return { error: "Activa al menos un medio de pago." };
+  return save((s) => ({ ...s, payments }), "los medios de pago");
+}
+
+export async function saveShipping(_: SettingsState, fd: FormData): Promise<SettingsState> {
+  let zones: ShippingZone[];
+  try {
+    zones = (JSON.parse(String(fd.get("zones") ?? "[]")) as ShippingZone[]).slice(0, 30).map((z, i) => ({
+      id: String(z.id || `zona-${i + 1}`).slice(0, 40),
+      name: String(z.name ?? "").trim().slice(0, 60),
+      days: String(z.days ?? "").trim().slice(0, 60),
+      cost: z.cost == null || String(z.cost) === "" ? null : Math.max(0, Math.round(Number(z.cost)) || 0),
+    }));
+  } catch {
+    return { error: "No se pudieron leer las zonas. Recarga la página e intenta de nuevo." };
+  }
+  zones = zones.filter((z) => z.name || z.days);
+  const bad = zones.find((z) => !z.name || !z.days);
+  if (bad) return { error: `A la zona "${bad.name || bad.days}" le falta ${bad.name ? "el tiempo de entrega" : "el nombre"}.`, field: "zones" };
+  const cutoff = text(fd, "cutoff", 5);
+  const sameDay = { enabled: fd.get("sameDay") === "on", cutoff: /^\d{1,2}:\d{2}$/.test(cutoff) ? cutoff : "14:00", area: text(fd, "sameDayArea", 60) };
+  return save((s) => ({ ...s, shippingZones: zones, sameDay }), "los envíos");
 }

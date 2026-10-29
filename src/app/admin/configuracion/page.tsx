@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BrandForm, PoliciesForm, SeoForm, StoreDataForm, ThemeForm } from "@/components/admin/SettingsForms";
+import { BrandForm, PaymentsForm, PoliciesForm, SeoForm, ShippingForm, StoreDataForm, ThemeForm } from "@/components/admin/SettingsForms";
 import { SITE } from "@/config/store";
 import { requireAdmin } from "@/lib/admin-auth";
 import { uploadMode } from "@/lib/media";
@@ -12,6 +12,8 @@ const TABS = [
   { id: "tienda", label: "Tienda", intro: "Nombre, contacto y datos legales. Lo que cambies aquí se ve en toda la tienda y en los mensajes de WhatsApp." },
   { id: "diseno", label: "Diseño", intro: "Cinco temas con la misma tienda por dentro: cambia la forma, no tus datos. Míralos en tu tienda antes de aplicar." },
   { id: "marca", label: "Marca", intro: "Logo, ícono de la pestaña y color de acento." },
+  { id: "pagos", label: "Pagos", intro: "Medios de pago que aceptas y cuotas. La tienda muestra solo los activos." },
+  { id: "envios", label: "Envíos", intro: "Zonas con tiempo y costo de entrega, y despacho el mismo día." },
   { id: "politicas", label: "Políticas", intro: "Envíos, garantía, cambios y las páginas legales." },
   { id: "seo", label: "SEO", intro: "Cómo aparece la tienda en Google y al compartir el enlace." },
 ] as const;
@@ -46,6 +48,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         {tab === "tienda" && <StoreDataForm store={store} writable={settings.writable} />}
         {tab === "diseno" && <ThemeForm store={store} writable={settings.writable} />}
         {tab === "marca" && <BrandForm store={store} mode={mode} writable={settings.writable} />}
+        {tab === "pagos" && <PaymentsForm store={store} writable={settings.writable} />}
+        {tab === "envios" && <ShippingForm store={store} writable={settings.writable} />}
         {tab === "politicas" && <PoliciesForm store={store} writable={settings.writable} />}
         {tab === "seo" && <SeoForm store={store} mode={mode} writable={settings.writable} siteUrl={SITE.url} />}
       </div>

@@ -2,6 +2,7 @@ import "server-only";
 import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 import { BRANDS } from "@/data/brands";
 import { CATEGORIES } from "@/data/categories";
+import { SEED_PROMOTIONS } from "@/data/promotions";
 import { SEED_PRODUCTS } from "@/data/products";
 
 /**
@@ -132,6 +133,32 @@ const MIGRATIONS: Migration[] = [
           value jsonb not null,
           updated_at timestamptz not null default now()
         )`;
+    },
+  },
+  {
+    // Promociones por tienda, categoría o producto. La promoción fija del código pasa a ser la primera fila.
+    id: "004_promociones",
+    async run(sql) {
+      await sql`
+        create table if not exists promotions (
+          id text primary key,
+          name text not null,
+          percent int not null check (percent between 1 and 90),
+          scope text not null check (scope in ('tienda', 'categoria', 'producto')),
+          target_id text,
+          starts_at date,
+          ends_at date,
+          active boolean not null default true,
+          created_at timestamptz not null default now(),
+          updated_at timestamptz not null default now()
+        )`;
+      if (process.env.CATALOG_SEED === "none") return;
+      for (const p of SEED_PROMOTIONS) {
+        await sql`
+          insert into promotions (id, name, percent, scope, target_id, starts_at, ends_at, active)
+          values (${p.id}, ${p.name}, ${p.percent}, ${p.scope}, ${p.targetId}, ${p.startsAt}, ${p.endsAt}, ${p.active})
+          on conflict (id) do nothing`;
+      }
     },
   },
 ];

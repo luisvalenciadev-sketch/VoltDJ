@@ -31,7 +31,10 @@ export default async function GuideAdminPage({ params, searchParams }: { params:
   const shop = await getStore();
   const guide = code && store ? await store.get(code) : null;
   if (!guide) notFound();
-  const created = Boolean((await searchParams).creada);
+  const search = await searchParams;
+  const created = Boolean(search.creada);
+  const stockWarning = typeof search.stock === "string" ? search.stock : null;
+  const held = (guide.stockApplied ?? []).reduce((n, h) => n + h.qty, 0);
 
   const now = new Date();
   const cur = currentStatus(guide, now);
@@ -72,7 +75,17 @@ export default async function GuideAdminPage({ params, searchParams }: { params:
 
       {created && (
         <p className="alert ok" role="status">
-          <span>Guía creada. Envíale el enlace al cliente por WhatsApp.</span>
+          <span>
+            Guía creada. Envíale el enlace al cliente por WhatsApp.
+            {held > 0 && ` Se apartaron ${held} ${held === 1 ? "unidad" : "unidades"} del inventario.`}
+          </span>
+        </p>
+      )}
+      {stockWarning && (
+        <p className="alert warn" role="alert">
+          <span>
+            Inventario: {stockWarning} <Link href="/admin/inventario?ver=movimientos">Ver movimientos</Link>
+          </span>
         </p>
       )}
 

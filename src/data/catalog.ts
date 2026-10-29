@@ -1,9 +1,10 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
-import { activePromo } from "@/config/store";
 import { cacheScope } from "@/lib/cache-scope";
 import { catalogStore } from "@/lib/catalog-store";
 import { toPublicProduct } from "@/lib/inventory";
+import { discountPercent } from "@/lib/pricing";
+import { bestPromotion, storewidePromotion } from "@/lib/promotions";
 import type { Brand, CartProduct, Category, Product } from "./types";
 
 /**
@@ -16,17 +17,27 @@ export const CATALOG_TAG = "catalog";
 const snapshot = unstable_cache(() => catalogStore().snapshot(), ["catalog-snapshot-v1", cacheScope()], { tags: [CATALOG_TAG] });
 
 /**
- * La promoción general se aplica en cada lectura, no dentro de la caché: un servidor que sigue
- * encendido después de la fecha de fin no debe seguir sirviendo el precio rebajado.
+ * Las promociones se aplican en cada lectura, no dentro de la caché: así empiezan y terminan a su hora
+ * aunque el servidor siga encendido, sin que nadie guarde nada.
  */
-async function published(): Promise<Product[]> {
-  const { products, categories, brands } = await snapshot();
+async function published(now = new Date()): Promise<Product[]> {
+  const { products, categories, brands, promotions } = await snapshot();
   const hiddenCat = new Set(categories.filter((c) => c.visible === false).map((c) => c.id));
   const hiddenBrand = new Set(brands.filter((b) => b.visible === false).map((b) => b.id));
-  const promo = activePromo();
   return products
     .filter((p) => p.status === "published" && !hiddenCat.has(p.categoryId) && !hiddenBrand.has(p.brandId))
-    .map((p) => toPublicProduct(p, promo));
+    .map((p) => toPublicProduct(p, bestPromotion(p, promotions, now)));
+}
+
+/**
+ * Titular de la cinta superior: la promoción de toda la tienda si hay una vigente; si no, el mayor
+ * descuento que se puede encontrar hoy en el catálogo. null si no hay ofertas.
+ */
+export async function getDealHeadline(): Promise<string | null> {
+  const store = storewidePromotion((await snapshot()).promotions);
+  if (store) return `−${store.percent}% en todo el catálogo`;
+  const max = Math.max(0, ...(await published()).map(discountPercent));
+  return max > 0 ? `Ofertas de hasta −${max}%` : null;
 }
 
 export async function getProducts(): Promise<Product[]> {

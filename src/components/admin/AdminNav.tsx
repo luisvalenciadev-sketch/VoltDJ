@@ -9,6 +9,7 @@ const LINKS = [
   { href: "/admin/inventario", label: "Inventario", match: (p: string) => p.startsWith("/admin/inventario") },
   { href: "/admin/categorias", label: "Categorías", match: (p: string) => p.startsWith("/admin/categorias") },
   { href: "/admin/marcas", label: "Marcas", match: (p: string) => p.startsWith("/admin/marcas") },
+  { href: "/admin/promociones", label: "Promociones", match: (p: string) => p.startsWith("/admin/promociones") },
   { href: "/admin/importar", label: "Importar / exportar", match: (p: string) => p.startsWith("/admin/importar") },
   { href: "/admin/configuracion", label: "Configuración", match: (p: string) => p.startsWith("/admin/configuracion") },
 ];

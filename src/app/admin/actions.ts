@@ -4,7 +4,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { adminConfigured, clearLoginAttempts, createAdminSession, deleteAdminSession, loginBlocked, passwordMatches, recordFailedLogin, requireAdmin } from "@/lib/admin-auth";
-import { guidesStore } from "@/lib/guides-store";
+import { syncGuideStock } from "@/lib/guide-stock";
+import { guidesStore, type GuidesStore } from "@/lib/guides-store";
 import {
   addManualStatus,
   createGuideCode,
@@ -166,10 +167,26 @@ export async function createGuide(_: FormState, fd: FormData): Promise<FormState
   let code = createGuideCode();
   while (await store.get(code)) code = createGuideCode();
   const now = new Date().toISOString();
-  await store.create({ code, ...details, items: "", mode, events, createdAt: now, updatedAt: now });
+  await store.create({ code, ...details, items: "", mode, events, stockApplied: [], createdAt: now, updatedAt: now });
+  const warnings = await stockAfter(store, code);
   revalidatePath("/admin");
-  redirect(`/admin/guias/${code}?creada=1`);
+  redirect(`/admin/guias/${code}?creada=1${warnings ? `&stock=${encodeURIComponent(warnings.slice(0, 600))}` : ""}`);
 }
+
+/** Inventario al día con la guía. Devuelve los avisos de stock juntos, o "" si no hay. */
+async function stockAfter(store: GuidesStore, code: string, opts?: { release?: boolean }): Promise<string> {
+  const g = await store.get(code);
+  if (!g) return "";
+  try {
+    return (await syncGuideStock(g, store, opts)).join(" ");
+  } catch (e) {
+    // El pedido ya quedó guardado: un fallo del inventario no lo deshace, se avisa para ajustarlo a mano.
+    console.error("[panel] stock del pedido", code, e);
+    return "No se pudo actualizar el inventario de este pedido. Revísalo en Inventario.";
+  }
+}
+
+const withStock = (ok: string, warnings: string): FormState => (warnings ? { ok: `${ok} Inventario: ${warnings}` } : { ok });
 
 export async function updateDetails(code: string, _: FormState, fd: FormData): Promise<FormState> {
   await requireAdmin();
@@ -188,8 +205,9 @@ export async function updateDetails(code: string, _: FormState, fd: FormData): P
   const details = detailsFrom(fd);
   if (typeof details === "string") return { error: details };
   await store.update(code, details);
+  const warnings = await stockAfter(store, code);
   revalidatePath(`/admin/guias/${code}`);
-  return { ok: "Datos guardados." };
+  return withStock("Datos guardados.", warnings);
 }
 
 /** Registrar un abono: el monto es el total recibido hasta ahora, no lo que se suma. */
@@ -228,8 +246,10 @@ export async function setManualStatus(code: string, _: FormState, fd: FormData):
   // Un cambio manual congela el calendario: desde aquí manda el asesor.
   const base = g.mode === "auto" ? freezeToManual(g.events) : g.events;
   await store.update(code, { mode: "manual", events: addManualStatus(base, status, new Date(), note, { receivedBy, rescheduledFor }) });
+  // Cancelar devuelve las unidades al inventario; reactivar un pedido cancelado las vuelve a apartar.
+  const warnings = await stockAfter(store, code);
   revalidatePath(`/admin/guias/${code}`);
-  return { ok: "Estado actualizado." };
+  return withStock(status === "cancelado" ? "Pedido cancelado. Las unidades volvieron al inventario." : "Estado actualizado.", warnings);
 }
 
 export async function saveSchedule(code: string, _: FormState, fd: FormData): Promise<FormState> {
@@ -243,7 +263,10 @@ export async function saveSchedule(code: string, _: FormState, fd: FormData): Pr
 
 export async function deleteGuide(code: string): Promise<void> {
   await requireAdmin();
-  await storeOrFail().remove(code);
+  const store = storeOrFail();
+  // Eliminar un pedido no debe dejar unidades apartadas para siempre.
+  await stockAfter(store, code, { release: true });
+  await store.remove(code);
   revalidatePath("/admin");
   redirect("/admin?eliminada=1");
 }
