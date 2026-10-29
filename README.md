@@ -134,7 +134,7 @@ src/
 
 ```bash
 npm run typecheck
-npm test            # Vitest: lógica, componentes y contraste de los temas (205 pruebas)
+npm test            # Vitest: lógica, componentes y contraste de los temas (207 pruebas)
 npm run test:e2e    # Playwright: escritorio, tablet, móvil, los cinco temas, panel de catálogo, configuración, ventas y contenido (132 pruebas)
 ```
 
