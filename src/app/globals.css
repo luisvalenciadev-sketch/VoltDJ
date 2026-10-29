@@ -164,7 +164,7 @@ main { min-height: 60vh; }
 img.cover { width: 100% !important; height: 100% !important; object-fit: cover; }
 /* Fotos reales de producto (sin recorte): ocupan casi todo el marco, a diferencia de las ilustraciones. */
 /* Posición absoluta: la foto nunca se sale del marco, sea horizontal o vertical. */
-.card .img > img:not(.cover), .gallery .main > img:not(.cover), .line .thumb img:not(.cover) { position: absolute; inset: 3%; width: 94%; height: 94%; object-fit: contain; }
+.card .img > img:not(.cover), .line .thumb img:not(.cover) { position: absolute; inset: 3%; width: 94%; height: 94%; object-fit: contain; }
 .card .img, .line .thumb, .cat .img { overflow: hidden; }
 /* Zoom de foto al pasar: lento y corto (4%), solo con puntero fino y sin preferencia de movimiento reducido. */
 .card .img > img, .card .img > svg, .cat .img > img, .cat .img > svg { transition: transform var(--d-media) var(--ease-out); }
@@ -261,10 +261,8 @@ img.cover { width: 100% !important; height: 100% !important; object-fit: cover; 
 .billboard .txt { grid-area: txt; display: grid; gap: var(--s2); align-content: center; justify-items: start; padding: var(--s3) var(--s5) var(--s6); }
 .billboard .brand { color: rgb(16 17 20 / 0.72); }
 .billboard h3 { font-size: clamp(2.25rem, 6.5vw, 4.75rem); line-height: 0.95; letter-spacing: -0.01em; }
-.billboard h3 a { text-decoration: none; }
-.billboard h3 a::after { content: ""; position: absolute; inset: 0; z-index: 3; } /* toda la banda es el enlace */
-.billboard h3 a:focus-visible { outline: none; }
-.billboard:has(h3 a:focus-visible) { outline: 3px solid var(--fg); outline-offset: 4px; }
+.billboard-link { position: absolute; inset: 0; z-index: 3; border-radius: inherit; } /* toda la banda es el enlace */
+.billboard-link:focus-visible { outline: 3px solid var(--fg); outline-offset: 4px; }
 .billboard .price b { font-size: var(--t-xl); font-family: var(--f-display); font-weight: 800; }
 .billboard .price s { color: rgb(16 17 20 / 0.7); }
 .billboard .price .tbc { color: rgb(16 17 20 / 0.8); }
@@ -457,13 +455,44 @@ img.cover { width: 100% !important; height: 100% !important; object-fit: cover; 
 .pdp { display: grid; gap: var(--s5); padding-block: var(--s4) var(--s7); }
 @media (min-width: 900px) { .pdp { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: var(--s7); align-items: start; } }
 .gallery { display: grid; gap: var(--s2); }
-.gallery .main { position: relative; aspect-ratio: 1; max-width: 100%; background: var(--photo); border-radius: var(--r); display: grid; place-items: center; overflow: hidden; }
-.gallery .main > svg, .gallery .main > img { width: 70%; height: 70%; object-fit: contain; }
-.gallery .main .flag { top: var(--s3); left: var(--s3); font-size: var(--t-sm); padding: 6px 8px; }
+.gallery .main { position: relative; max-width: 100%; }
+.gallery .main .flag { top: var(--s3); left: var(--s3); z-index: 2; font-size: var(--t-sm); padding: 6px 8px; pointer-events: none; }
+
+/* ---------- Visor del producto ----------
+ * Estudio fotográfico: fondo claro con un foco suave arriba y sombra de piso que se desplaza
+ * opuesta al giro. El reflejo usa la propia foto como máscara: brilla solo sobre el producto. */
+.viewer { position: relative; }
+.viewer-stage { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: var(--r); background: radial-gradient(85% 70% at 50% 30%, #fbfbfc 0%, var(--photo) 55%, #cfd1d6 100%); perspective: 1100px; cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.viewer-stage:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.viewer-stage[data-dragging] { cursor: grabbing; }
+.viewer-stage[data-zoomed] { cursor: move; touch-action: none; }
+.viewer-obj { position: absolute; inset: 0; display: grid; place-items: center; transform-style: preserve-3d; will-change: transform; }
+.viewer-obj > img, .viewer-obj > svg { position: absolute; inset: 7%; width: 86%; height: 86%; object-fit: contain; pointer-events: none; -webkit-user-drag: none; }
+.viewer-obj > img.cover { inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.viewer-shine { position: absolute; inset: 7%; overflow: hidden; pointer-events: none; mask-size: contain; mask-position: center; mask-repeat: no-repeat; -webkit-mask-size: contain; -webkit-mask-position: center; -webkit-mask-repeat: no-repeat; }
+.viewer-shine > i { position: absolute; inset: -40%; background: radial-gradient(circle at 50% 42%, rgb(255 255 255 / 0.5), rgb(255 255 255 / 0) 30%); mix-blend-mode: soft-light; }
+.viewer-floor { position: absolute; left: 20%; right: 20%; bottom: 7%; height: 7%; border-radius: 50%; background: radial-gradient(closest-side, rgb(16 17 20 / 0.28), transparent); }
+.viewer-hint { position: absolute; left: var(--s3); bottom: var(--s3); max-width: calc(100% - 200px); padding: 6px 10px; border-radius: 999px; background: rgb(16 17 20 / 0.78); color: var(--fg); font-size: var(--t-xs); line-height: 1.3; pointer-events: none; transition: opacity var(--d-ui) var(--ease-out), transform var(--d-ui) var(--ease-out); }
+.viewer-hint[data-hidden] { opacity: 0; transform: translateY(4px); }
+.viewer-hint .on-touch { display: none; }
+@media (pointer: coarse) { .viewer-hint .on-mouse { display: none; } .viewer-hint .on-touch { display: inline; } }
+.viewer-tools { position: absolute; right: var(--s3); bottom: var(--s3); display: flex; gap: 6px; }
+.viewer-tools button { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 1px solid rgb(255 255 255 / 0.14); border-radius: var(--r); background: rgb(16 17 20 / 0.78); color: var(--fg); backdrop-filter: blur(6px); transition: transform var(--d-press) var(--ease-out), background-color var(--d-hover) var(--ease), opacity var(--d-hover) var(--ease); }
+.viewer-tools button:active:not(:disabled) { transform: scale(0.94); }
+.viewer-tools button:disabled { opacity: 0.4; cursor: not-allowed; }
+.viewer-tools svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+@media (hover: hover) and (pointer: fine) { .viewer-tools button:hover:not(:disabled) { background: rgb(16 17 20 / 0.95); } }
+@media (max-width: 480px) { .viewer-hint { max-width: calc(100% - 24px); bottom: calc(var(--s3) + 48px); } }
+
+/* Pantalla completa: <dialog> modal a toda la ventana. Entra con un fundido + escala corta. */
+.viewer-dialog { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: var(--bg); color: var(--fg); opacity: 1; transform: none; transition: opacity var(--d-ui) var(--ease-out), transform var(--d-ui) var(--ease-out), overlay var(--d-ui) allow-discrete, display var(--d-ui) allow-discrete; }
+@starting-style { .viewer-dialog[open] { opacity: 0; transform: scale(0.98); } }
+.viewer-dialog::backdrop { background: var(--bg); }
+.viewer[data-expanded] { height: 100%; }
+.viewer[data-expanded] .viewer-stage { aspect-ratio: auto; height: 100%; border-radius: 0; }
+.viewer[data-expanded] .viewer-tools { right: var(--s5); bottom: var(--s5); }
+.viewer[data-expanded] .viewer-hint { left: var(--s5); bottom: var(--s5); }
 .gallery .thumbs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s2); }
-/* Cambio de foto: fundido corto de la nueva sobre el fondo; solo tras elegir una miniatura, no en la carga inicial. */
-.gallery .main > img.swap { transition: opacity var(--d-ui) var(--ease-out); }
-@starting-style { .gallery .main > img.swap { opacity: 0; } }
 .gallery .thumbs button { aspect-ratio: 1; background: var(--photo); border: 2px solid transparent; border-radius: var(--r); display: grid; place-items: center; padding: 0; transition: transform var(--d-press) var(--ease-out), border-color var(--d-hover) var(--ease); }
 .gallery .thumbs button[aria-pressed="true"] { border-color: var(--accent); }
 .gallery .thumbs svg, .gallery .thumbs img { width: 60%; height: 60%; object-fit: contain; }

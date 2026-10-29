@@ -154,3 +154,31 @@ for (const path of PAGES) {
     expect(errors).toEqual([]);
   });
 }
+
+test("la banda de destacados lleva a la ficha del producto", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+  // Se hace clic sobre el texto "Ver producto", como lo haría una persona: debe navegar.
+  const go = page.locator(".billboard .go").first();
+  await go.scrollIntoViewIfNeeded();
+  const box = (await go.boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(page).toHaveURL(/\/producto\/pioneer-dj-cdj-3000$/);
+});
+
+test("el visor del producto acerca, se restablece y abre en pantalla completa", async ({ page }) => {
+  await page.goto("/producto/pioneer-dj-cdj-3000");
+  await page.waitForLoadState("networkidle");
+  const viewer = page.getByRole("group", { name: /Pioneer DJ CDJ-3000: vista interactiva/ });
+  await expect(viewer).toBeVisible();
+  await expect(page.getByRole("button", { name: "Alejar" })).toBeDisabled();
+  await page.getByRole("button", { name: "Acercar" }).click();
+  await expect(page.getByRole("button", { name: "Alejar" })).toBeEnabled();
+  await page.getByRole("button", { name: "Restablecer vista" }).click();
+  await expect(page.getByRole("button", { name: "Alejar" })).toBeDisabled();
+  await page.getByRole("button", { name: "Ver en pantalla completa" }).click();
+  const dialog = page.getByRole("dialog", { name: /pantalla completa/ });
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+});
