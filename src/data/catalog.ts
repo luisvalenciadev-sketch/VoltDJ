@@ -1,44 +1,51 @@
 import "server-only";
-import { promoIsActive } from "@/config/store";
-import { BRANDS } from "./brands";
-import { CATEGORIES } from "./categories";
-import { PRODUCTS } from "./products";
+import { unstable_cache } from "next/cache";
+import { activePromo } from "@/config/store";
+import { catalogStore } from "@/lib/catalog-store";
+import { toPublicProduct } from "@/lib/inventory";
 import type { Brand, CartProduct, Category, Product } from "./types";
 
 /**
- * Repositorio del catálogo. Es la única puerta de entrada a los datos: hoy lee
- * archivos locales; para pasar a un CMS se reemplaza la implementación de estas
- * funciones sin tocar páginas ni componentes.
+ * Repositorio del catálogo de la tienda. Es la única puerta de entrada a los datos: lee del almacén
+ * (Neon en producción) a través de una caché con la etiqueta CATALOG_TAG. El panel invalida esa
+ * etiqueta al guardar, así que un cambio se ve en la siguiente visita sin consultar la base cada vez.
  */
-const SOURCE: Product[] = PRODUCTS;
+export const CATALOG_TAG = "catalog";
 
-const isPublished = (p: Product) => p.status === "published";
+const snapshot = unstable_cache(() => catalogStore().snapshot(), ["catalog-snapshot-v1"], { tags: [CATALOG_TAG] });
 
 /**
- * Las promociones vencidas se quitan en cada lectura, no al cargar el módulo: un servidor que
- * sigue encendido después de la fecha de fin no debe seguir sirviendo el precio rebajado.
+ * La promoción general se aplica en cada lectura, no dentro de la caché: un servidor que sigue
+ * encendido después de la fecha de fin no debe seguir sirviendo el precio rebajado.
  */
-const withCurrentPromo = (p: Product): Product => (p.promoEndsAt && !promoIsActive(p.promoEndsAt) ? { ...p, promoPrice: null, promoEndsAt: null } : p);
+async function published(): Promise<Product[]> {
+  const { products, categories, brands } = await snapshot();
+  const hiddenCat = new Set(categories.filter((c) => c.visible === false).map((c) => c.id));
+  const hiddenBrand = new Set(brands.filter((b) => b.visible === false).map((b) => b.id));
+  const promo = activePromo();
+  return products
+    .filter((p) => p.status === "published" && !hiddenCat.has(p.categoryId) && !hiddenBrand.has(p.brandId))
+    .map((p) => toPublicProduct(p, promo));
+}
 
 export async function getProducts(): Promise<Product[]> {
-  return SOURCE.filter(isPublished).map(withCurrentPromo);
+  return published();
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  const p = SOURCE.find((x) => x.slug === slug && isPublished(x));
-  return p ? withCurrentPromo(p) : null;
+  return (await published()).find((p) => p.slug === slug) ?? null;
 }
 
 export async function getCategories(): Promise<Category[]> {
-  return [...CATEGORIES].sort((a, b) => a.order - b.order);
+  return (await snapshot()).categories.filter((c) => c.visible !== false).sort((a, b) => a.order - b.order);
 }
 
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
-  return CATEGORIES.find((c) => c.slug === slug) ?? null;
+  return (await getCategories()).find((c) => c.slug === slug) ?? null;
 }
 
 export async function getBrands(): Promise<Brand[]> {
-  return BRANDS;
+  return (await snapshot()).brands.filter((b) => b.visible !== false);
 }
 
 /** Vista reducida para el carrito: lo justo para recalcular precios en el cliente. */

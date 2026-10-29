@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { logout } from "./actions";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { LogoMark } from "@/components/icons";
 import { SESSION_COOKIE, verifyAdminToken } from "@/lib/admin-auth";
 
@@ -35,6 +36,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </nav>
         </div>
       </header>
+      {signedIn && <AdminNav />}
       <div className="wrap admin">{children}</div>
     </>
   );

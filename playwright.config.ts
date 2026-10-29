@@ -14,9 +14,17 @@ export default defineConfig({
   reporter: [["list"]],
   use: { baseURL: `http://localhost:${PORT}`, trace: "retain-on-failure" },
   projects: [
-    { name: "escritorio", use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } } },
-    { name: "tablet", use: { ...devices["Desktop Chrome"], viewport: { width: 820, height: 1180 }, hasTouch: true } },
-    { name: "movil", use: { ...devices["Pixel 7"] } },
+    { name: "escritorio", testIgnore: /catalogo\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } } },
+    { name: "tablet", testIgnore: /catalogo\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 820, height: 1180 }, hasTouch: true } },
+    { name: "movil", testIgnore: /catalogo\.spec/, use: { ...devices["Pixel 7"] } },
+    // El panel de catálogo crea productos en el catálogo compartido (memoria del servidor): corre al final,
+    // cuando las pruebas de la tienda (que cuentan los 28 productos) ya terminaron.
+    {
+      name: "panel-catalogo",
+      testMatch: /catalogo\.spec/,
+      dependencies: ["escritorio", "tablet", "movil"],
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } },
+    },
   ],
   webServer: {
     command: `npx next build && npx next start -p ${PORT}`,
@@ -29,6 +37,7 @@ export default defineConfig({
       NEXT_TELEMETRY_DISABLED: "1",
       // Panel de guías con almacén en memoria: las pruebas nunca tocan la base real.
       GUIDES_STORE: "memory",
+      CATALOG_STORE: "memory",
       ADMIN_PASSWORD: TEST_ADMIN_PASSWORD,
       SESSION_SECRET: "clave-de-prueba-solo-para-e2e-0123456789abcdef",
     },

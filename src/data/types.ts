@@ -55,7 +55,55 @@ export interface Product {
   /** Distingue los productos de demostración del catálogo definitivo. */
   isDemo: boolean;
   featured: boolean;
+  /** Cifra que el comprador busca primero ("18\"", "1000W", "4CH"); titular de la vitrina. */
+  keyFigure?: string | null;
   updatedAt: string;
+}
+
+/**
+ * Producto tal como se guarda y se edita en el panel. La tienda nunca lo usa directo:
+ * `toPublicProduct` calcula la disponibilidad desde el stock y aplica la promoción vigente.
+ */
+export interface ProductRecord {
+  id: string;
+  slug: string;
+  sku: string;
+  name: string;
+  brandId: string;
+  categoryId: string;
+  description: string;
+  /** Precio de lista en COP enteros. `null` = precio por confirmar. */
+  price: number | null;
+  /** Precio rebajado propio del producto; tiene prioridad sobre la promoción general. */
+  salePrice: number | null;
+  keyFigure: string | null;
+  specs: Spec[];
+  images: ProductImage[];
+  art: ArtKind;
+  /** Unidades en bodega. `null` = la tienda no controla inventario de este producto. */
+  stock: number | null;
+  /** Con stock en este número o menos se muestra "Pocas unidades". 0 = nunca. */
+  lowStockAt: number;
+  /** Sin stock se sigue vendiendo como "Bajo pedido" en lugar de "Agotado". */
+  allowBackorder: boolean;
+  maxPerOrder: number;
+  featured: boolean;
+  status: PublicationStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type StockReason = "ajuste" | "pedido" | "cancelacion" | "importacion" | "inicial";
+
+export interface StockMovement {
+  id: string;
+  productId: string;
+  delta: number;
+  stockAfter: number | null;
+  reason: StockReason;
+  ref: string | null;
+  note: string | null;
+  createdAt: string;
 }
 
 export interface Category {
@@ -66,6 +114,8 @@ export interface Category {
   art: ArtKind;
   order: number;
   image?: ProductImage;
+  /** Oculta la categoría en la tienda sin borrarla. Sin valor = visible. */
+  visible?: boolean;
 }
 
 export interface Brand {
@@ -74,8 +124,11 @@ export interface Brand {
   /** Solo marcas con distribución o autorización confirmada deben tener `authorized: true`. */
   authorized: boolean;
   isDemo: boolean;
-  /** Logotipo en public/img/marcas. Sin logo confiable se muestra el nombre como texto. */
+  /** Logotipo en public/img/marcas o subido desde el panel. Sin logo confiable se muestra el nombre como texto. */
   logo?: { src: string; width: number; height: number; /** El logo es solo un símbolo: mostrar el nombre al lado. */ withName?: boolean };
+  order?: number;
+  /** Oculta la marca en la tienda sin borrarla. Sin valor = visible. */
+  visible?: boolean;
 }
 
 /** Vista mínima de producto que el carrito necesita en el cliente. */

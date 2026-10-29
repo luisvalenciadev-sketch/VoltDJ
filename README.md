@@ -66,28 +66,24 @@ Los colores, la tipografía, el espaciado y los radios están en `src/styles/tok
 
 ### Catálogo
 
+El catálogo se administra en el panel: `/admin/productos`, `/admin/inventario`, `/admin/categorias`, `/admin/marcas` e `/admin/importar` (CSV propio o exportación de WooCommerce). Se guarda en Neon y las fotos en Vercel Blob. El plan completo está en `docs/plan-panel-admin.md`.
+
 | Archivo | Contenido |
 |---|---|
-| `src/data/types.ts` | Modelo de producto, categoría y marca |
-| `src/data/products.ts` | **Catálogo real** (28 productos) |
+| `src/data/types.ts` | Modelo de producto (`ProductRecord` en el panel, `Product` en la tienda), categoría y marca |
+| `src/data/products.ts` / `categories.ts` / `brands.ts` | **Catálogo inicial**: se copia a la base la primera vez y se usa en las pruebas |
 | `src/data/products.demo.ts` | Productos ficticios, solo para pruebas |
-| `src/data/categories.ts` / `brands.ts` | Categorías y marcas |
-| `src/data/catalog.ts` | Repositorio: única puerta de acceso a los datos |
-
-Para cargar el catálogo real:
-1. Crea `src/data/products.ts` con el mismo tipo `Product[]`, con `isDemo: false` y `status: "published"`.
-2. En `src/data/catalog.ts`, cambia `SOURCE` a ese arreglo.
-3. Pon las fotos en `public/productos/…` y añádelas a `images` con `src`, `alt`, `width` y `height`. Sin fotos se muestra una ilustración provisional.
-4. En las marcas con autorización, marca `authorized: true` para que aparezcan en la sección de marcas del inicio.
+| `src/data/catalog.ts` | Repositorio de la tienda: lee con caché por etiqueta (`catalog`) que el panel invalida al guardar |
+| `src/lib/catalog-store.ts` | Almacén: Neon, memoria (pruebas) o solo lectura (sin base) |
+| `src/lib/db.ts` | Esquema y migraciones: se aplican solas en la primera petición |
+| `src/lib/inventory.ts` | Disponibilidad calculada desde el stock y promoción aplicada |
+| `src/lib/catalog-import.ts` | Importación y exportación CSV, plantilla y WooCommerce |
 
 Reglas de los datos:
-- `price: null` muestra "Precio por confirmar" y no suma al subtotal.
-- `promoPrice` debe ser menor que `price`; solo entonces se muestran el precio anterior y el porcentaje calculado.
-- `availability` acepta `disponible`, `pocas`, `bajo_pedido`, `agotado` o `consultar`. Los productos `agotado` no se pueden añadir al carrito.
-- `status: "draft"` o `"archived"` despublica el producto.
-- Los productos con `isDemo: true` llevan `noindex` y no entran en el sitemap.
-
-Si el catálogo lo va a editar personal no técnico, la recomendación es conectar un CMS headless reimplementando las funciones de `src/data/catalog.ts`. Páginas y componentes no cambian.
+- Precio vacío muestra "Precio por confirmar" y no suma al subtotal.
+- El precio rebajado propio debe ser menor que el precio; gana sobre la promoción general de `src/config/store.ts`.
+- La disponibilidad sale del stock: sin control de inventario → Disponible; 0 → Agotado (o Bajo pedido si se permite); hasta el umbral → Pocas unidades. Los agotados no se pueden añadir al carrito y nadie puede pedir más unidades de las que hay.
+- Borrador o archivado despublica el producto. Una categoría o marca oculta oculta también sus productos.
 
 ## Arquitectura
 
@@ -111,8 +107,8 @@ src/
 
 ```bash
 npm run typecheck
-npm test            # Vitest: lógica y componentes (39 pruebas)
-npm run test:e2e    # Playwright: escritorio, tablet y móvil (51 pruebas)
+npm test            # Vitest: lógica y componentes (84 pruebas)
+npm run test:e2e    # Playwright: escritorio, tablet, móvil y panel de catálogo (88 pruebas)
 ```
 
 La primera vez, para las pruebas e2e: `npx playwright install chromium`. Usan el puerto 3217 y un número de WhatsApp ficticio de prueba.
@@ -133,7 +129,8 @@ npm run start   # puerto 3000 por defecto; -p para cambiarlo
 
 Antes de publicar:
 1. Configura `NEXT_PUBLIC_WHATSAPP_NUMBER` y `NEXT_PUBLIC_SITE_URL` en el hosting.
-2. Reemplaza el catálogo demo y completa `src/config/store.ts`.
+2. Conecta en Vercel las integraciones **Neon** (catálogo y guías) y **Blob** (fotos del panel), y define `ADMIN_PASSWORD` y `SESSION_SECRET`. Para una tienda nueva que debe arrancar vacía, define también `CATALOG_SEED=none` antes del primer despliegue.
+3. Completa `src/config/store.ts`.
 3. Reemplaza los textos legales de `/privacidad` y `/terminos` por los aprobados por la tienda.
 4. Reemplaza la ilustración del hero por una fotografía autorizada.
 

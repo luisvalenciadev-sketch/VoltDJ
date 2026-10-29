@@ -1,11 +1,11 @@
-import { PROMO } from "@/config/store";
 import { productPhoto } from "./product-photos";
-import type { ArtKind, Product } from "./types";
+import type { ArtKind, ProductRecord } from "./types";
 
 /**
- * CATÁLOGO REAL de la tienda (lista entregada el 2026-10-28).
- * Precios de lista en COP; el precio promocional sale de PROMO (config/store). Una unidad de cada producto. Todos nuevos.
- * Fotos: las del fabricante en public/img/productos; sin foto se muestra la ilustración del tipo de equipo.
+ * CATÁLOGO INICIAL de la tienda (lista entregada el 2026-10-28). Ya no es la fuente de la tienda:
+ * es la semilla que se copia a la base de datos la primera vez (ver src/lib/db.ts) y el catálogo
+ * de las pruebas. Desde ahí, los productos se administran en /admin/productos.
+ * Precios de lista en COP; la promoción general se aplica al leer (src/lib/inventory.ts). Una unidad de cada producto.
  */
 interface Seed {
   model: string;
@@ -15,12 +15,13 @@ interface Seed {
   price: number;
   art: ArtKind;
   featured?: boolean;
+  keyFigure?: string;
   extra?: [string, string][];
 }
 
-const UPDATED = "2026-10-28";
+const UPDATED = "2026-10-28T00:00:00.000Z";
 
-const slugify = (s: string) =>
+export const slugify = (s: string) =>
   s
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
@@ -39,17 +40,17 @@ const BRAND_NAME: Record<string, string> = {
 
 const SEEDS: Seed[] = [
   // Parlantes y bajos
-  { model: "ZLX-15P-G2", brandId: "electro-voice", categoryId: "parlantes", type: "Parlante activo 15\"", price: 2300000, art: "speaker", extra: [["Woofer", "15\""]] },
-  { model: "B3 MU18BA", brandId: "beta-three", categoryId: "parlantes", type: "Bajo activo 18\"", price: 2000000, art: "speaker", extra: [["Woofer", "18\""], ["Potencia", "500 W RMS"]] },
-  { model: "B3 N15A/MP3-II", brandId: "beta-three", categoryId: "parlantes", type: "Parlante activo 15\"", price: 1800000, art: "speaker", extra: [["Woofer", "15\""]] },
+  { model: "ZLX-15P-G2", brandId: "electro-voice", categoryId: "parlantes", type: "Parlante activo 15\"", price: 2300000, art: "speaker", keyFigure: "15\"", extra: [["Woofer", "15\""]] },
+  { model: "B3 MU18BA", brandId: "beta-three", categoryId: "parlantes", type: "Bajo activo 18\"", price: 2000000, art: "speaker", keyFigure: "18\"", extra: [["Woofer", "18\""], ["Potencia", "500 W RMS"]] },
+  { model: "B3 N15A/MP3-II", brandId: "beta-three", categoryId: "parlantes", type: "Parlante activo 15\"", price: 1800000, art: "speaker", keyFigure: "15\"", extra: [["Woofer", "15\""]] },
   // Monitores de estudio
   { model: "VXT8", brandId: "krk", categoryId: "monitores", type: "Monitor de estudio", price: 1600000, art: "speaker" },
   { model: "HS5", brandId: "yamaha", categoryId: "monitores", type: "Monitor de estudio", price: 1600000, art: "speaker" },
   // Reproductores
   { model: "CDJ-3000", brandId: "pioneer-dj", categoryId: "reproductores", type: "Reproductor multimedia DJ", price: 10000000, art: "turntable", featured: true },
   // Sistemas todo en uno
-  { model: "XDJ-AZ", brandId: "alphatheta", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 9000000, art: "controller", featured: true },
-  { model: "Opus Quad", brandId: "pioneer-dj", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 8000000, art: "controller", featured: true },
+  { model: "XDJ-AZ", brandId: "alphatheta", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 9000000, art: "controller", featured: true, keyFigure: "4CH" },
+  { model: "Opus Quad", brandId: "pioneer-dj", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 8000000, art: "controller", featured: true, keyFigure: "4CH" },
   { model: "XDJ-RX3", brandId: "pioneer-dj", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 7800000, art: "controller" },
   { model: "XDJ-XZ", brandId: "pioneer-dj", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 7000000, art: "controller" },
   { model: "OMNIS-DUO", brandId: "alphatheta", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 4500000, art: "controller" },
@@ -59,7 +60,7 @@ const SEEDS: Seed[] = [
   { model: "XDJ-RR", brandId: "pioneer-dj", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 3800000, art: "controller" },
   { model: "XDJ-RX", brandId: "pioneer-dj", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 3500000, art: "controller" },
   // Controladores
-  { model: "DDJ-FLX10", brandId: "pioneer-dj", categoryId: "controladores", type: "Controlador DJ", price: 4500000, art: "controller", featured: true },
+  { model: "DDJ-FLX10", brandId: "pioneer-dj", categoryId: "controladores", type: "Controlador DJ", price: 4500000, art: "controller", featured: true, keyFigure: "4CH" },
   { model: "DDJ-RX", brandId: "pioneer-dj", categoryId: "controladores", type: "Controlador DJ", price: 4000000, art: "controller" },
   { model: "DDJ-FLX6-GT", brandId: "pioneer-dj", categoryId: "controladores", type: "Controlador DJ", price: 3100000, art: "controller" },
   { model: "DDJ-1000", brandId: "pioneer-dj", categoryId: "controladores", type: "Controlador DJ", price: 3000000, art: "controller" },
@@ -74,26 +75,21 @@ const SEEDS: Seed[] = [
   { model: "RMX-1000", brandId: "pioneer-dj", categoryId: "efectos", type: "Estación de efectos y remix", price: 3000000, art: "mixer" },
 ];
 
-export const PRODUCTS: Product[] = SEEDS.map((s) => {
+export const SEED_PRODUCTS: ProductRecord[] = SEEDS.map((s) => {
   const brand = BRAND_NAME[s.brandId];
   const name = `${brand} ${s.model}`;
   const photo = productPhoto(slugify(name), name);
   return {
     id: slugify(name),
     slug: slugify(name),
+    sku: s.model,
     name,
     brandId: s.brandId,
     categoryId: s.categoryId,
     description: `${s.type} ${brand} ${s.model}, nuevo. Escríbenos por WhatsApp para confirmar disponibilidad, estado y costo de envío a tu ciudad.`,
-    images: photo ? [photo] : [],
-    art: s.art,
     price: s.price,
-    // Redondeado al millar: en COP no se publican precios con centenas sueltas.
-    promoPrice: PROMO ? Math.round((s.price * (1 - PROMO.percent / 100)) / 1000) * 1000 : null,
-    promoEndsAt: PROMO?.endsAt ?? null,
-    sku: s.model,
-    availability: "disponible",
-    maxQtyPerOrder: 1,
+    salePrice: null,
+    keyFigure: s.keyFigure ?? null,
     specs: [
       { label: "Marca", value: brand },
       { label: "Modelo", value: s.model },
@@ -101,9 +97,16 @@ export const PRODUCTS: Product[] = SEEDS.map((s) => {
       { label: "Estado", value: "Nuevo" },
       ...(s.extra ?? []).map(([label, value]) => ({ label, value })),
     ],
-    status: "published",
-    isDemo: false,
+    images: photo ? [photo] : [],
+    art: s.art,
+    // Una unidad de cada uno; "Pocas unidades" desactivado para que la tienda se vea igual que antes del panel.
+    stock: 1,
+    lowStockAt: 0,
+    allowBackorder: false,
+    maxPerOrder: 1,
     featured: s.featured ?? false,
+    status: "published",
+    createdAt: UPDATED,
     updatedAt: UPDATED,
   };
 });

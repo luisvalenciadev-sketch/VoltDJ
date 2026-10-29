@@ -151,6 +151,8 @@ export default async function HomePage() {
                       </Tilt>
                     </div>
                     <div className="txt">
+                      {/* La cifra que el comprador busca primero (18", 4CH), editable en el panel. */}
+                      {p.keyFigure && <span className="key-figure" aria-hidden="true">{p.keyFigure}</span>}
                       <span className="brand">{brand} · {categoryName(p.categoryId)}</span>
                       <h3 className="disp" id={`bb-${p.id}`}>
                         <span className="sr-only">{brand} </span>
