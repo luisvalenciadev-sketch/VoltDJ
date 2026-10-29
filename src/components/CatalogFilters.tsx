@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useOptimistic, useState, useTransition } from "react";
 import type { Availability } from "@/data/types";
 import { toSearchParams, type CatalogQuery, type SortKey } from "@/lib/catalog-filter";
 import { AVAILABILITY_LABEL } from "@/lib/pricing";
@@ -32,10 +32,12 @@ const parseNum = (s: string) => {
   return digits === "" ? null : parseInt(digits, 10);
 };
 
-export function CatalogShell({ query, categories, brands, lockedPromo, resultCount, chips, children }: Props) {
+export function CatalogShell({ query: serverQuery, categories, brands, lockedPromo, resultCount, chips, children }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [pending, startTransition] = useTransition();
+  // Los controles reflejan el cambio al instante mientras llega la página filtrada.
+  const [query, setOptimisticQuery] = useOptimistic(serverQuery);
   const [open, setOpen] = useState(false);
   const [min, setMin] = useState(query.min?.toString() ?? "");
   const [max, setMax] = useState(query.max?.toString() ?? "");
@@ -48,7 +50,10 @@ export function CatalogShell({ query, categories, brands, lockedPromo, resultCou
     const next = { ...query, ...patch };
     if (lockedPromo) next.promo = false; // la ruta ya lo implica
     const qs = toSearchParams(next).toString();
-    startTransition(() => router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false }));
+    startTransition(() => {
+      setOptimisticQuery(next);
+      router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    });
   };
 
   const activeCount = query.brands.length + query.availability.length + (query.promo && !lockedPromo ? 1 : 0) + (query.min != null || query.max != null ? 1 : 0);

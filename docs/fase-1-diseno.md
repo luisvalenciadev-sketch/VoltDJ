@@ -1,6 +1,6 @@
 # VOLT DJ — Fase 1: Diseño UX/UI
 
-Estado: **pendiente de aprobación**. No se ha iniciado la implementación funcional.
+Estado: **aprobado** (2026-10-28). Decisiones: datos locales para el catálogo, Next.js + TypeScript. Implementación: ver README.md.
 
 - Prototipo navegable: `design/prototipo-volt-dj.html` (publicado como artifact privado).
 - Todos los productos, marcas y precios del prototipo son **de demostración** (`DEMO-*`, "Marca A…F").

@@ -60,7 +60,7 @@ export default async function HomePage() {
                 <span className="img"><ProductArt kind={c.art} /></span>
                 <span className="meta">
                   <b>{c.name}</b>
-                  <span aria-label="productos">{products.filter((p) => p.categoryId === c.id).length}</span>
+                  <span>{products.filter((p) => p.categoryId === c.id).length}<span className="sr-only"> productos</span></span>
                 </span>
               </Link>
             ))}

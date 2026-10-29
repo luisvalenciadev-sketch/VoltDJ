@@ -35,7 +35,7 @@ p { margin: 0; }
 main { min-height: 60vh; }
 .sec { padding-block: var(--s7); }
 .sec + .sec { border-top: 1px solid var(--border); }
-.sechead { display: flex; align-items: end; justify-content: space-between; gap: var(--s4); margin-bottom: var(--s5); }
+.sechead { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--s2) var(--s4); margin-bottom: var(--s5); }
 .sechead h2 { font-size: var(--t-xl); }
 .sechead p { color: var(--fg-2); margin-top: 6px; max-width: 60ch; }
 .pagehead { padding-block: var(--s3) var(--s5); display: grid; gap: var(--s2); }
