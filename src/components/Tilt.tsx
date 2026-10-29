@@ -23,6 +23,9 @@ export function Tilt({ max = 8, lift = 0, host: hostSelector, className, childre
     let tx = 0, ty = 0, tz = 0, ts = 1;
     let x = 0, y = 0, z = 0, s = 1;
     let raf = 0;
+    // Los temas planos (--tilt: 0) no inclinan. Se lee al entrar, no en cada movimiento: el tema
+    // puede cambiar sin recargar (vista previa), pero no mientras el puntero está encima.
+    let flat: boolean | null = null;
 
     const tick = () => {
       x += (tx - x) * STIFFNESS;
@@ -38,6 +41,8 @@ export function Tilt({ max = 8, lift = 0, host: hostSelector, className, childre
       if (!raf) raf = requestAnimationFrame(tick);
     };
     const move = (e: PointerEvent) => {
+      flat ??= getComputedStyle(el).getPropertyValue("--tilt").trim() === "0";
+      if (flat) return;
       const r = host.getBoundingClientRect();
       tx = ((e.clientX - r.left) / r.width - 0.5) * max * 2;
       ty = -((e.clientY - r.top) / r.height - 0.5) * max * 2;
@@ -46,6 +51,7 @@ export function Tilt({ max = 8, lift = 0, host: hostSelector, className, childre
       kick();
     };
     const leave = () => {
+      flat = null;
       tx = ty = tz = 0;
       ts = 1;
       delete host.dataset.tilting;

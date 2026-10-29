@@ -108,3 +108,22 @@ test("el SEO cambia el título de la portada", async ({ page, context }) => {
   await go(shop, "/");
   await expect(shop).toHaveTitle("Sonido Prueba · Parlantes y DJ en Ibagué");
 });
+
+test("el tema elegido se aplica a toda la tienda y el panel sigue oscuro", async ({ page, context }) => {
+  await login(page);
+  await go(page, "/admin/configuracion?s=diseno");
+  await page.locator(".theme-card", { hasText: "Vitrina" }).click();
+  await expect(page.getByRole("radio", { name: /Vitrina/ })).toBeChecked();
+  await save(page);
+  await expect(page.locator(".theme-card", { hasText: "Vitrina" }).getByText("En uso")).toBeVisible();
+  // El panel no adopta el tema de la tienda.
+  await expect(page.locator(".admin-root")).toHaveCSS("background-color", "rgb(16, 17, 20)");
+
+  const shop = await context.newPage();
+  await go(shop, "/catalogo");
+  await expect(shop.locator("html")).toHaveAttribute("data-theme", "vitrina");
+  await expect(shop.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  // El acento guardado antes (pensado para fondo oscuro) se oscurece solo para leerse sobre blanco.
+  const accent = await shop.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--accent").trim());
+  expect(accent).toMatch(/^#[0-9a-f]{6}$/);
+});

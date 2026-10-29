@@ -2,11 +2,12 @@
 
 import { revalidateTag } from "next/cache";
 import type { SocialLink, StoreSettings } from "@/config/store";
+import { DEFAULT_THEME, isThemeId, THEMES } from "@/config/themes";
 import { SETTINGS_TAG } from "@/data/store";
 import type { ProductImage } from "@/data/types";
 import { requireAdmin } from "@/lib/admin-auth";
 import { catalogStore, ReadOnlyCatalogError } from "@/lib/catalog-store";
-import { contrast, MIN_ACCENT_CONTRAST, normalizeHex, readableAccent, STORE_BG } from "@/lib/color";
+import { contrast, MIN_ACCENT_CONTRAST, normalizeHex, readableAccent } from "@/lib/color";
 import { deleteMedia } from "@/lib/media";
 import { settingsStore } from "@/lib/settings-store";
 import { normalizeWhatsApp } from "@/lib/whatsapp";
@@ -113,16 +114,25 @@ export async function saveBrandSettings(_: SettingsState, fd: FormData): Promise
   const rawAccent = text(fd, "accent", 20);
   const accent = rawAccent ? normalizeHex(rawAccent) : null;
   if (rawAccent && !accent) return { error: "El color debe escribirse como #RRGGBB, por ejemplo #B8FF32.", field: "accent" };
-  if (accent && contrast(accent, STORE_BG) < MIN_ACCENT_CONTRAST) {
-    return { error: `Ese color no se lee sobre el fondo oscuro de la tienda. Prueba con ${readableAccent(accent)?.toUpperCase()}, el mismo tono más claro.`, field: "accent" };
-  }
-  return save(
-    (s) => ({
+  return save((s) => {
+    // Se valida contra el fondo del tema elegido. Si después cambian de tema, la tienda ajusta el tono sola.
+    const theme = THEMES[s.brand.theme] ?? THEMES[DEFAULT_THEME];
+    if (accent && contrast(accent, theme.colors.bg) < MIN_ACCENT_CONTRAST) {
+      const where = theme.scheme === "dark" ? "oscuro" : "claro";
+      const how = theme.scheme === "dark" ? "más claro" : "más oscuro";
+      return { error: `Ese color no se lee sobre el fondo ${where} del tema ${theme.name}. Prueba con ${readableAccent(accent, theme.colors.bg)?.toUpperCase()}, el mismo tono ${how}.`, field: "accent" };
+    }
+    return {
       ...s,
-      brand: { logoOnDark: parseImage(fd.get("logoOnDark")), logoOnLight: parseImage(fd.get("logoOnLight")), favicon: parseImage(fd.get("favicon")), accent },
-    }),
-    "la marca",
-  );
+      brand: { ...s.brand, logoOnDark: parseImage(fd.get("logoOnDark")), logoOnLight: parseImage(fd.get("logoOnLight")), favicon: parseImage(fd.get("favicon")), accent },
+    };
+  }, "la marca");
+}
+
+export async function saveTheme(_: SettingsState, fd: FormData): Promise<SettingsState> {
+  const theme = fd.get("theme");
+  if (!isThemeId(theme)) return { error: "Elige uno de los cinco temas." };
+  return save((s) => ({ ...s, brand: { ...s.brand, theme } }), "el tema");
 }
 
 export async function savePolicies(_: SettingsState, fd: FormData): Promise<SettingsState> {

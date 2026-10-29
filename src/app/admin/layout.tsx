@@ -12,8 +12,9 @@ export const metadata: Metadata = { title: { default: "Panel", template: "%s · 
 /** Barra propia del panel: lo justo para trabajar (marca, volver a la tienda, salir). */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const signedIn = await verifyAdminToken((await cookies()).get(SESSION_COOKIE)?.value);
+  // El panel siempre usa el tema base (oscuro), elija la tienda el que elija: es una herramienta de trabajo.
   return (
-    <>
+    <div className="admin-root" data-theme="escenario">
       <header className="admin-bar">
         <div className="wrap">
           <Link className="logo" href={signedIn ? "/admin" : "/"} aria-label="Panel de guías">
@@ -38,6 +39,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </header>
       {signedIn && <AdminNav />}
       <div className="wrap admin">{children}</div>
-    </>
+    </div>
   );
 }

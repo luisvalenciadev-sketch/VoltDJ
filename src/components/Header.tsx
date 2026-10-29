@@ -10,12 +10,23 @@ import { Pending } from "./ui";
 
 /** Logo subido en el panel o, si no hay, el nombre de la tienda con el medidor de VOLT. */
 export function Logo({ store }: { store: StoreSettings }) {
-  const logo = store.brand.logoOnDark;
-  if (logo) {
+  const { logoOnDark, logoOnLight } = store.brand;
+  if (logoOnDark || logoOnLight) {
+    // Con los dos logos van ambos y el tema muestra el que corresponde a su fondo (themes.css): así la
+    // vista previa de un tema claro cambia el logo sin pedir otra página. Con uno solo, se usa siempre.
+    const both = logoOnDark && logoOnLight;
     return (
       <Link className="logo logo-img" href="/" aria-label={`${store.name}, ir al inicio`}>
-        {/* eslint-disable-next-line @next/next/no-img-element -- logo de proporción libre; ya llega optimizado */}
-        <img src={logo.src} alt={store.name} width={logo.width} height={logo.height} />
+        {[
+          { img: logoOnDark, cls: both ? "for-dark" : undefined },
+          { img: both ? logoOnLight : null, cls: "for-light" },
+          { img: both ? null : logoOnLight, cls: undefined },
+        ].map(({ img, cls }) =>
+          img ? (
+            // eslint-disable-next-line @next/next/no-img-element -- logo de proporción libre; ya llega optimizado
+            <img key={img.src} className={cls} src={img.src} alt={store.name} width={img.width} height={img.height} />
+          ) : null,
+        )}
       </Link>
     );
   }

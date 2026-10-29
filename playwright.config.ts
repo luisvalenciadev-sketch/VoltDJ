@@ -15,7 +15,7 @@ export default defineConfig({
   use: { baseURL: `http://localhost:${PORT}`, trace: "retain-on-failure" },
   projects: [
     { name: "escritorio", testIgnore: /(catalogo|configuracion)\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } } },
-    { name: "tablet", testIgnore: /(catalogo|configuracion)\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 820, height: 1180 }, hasTouch: true } },
+    { name: "tablet", testIgnore: /(catalogo|configuracion|temas)\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 820, height: 1180 }, hasTouch: true } },
     { name: "movil", testIgnore: /(catalogo|configuracion)\.spec/, use: { ...devices["Pixel 7"] } },
     // El panel de catálogo crea productos en el catálogo compartido (memoria del servidor): corre al final,
     // cuando las pruebas de la tienda (que cuentan los 28 productos) ya terminaron.

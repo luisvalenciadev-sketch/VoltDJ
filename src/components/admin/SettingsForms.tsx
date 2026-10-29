@@ -1,18 +1,16 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
-import { saveBrandSettings, savePolicies, saveSeo, saveStoreData, type SettingsState } from "@/app/admin/configuracion/actions";
+import { saveBrandSettings, savePolicies, saveSeo, saveStoreData, saveTheme, type SettingsState } from "@/app/admin/configuracion/actions";
 import { RichText } from "@/components/RichText";
 import { LogoMark } from "@/components/icons";
 import type { SocialLink, StoreSettings } from "@/config/store";
+import { DEFAULT_THEME, THEME_IDS, THEMES, type ThemeId } from "@/config/themes";
 import type { ProductImage } from "@/data/types";
-import { contrast, MIN_ACCENT_CONTRAST, inkFor, normalizeHex, readableAccent, STORE_BG } from "@/lib/color";
+import { contrast, MIN_ACCENT_CONTRAST, inkFor, normalizeHex, readableAccent } from "@/lib/color";
 import type { UploadMode } from "@/lib/media";
 import { normalizeWhatsApp } from "@/lib/whatsapp";
 import { Message, Section, SingleImage } from "./CatalogForms";
-
-/** Tema actual (Escenario): lo que se usa si la tienda no elige color. */
-const THEME_ACCENT = "#b8ff32";
 
 function ReadOnlyNotice({ writable }: { writable: boolean }) {
   if (writable) return null;
@@ -186,9 +184,10 @@ export function BrandForm({ store, mode, writable }: { store: StoreSettings; mod
   const [favicon, setFavicon] = useState<ProductImage | null>(store.brand.favicon);
   const [accentText, setAccentText] = useState(store.brand.accent ?? "");
   const accent = normalizeHex(accentText);
-  const shown = accent ?? THEME_ACCENT;
-  const ratio = contrast(shown, STORE_BG);
-  const suggestion = accent ? readableAccent(accent) : null;
+  const theme = THEMES[store.brand.theme] ?? THEMES[DEFAULT_THEME];
+  const shown = accent ?? theme.colors.accent;
+  const ratio = contrast(shown, theme.colors.bg);
+  const suggestion = accent ? readableAccent(accent, theme.colors.bg) : null;
   const image = (set: (v: ProductImage | null) => void) => (v: ProductImage | null) => (set(v ? { ...v, alt: store.name } : null), setDirty(true));
 
   return (
@@ -204,12 +203,12 @@ export function BrandForm({ store, mode, writable }: { store: StoreSettings; mod
           <SingleImage label="Ícono de la pestaña (cuadrado, 512 × 512)" value={favicon} onChange={image(setFavicon)} mode={mode} baseName="tienda-icono" keepAlpha />
         </Section>
 
-        <Section id="color" title="Color de acento" hint="Botones principales, precios rebajados y pasos activos. Debe leerse sobre el fondo oscuro de la tienda.">
+        <Section id="color" title="Color de acento" hint={`Botones principales, precios rebajados y pasos activos. Debe leerse sobre el fondo ${theme.scheme === "dark" ? "oscuro" : "claro"} del tema ${theme.name}.`}>
           <div className="color-row">
             <input type="color" aria-label="Elegir color" value={shown} onChange={(e) => setAccentText(e.target.value)} />
             <div className="field">
               <label htmlFor="accent">Código del color</label>
-              <input id="accent" name="accent" className="input mono" maxLength={7} placeholder={`${THEME_ACCENT.toUpperCase()} (el del tema)`} value={accentText} onChange={(e) => setAccentText(e.target.value)} aria-invalid={(accentText !== "" && !accent) || undefined} />
+              <input id="accent" name="accent" className="input mono" maxLength={7} placeholder={`${theme.colors.accent.toUpperCase()} (el del tema)`} value={accentText} onChange={(e) => setAccentText(e.target.value)} aria-invalid={(accentText !== "" && !accent) || undefined} />
             </div>
             {accentText && (
               <button type="button" className="textbtn" onClick={() => (setAccentText(""), setDirty(true))}>
@@ -230,7 +229,7 @@ export function BrandForm({ store, mode, writable }: { store: StoreSettings; mod
 
       <aside className="preview" aria-label="Vista previa">
         <span className="eyebrow">Así se verá</span>
-        <div className="brand-preview" style={{ "--accent": shown, "--accent-ink": inkFor(shown) } as React.CSSProperties}>
+        <div className="brand-preview" data-theme={theme.id} style={{ "--accent": shown, "--accent-ink": inkFor(shown) } as React.CSSProperties}>
           <div className="bp-bar">
             {logoOnDark ? (
               // eslint-disable-next-line @next/next/no-img-element -- vista previa del panel
@@ -385,6 +384,66 @@ export function SeoForm({ store, mode, writable, siteUrl }: { store: StoreSettin
         </div>
       </aside>
 
+      <SaveBar state={state} pending={pending} dirty={dirty} writable={writable} />
+    </form>
+  );
+}
+
+// ---------- Diseño ----------
+
+/** Miniatura de la tienda pintada con las variables del tema: la misma hoja que usa la tienda. */
+function ThemeMini({ id, name }: { id: ThemeId; name: string }) {
+  return (
+    <div className="theme-mini" data-theme={id} aria-hidden="true">
+      <div className="tm-tick" />
+      <div className="tm-bar">
+        {name}
+        <i />
+      </div>
+      <div className="tm-hero">
+        Tu sonido.
+        <span />
+      </div>
+      <div className="tm-cards">
+        {["$ 1.275.000", "$ 890.000", "$ 2.300.000"].map((p) => (
+          <div key={p}>
+            <b>{p}</b>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function ThemeForm({ store, writable }: { store: StoreSettings; writable: boolean }) {
+  const { state, pending, dirty, setDirty, onSubmit } = useSave(saveTheme);
+  const [theme, setTheme] = useState<ThemeId>(store.brand.theme);
+  return (
+    <form onSubmit={onSubmit} className="stack">
+      <ReadOnlyNotice writable={writable} />
+      <ul className="theme-cards" role="radiogroup" aria-label="Tema de la tienda">
+        {THEME_IDS.map((id) => {
+          const t = THEMES[id];
+          return (
+            <li key={id}>
+              <label className="theme-card">
+                <input type="radio" name="theme" value={id} checked={theme === id} onChange={() => (setTheme(id), setDirty(true))} />
+                <ThemeMini id={id} name={store.name} />
+                <span className="tc-head">
+                  <b>{t.name}</b>
+                  {store.brand.theme === id && <span className="status-chip">En uso</span>}
+                </span>
+                <p>{t.idea}</p>
+                <p className="note">Para: {t.forWho}</p>
+                <a className="link" href={`/?tema=${id}`} target="_blank" rel="noopener">
+                  Ver la tienda con este tema ↗
+                </a>
+              </label>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="note">La vista previa solo la ves tú, en esa pestaña. Tu color de acento se aplica en cualquier tema, ajustado para leerse sobre su fondo.</p>
       <SaveBar state={state} pending={pending} dirty={dirty} writable={writable} />
     </form>
   );

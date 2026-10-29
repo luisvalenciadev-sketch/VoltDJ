@@ -1,6 +1,7 @@
 /*
- * Tokens de diseño de VOLT DJ. Única fuente de verdad visual: para cambiar la
- * identidad (colores, tipografía, radios) se edita solo este archivo.
+ * Tokens de diseño compartidos por los cinco temas: escala tipográfica, espaciado, movimiento.
+ * Los colores, las familias, los radios y la densidad de cada tema salen de src/config/themes.ts
+ * (el layout los inyecta por [data-theme]); los de aquí son los de Escenario, como respaldo.
  * Las familias tipográficas las inyecta next/font en src/app/fonts.ts.
  */
 :root {
@@ -34,6 +35,12 @@
   --f-display: var(--font-archivo), "Arial Narrow", system-ui, sans-serif;
   --f-body: var(--font-hanken), system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono: var(--font-mono), ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --disp-case: uppercase;
+  --disp-stretch: 115%;
+  --disp-weight: 800;
+  --disp-tracking: -0.005em;
+  --tilt: 1;
+  --logo-filter: brightness(0) invert(1);
   --t-xs: 0.75rem;
   --t-sm: 0.875rem;
   --t-md: 1rem;

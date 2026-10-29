@@ -69,7 +69,14 @@ Las fotos están en `public/img/productos/<id-del-producto>.webp`. Para cambiar 
 
 ### Identidad visual
 
-Los colores, la tipografía, el espaciado y los radios están en `src/styles/tokens.css`. Las fuentes se cargan en `src/app/fonts.ts`.
+La tienda elige uno de cinco temas en **Configuración → Diseño**: Escenario (oscuro, el original), Vitrina, Estudio, Bodega y Barrio. Comparten datos, lógica y componentes; cambia la presentación.
+
+- `src/config/themes.ts`: colores, familias, radios y densidad de cada tema. El layout genera con ellos las variables CSS por `[data-theme]`. Las pruebas verifican el contraste de cada tema (`themes.test.ts`).
+- `src/styles/themes.css`: lo que cambia de forma (héroe sin 3D, tarjetas en caja, filas densas…).
+- `src/styles/tokens.css`: escala tipográfica, espaciado y movimiento compartidos.
+- `src/app/fonts.ts`: dos familias por tema. Solo se precargan las de Escenario.
+- El color de acento de la tienda se aplica en cualquier tema, aclarado u oscurecido lo justo para leerse sobre su fondo.
+- **Vista previa:** `/?tema=vitrina` muestra la tienda con otro tema solo en esa pestaña, también al navegar; `?tema=salir` la quita. El panel siempre usa Escenario.
 
 ### Catálogo
 
@@ -115,13 +122,14 @@ src/
 
 ```bash
 npm run typecheck
-npm test            # Vitest: lógica y componentes (94 pruebas)
-npm run test:e2e    # Playwright: escritorio, tablet, móvil, panel de catálogo y configuración (93 pruebas)
+npm test            # Vitest: lógica, componentes y contraste de los temas (185 pruebas)
+npm run test:e2e    # Playwright: escritorio, tablet, móvil, los cinco temas, panel de catálogo y configuración (128 pruebas)
 ```
 
 La primera vez, para las pruebas e2e: `npx playwright install chromium`. Usan el puerto 3217 y un número de WhatsApp ficticio de prueba.
 
 Las e2e cubren:
+- los cuatro temas nuevos sin scroll horizontal ni errores graves de accesibilidad en inicio, catálogo, ficha y carrito, en escritorio y celular;
 - el flujo completo categoría → producto → carrito → pedido, con verificación del enlace `wa.me` decodificado;
 - búsqueda sin resultados, filtros, ofertas, producto agotado y 404;
 - ausencia de scroll horizontal y de errores graves de accesibilidad (axe, WCAG 2 A/AA) en 11 páginas y 3 tamaños.

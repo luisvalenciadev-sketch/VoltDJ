@@ -35,14 +35,18 @@ export function inkFor(accent: string): string {
   return contrast(accent, INK_DARK) >= contrast(accent, INK_LIGHT) ? INK_DARK : INK_LIGHT;
 }
 
-/** El mismo tono, aclarado lo mínimo para leerse sobre el fondo; null si ya se lee. */
+/**
+ * El mismo tono, llevado lo mínimo hacia el blanco (fondo oscuro) o hacia el negro (fondo claro)
+ * para leerse sobre `bg`; null si ya se lee.
+ */
 export function readableAccent(hex: string, bg = STORE_BG): string | null {
   if (contrast(hex, bg) >= MIN_ACCENT_CONTRAST) return null;
+  const toward = luminance(bg) > 0.4 ? 0 : 255;
   const [r, g, b] = channels(hex);
-  for (let t = 0.05; t <= 1; t += 0.05) {
-    const mix = (c: number) => Math.round(c + (255 - c) * t).toString(16).padStart(2, "0");
+  for (let t = 0.05; t <= 1.001; t += 0.05) {
+    const mix = (c: number) => Math.round(c + (toward - c) * t).toString(16).padStart(2, "0");
     const next = `#${mix(r)}${mix(g)}${mix(b)}`;
     if (contrast(next, bg) >= MIN_ACCENT_CONTRAST) return next;
   }
-  return "#ffffff";
+  return toward ? "#ffffff" : "#000000";
 }

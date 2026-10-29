@@ -1,6 +1,14 @@
 # Plan técnico — Panel de administración completo
 
-Estado: **fase 1** construida en `feat/panel-fase-1` · **fase 2** construida en `feat/panel-fase-2` · 2026-10-29
+Estado: **fase 1** construida en `feat/panel-fase-1` · **fase 2** en `feat/panel-fase-2` · **fase 2b** en `feat/panel-fase-2b` · 2026-10-29
+
+### Cambios respecto al plan en la fase 2b
+
+- **Variantes por CSS, no componentes por tema:** héroe, tarjeta, categorías y cabecera cambian con reglas `[data-theme=…]` en `src/styles/themes.css`. El marcado es el mismo en los cinco temas, así que la vista previa puede cambiar de tema en el navegador sin pedir otra página.
+- **Valores de los temas en TypeScript** (`src/config/themes.ts`), con pruebas de contraste para cada par de texto y fondo.
+- **Vista previa con `?tema=`**, guardada en `sessionStorage` de esa pestaña: no pasa por el servidor ni la ven otros visitantes.
+- **El panel siempre en Escenario** (`.admin-root` redefine el tema), elija la tienda el que elija.
+- **Pendiente:** las variantes de Barrio que dependen de contenido (fotos del local, reseñas y videos arriba) esperan la fase 4. El logo para fondo claro se muestra solo en los temas claros.
 
 ### Cambios respecto al plan en la fase 2
 

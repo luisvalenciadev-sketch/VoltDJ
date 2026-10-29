@@ -1,4 +1,5 @@
 import type { ProductImage } from "@/data/types";
+import { DEFAULT_THEME, type ThemeId } from "./themes";
 
 /**
  * Datos de la tienda. Se editan en el panel (/admin/configuracion) y se guardan en la base; lo que hay
@@ -24,6 +25,8 @@ export interface Policy {
 }
 
 export interface BrandSettings {
+  /** Uno de los cinco temas (src/config/themes.ts). */
+  theme: ThemeId;
   /** Logo para fondos oscuros (el tema actual). */
   logoOnDark: ProductImage | null;
   /** Logo para fondos claros (temas claros, fase 2b). */
@@ -101,7 +104,7 @@ export function initialStore(): StoreSettings {
     paymentMethods: "Transferencia bancaria",
     privacyText: null,
     termsText: null,
-    brand: { logoOnDark: null, logoOnLight: null, favicon: null, accent: null },
+    brand: { theme: DEFAULT_THEME, logoOnDark: null, logoOnLight: null, favicon: null, accent: null },
     seo: { title: "VOLT DJ · Equipos DJ y audio profesional", description: null, image: null },
   };
 }
@@ -128,7 +131,7 @@ export function blankStore(): StoreSettings {
     returnsPolicy: null,
     privacyText: null,
     termsText: null,
-    brand: { logoOnDark: null, logoOnLight: null, favicon: null, accent: null },
+    brand: { theme: DEFAULT_THEME, logoOnDark: null, logoOnLight: null, favicon: null, accent: null },
     seo: { title: null, description: null, image: null },
   };
 }

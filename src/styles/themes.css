@@ -1,0 +1,94 @@
+/*
+ * Variantes de forma de los temas. Los colores, las fuentes, los radios y la densidad son variables
+ * (src/config/themes.ts); aquí va solo lo que cambia de forma. Cada regla empieza por [data-theme],
+ * así gana a la regla base sin importar el orden del archivo.
+ * Escenario es la base (globals.css) y no tiene reglas propias.
+ */
+
+/* ---------- Temas planos: sin escena 3D ni espectro en el héroe ---------- */
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero .eq,
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero .floor,
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero .scene::before,
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero .stage::after,
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .glare { display: none; }
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero .stage { background: var(--surface); border: 1px solid var(--border); }
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero .scene { perspective: none; }
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero .prod { animation: none; }
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero .bob { animation: none; }
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero .angle { transform: none; filter: drop-shadow(0 18px 22px rgb(0 0 0 / 0.14)); animation: fade 0.6s var(--ease-out) both; }
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero .ctas .btn-ghost { background: var(--bg); border-color: var(--border-strong); backdrop-filter: none; }
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero h1 em { color: var(--accent); }
+/* Logos de marcas: en fondo claro, el 62 % de opacidad del tema oscuro no llega al contraste mínimo. */
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .logo-item { opacity: 0.85; }
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hdr { background: color-mix(in srgb, var(--bg) 96%, transparent); }
+
+/* ---------- Vitrina: retail claro, precio protagonista, tarjetas en caja ---------- */
+[data-theme="vitrina"] .hero .stage { background: linear-gradient(120deg, var(--surface) 0%, var(--surface) 55%, color-mix(in srgb, var(--accent) 10%, var(--surface)) 100%); }
+[data-theme="vitrina"] .hero h1 { letter-spacing: 0.005em; }
+[data-theme="vitrina"] .grid-p { gap: var(--s3); }
+[data-theme="vitrina"] .card { padding: var(--s3); background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-lg); gap: var(--s2); transition: border-color var(--d-hover) var(--ease), box-shadow var(--d-hover) var(--ease); }
+@media (hover: hover) and (pointer: fine) { [data-theme="vitrina"] .card:hover { border-color: var(--border-strong); box-shadow: 0 6px 18px rgb(17 19 24 / 0.08); } }
+[data-theme="vitrina"] .card .name { font-family: var(--f-body); font-weight: 600; }
+[data-theme="vitrina"] .card .price b { color: var(--accent); font-family: var(--f-display); font-size: var(--t-xl); font-weight: 800; letter-spacing: 0.01em; }
+[data-theme="vitrina"] .flag { font: 800 var(--t-sm)/1 var(--f-display); padding: 6px 8px; }
+[data-theme="vitrina"] .cat .img { border: 1px solid var(--border); }
+[data-theme="vitrina"] .sechead h2 { letter-spacing: 0.01em; }
+
+/* ---------- Estudio: sobrio, serifa, aire y fichas amplias ---------- */
+[data-theme="estudio"] .hero .stage { border: 0; }
+[data-theme="estudio"] .hero h1 { line-height: 1.04; }
+[data-theme="estudio"] .grid-p { gap: var(--s6) var(--s5); }
+@media (min-width: 1080px) { [data-theme="estudio"] .grid-p { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+[data-theme="estudio"] .card .img { border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--border); }
+[data-theme="estudio"] .card .name { font-family: var(--f-display); font-weight: 600; font-size: var(--t-md); letter-spacing: -0.01em; }
+@media (min-width: 720px) { [data-theme="estudio"] .card .name { font-size: var(--t-lg); } }
+[data-theme="estudio"] .brand, [data-theme="estudio"] .eyebrow { letter-spacing: 0.12em; }
+[data-theme="estudio"] .flag { background: var(--fg); color: var(--bg); }
+[data-theme="estudio"] .ticker { background: var(--fg); color: var(--bg); }
+
+/* ---------- Bodega: denso, filas con precio y disponibilidad al frente ---------- */
+[data-theme="bodega"] .hdr .row { padding-block: var(--s2); }
+[data-theme="bodega"] .hero .scene { display: none; }
+[data-theme="bodega"] .hero .stage { grid-template-areas: "copy"; grid-template-columns: minmax(0, 1fr); min-height: 0; }
+[data-theme="bodega"] .hero .copy { padding: var(--s5); }
+[data-theme="bodega"] .hero h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); }
+[data-theme="bodega"] .sechead h2 { font-size: clamp(1.35rem, 2.6vw, 1.8rem); }
+[data-theme="bodega"] .grid-p { grid-template-columns: minmax(0, 1fr); gap: var(--s2); }
+[data-theme="bodega"] .card { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: var(--s3); padding: var(--s2); background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); }
+[data-theme="bodega"] .card .img { aspect-ratio: 1; border: 1px solid var(--border); }
+[data-theme="bodega"] .card .body { gap: 4px; }
+[data-theme="bodega"] .card .name { font-family: var(--f-body); font-weight: 600; font-size: var(--t-sm); min-height: 0; }
+[data-theme="bodega"] .card .foot { padding-top: 0; }
+[data-theme="bodega"] .card .price b { font-size: var(--t-md); }
+[data-theme="bodega"] .flag { top: 4px; left: 4px; padding: 3px 4px; font-size: 10px; }
+@media (min-width: 720px) {
+  [data-theme="bodega"] .grid-p { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1080px) {
+  [data-theme="bodega"] .grid-p, [data-theme="bodega"] .grid-p.narrow { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  [data-theme="bodega"] .card { grid-template-columns: 104px minmax(0, 1fr); }
+}
+[data-theme="bodega"] .cats { gap: var(--s2); }
+[data-theme="bodega"] .cat { grid-template-columns: 64px minmax(0, 1fr); align-items: center; padding: var(--s2); background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); }
+/* Tamaño fijo: dentro de la fila, la foto tomaría su ancho natural y desbordaría en celular. */
+[data-theme="bodega"] .cat .img { display: block; width: 64px; height: 64px; aspect-ratio: auto; }
+[data-theme="bodega"] .cat .meta { min-width: 0; flex-wrap: wrap; }
+[data-theme="bodega"] .cat .meta b { min-width: 0; overflow-wrap: anywhere; }
+/* En celular, una fila por categoría: en dos columnas el nombre no cabe junto a la foto. */
+@media (max-width: 719px) { [data-theme="bodega"] .cats { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- Barrio: cálido, redondeado, tarjetas con sombra suave ---------- */
+[data-theme="barrio"] .hero .stage { border: 0; background: var(--surface-2); }
+[data-theme="barrio"] .hero .angle { filter: drop-shadow(0 22px 26px rgb(42 31 23 / 0.18)); }
+[data-theme="barrio"] .card { padding: var(--s3); background: var(--surface); border-radius: var(--r-lg); box-shadow: 0 1px 2px rgb(42 31 23 / 0.06), 0 8px 24px rgb(42 31 23 / 0.06); }
+[data-theme="barrio"] .card .img { border-radius: calc(var(--r-lg) - 6px); }
+[data-theme="barrio"] .card .name { font-family: var(--f-display); font-weight: 700; }
+[data-theme="barrio"] .flag { border-radius: 999px; padding: 5px 9px; }
+[data-theme="barrio"] .btn { border-radius: 999px; }
+[data-theme="barrio"] .cat .img { border-radius: var(--r-lg); }
+[data-theme="barrio"] .band { border-radius: var(--r-lg); }
+
+/* ---------- Logo de la tienda: claro u oscuro según el fondo del tema ---------- */
+.logo-img .for-light { display: none; }
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .logo-img .for-dark { display: none; }
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .logo-img .for-light { display: block; }
