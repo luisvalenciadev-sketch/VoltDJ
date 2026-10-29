@@ -92,7 +92,6 @@ export default async function ProductPage({ params }: { params: Params }) {
             <div className="ref">
               <span className="mono">Ref. {p.sku}</span>
               <AvailabilityBadge value={p.availability} />
-              {p.isDemo && <span className="mono">Producto de demostración</span>}
             </div>
             <div className="price">
               {p.price == null ? (

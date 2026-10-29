@@ -1,6 +1,14 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
+async function expectInside(page: Page, outer: string, inner: string) {
+  const o = (await page.locator(outer).boundingBox())!;
+  const i = (await page.locator(inner).boundingBox())!;
+  expect(i.x).toBeGreaterThanOrEqual(o.x);
+  expect(i.x + i.width).toBeLessThanOrEqual(o.x + o.width + 0.5);
+  expect(o.x + o.width).toBeLessThanOrEqual(page.viewportSize()!.width + 0.5);
+}
+
 const isMobile = (page: Page) => (page.viewportSize()?.width ?? 1366) < 900;
 
 async function search(page: Page, term: string) {
@@ -36,20 +44,22 @@ test("flujo completo: categoría → producto → carrito → pedido por WhatsAp
   const line = page.getByRole("listitem").filter({ hasText: "Audífonos DJ" });
   await line.getByRole("button", { name: "Aumentar cantidad" }).click();
   await expect(page.getByTestId("subtotal")).toHaveText("$ 4.560.000");
+  await expectInside(page, ".summary", ".summary .btn-primary");
 
   await page.getByRole("link", { name: "Revisar pedido" }).click();
   await page.getByLabel(/Ciudad de envío/).fill("Bogotá D.C.");
   const preview = page.getByTestId("message-preview");
   await expect(preview).toContainText("Ciudad de envío: Bogotá D.C.");
 
+  await expectInside(page, ".summary", ".summary .btn-primary");
   const href = await page.getByTestId("send-whatsapp").getAttribute("href");
   const url = new URL(href!);
   expect(url.host).toBe("wa.me");
   expect(url.pathname).toBe("/570000000000");
   const text = url.searchParams.get("text")!;
   expect(text).toBe(await preview.textContent());
-  expect(text).toContain("Controlador DJ 2 canales con pads de rendimiento\n   Ref.: DEMO-CTR-002\n   Cantidad: 2\n   Precio unitario: $ 1.690.000 · Total: $ 3.380.000");
-  expect(text).toContain("Audífonos DJ cerrados y plegables\n   Ref.: DEMO-HP-500\n   Cantidad: 2");
+  expect(text).toContain("Controlador DJ 2 canales con pads de rendimiento\n   Ref.: VD-CTR-002\n   Cantidad: 2\n   Precio unitario: $ 1.690.000 · Total: $ 3.380.000");
+  expect(text).toContain("Audífonos DJ cerrados y plegables\n   Ref.: VD-HP-500\n   Cantidad: 2");
   expect(text).toContain("Subtotal estimado: $ 4.560.000");
   expect(text).toMatch(/Pedido provisional: VD-\d{6}-[A-Z2-9]{4}/);
   expect(href).not.toMatch(/[\s\n]/);
@@ -108,7 +118,7 @@ for (const path of PAGES) {
   test(`sin scroll horizontal ni errores de accesibilidad graves: ${path}`, async ({ page }) => {
     if (path === "/carrito" || path === "/pedido") {
       await page.goto("/");
-      await page.evaluate(() => localStorage.setItem("voltdj.cart.v1", JSON.stringify([{ id: "p06", qty: 1, seenPrice: 2090000 }, { id: "p12", qty: 3, seenPrice: 45000 }])));
+      await page.evaluate(() => localStorage.setItem("voltdj.cart.v1", JSON.stringify([{ id: "p01", qty: 2, seenPrice: 1690000 }, { id: "p06", qty: 1, seenPrice: 2090000 }, { id: "p12", qty: 3, seenPrice: 45000 }])));
     }
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));

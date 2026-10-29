@@ -26,7 +26,7 @@ describe("parseCatalogQuery", () => {
 describe("filterProducts", () => {
   it("busca sin importar tildes ni mayúsculas, también por marca y referencia", () => {
     expect(run({ q: "AUDIFONOS" })).toEqual(["p08"]);
-    expect(run({ q: "demo-mix" })).toEqual(["p03"]);
+    expect(run({ q: "vd-mix" })).toEqual(["p03"]);
     expect(run({ q: "marca e" }).slice(0, 2).sort()).toEqual(["p06", "p07"]);
   });
   it("devuelve vacío cuando no hay coincidencias", () => {

@@ -46,11 +46,6 @@ export default async function HomePage() {
             {hero ? (
               <>
                 <Image src={hero.src} alt={hero.alt} width={hero.width} height={hero.height} sizes="(min-width: 900px) 50vw, 100vw" priority className="cover" />
-                {hero.credit && (
-                  <a className="cap credit" href={hero.credit.source} target="_blank" rel="noopener noreferrer">
-                    Foto: {hero.credit.name} / Pexels
-                  </a>
-                )}
               </>
             ) : (
               <>

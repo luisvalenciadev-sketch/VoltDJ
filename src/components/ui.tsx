@@ -56,22 +56,6 @@ export function ProductMedia({ image, art, sizes, priority }: { image: ProductIm
   return <ProductArt kind={art} />;
 }
 
-/** Crédito obligatorio para fotos de banco de imágenes (Pexels). */
-export function PhotoCredit({ image }: { image: ProductImage | null | undefined }) {
-  if (!image?.credit) return null;
-  return (
-    <p className="note">
-      Foto de referencia, no del producto exacto:{" "}
-      <a href={image.credit.source} target="_blank" rel="noopener noreferrer">
-        {image.credit.name}
-      </a>{" "}
-      en{" "}
-      <a href="https://www.pexels.com" target="_blank" rel="noopener noreferrer">
-        Pexels
-      </a>
-    </p>
-  );
-}
 
 export function Meter() {
   const on = 5;

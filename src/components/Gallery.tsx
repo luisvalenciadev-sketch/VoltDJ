@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useState } from "react";
 import type { ArtKind, ProductImage } from "@/data/types";
 import { ProductArt } from "./ProductArt";
-import { PhotoCredit } from "./ui";
 
 export function Gallery({ images, art, name, discount }: { images: ProductImage[]; art: ArtKind; name: string; discount: number }) {
   const [index, setIndex] = useState(0);
@@ -28,8 +27,6 @@ export function Gallery({ images, art, name, discount }: { images: ProductImage[
           ))}
         </div>
       )}
-      {!images.length && <p className="note">Ilustración de referencia: la fotografía del producto está pendiente.</p>}
-      <PhotoCredit image={current} />
-    </div>
+          </div>
   );
 }

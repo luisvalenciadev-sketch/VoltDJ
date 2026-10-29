@@ -52,7 +52,7 @@ export function Footer({ categories }: { categories: Category[] }) {
         </div>
         <div className="legal">
           <span>
-            © {year} {STORE.name} · Fotos de referencia de{" "}
+            © {year} {STORE.name} · Fotos:{" "}
             <a href="https://www.pexels.com" target="_blank" rel="noopener noreferrer">Pexels</a>
           </span>
           <span className="row-wrap" style={{ gap: "var(--s4)" }}>

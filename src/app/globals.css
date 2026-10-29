@@ -305,7 +305,7 @@ img.cover { width: 100% !important; height: 100% !important; object-fit: cover; 
 @media (min-width: 720px) { .line .ctrl { grid-column: 3; flex-direction: column; align-items: end; justify-content: space-between; } }
 .line .lt { font-weight: 700; font-variant-numeric: tabular-nums; }
 .line .warn-text { color: var(--warn); font-size: var(--t-xs); }
-.summary { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: var(--s5); display: grid; gap: var(--s4); }
+.summary { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: var(--s5); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s4); min-width: 0; }
 @media (min-width: 900px) { .summary { position: sticky; top: calc(var(--header-h) + 16px); } }
 .summary h2 { font-size: var(--t-lg); }
 .sumrow { display: flex; justify-content: space-between; gap: var(--s3); font-size: var(--t-sm); color: var(--fg-2); font-variant-numeric: tabular-nums; }

@@ -14,7 +14,6 @@ export function ProductCard({ product: p, brand }: { product: Product; brand: st
       <div className="img">
         <ProductMedia image={p.images[0] ?? null} art={p.art} sizes="(min-width: 1080px) 25vw, (min-width: 720px) 33vw, 50vw" />
         {off > 0 && <span className="flag">−{off}%</span>}
-        {p.isDemo && <span className="demo-tag">DEMO</span>}
       </div>
       <div className="body">
         <span className="brand">{brand}</span>

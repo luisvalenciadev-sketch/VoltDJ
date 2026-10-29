@@ -41,7 +41,7 @@ describe("buildWhatsAppLink", () => {
 });
 
 describe("buildOrderMessage", () => {
-  const catalog = [p("a", { name: "Controlador DJ", sku: "DEMO-CTR-002", price: 1890000, promoPrice: 1690000 }), p("b", { price: 590000 }), p("c", { price: null }), p("d", { availability: "agotado" })];
+  const catalog = [p("a", { name: "Controlador DJ", sku: "VD-CTR-002", price: 1890000, promoPrice: 1690000 }), p("b", { price: 590000 }), p("c", { price: null }), p("d", { availability: "agotado" })];
 
   it("incluye tienda, ID, nombre, referencia, cantidad, precios, subtotal y consulta de envío", () => {
     const summary = summarize([{ id: "a", qty: 1, seenPrice: null }, { id: "b", qty: 2, seenPrice: null }], catalog);
@@ -52,7 +52,7 @@ describe("buildOrderMessage", () => {
         "Pedido provisional: VD-261028-ABCD",
         "",
         "1. Controlador DJ",
-        "   Ref.: DEMO-CTR-002",
+        "   Ref.: VD-CTR-002",
         "   Cantidad: 1",
         "   Precio unitario: $ 1.690.000 · Total: $ 1.690.000",
         "2. Producto b",
