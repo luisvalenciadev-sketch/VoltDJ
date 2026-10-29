@@ -102,7 +102,8 @@ main { min-height: 60vh; }
 /* Fotos de ambiente (Pexels) llenan el marco; las de producto sobre fondo usan contain. */
 img.cover { width: 100% !important; height: 100% !important; object-fit: cover; }
 /* Fotos reales de producto (sin recorte): ocupan casi todo el marco, a diferencia de las ilustraciones. */
-.card .img > img:not(.cover), .gallery .main > img:not(.cover), .line .thumb img:not(.cover) { width: 94%; height: 94%; }
+/* Posición absoluta: la foto nunca se sale del marco, sea horizontal o vertical. */
+.card .img > img:not(.cover), .gallery .main > img:not(.cover), .line .thumb img:not(.cover) { position: absolute; inset: 3%; width: 94%; height: 94%; object-fit: contain; }
 .card .img, .line .thumb, .cat .img { overflow: hidden; }
 .hero .shot .cap.credit { border-style: solid; border-color: var(--border); color: var(--fg-2); text-decoration: none; }
 .hero .shot .cap.credit:hover { color: var(--fg); }
@@ -299,7 +300,7 @@ img.cover { width: 100% !important; height: 100% !important; object-fit: cover; 
 .lines { display: grid; border-top: 1px solid var(--border); margin: 0; padding: 0; list-style: none; }
 .line { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: var(--s3); padding-block: var(--s4); border-bottom: 1px solid var(--border); }
 @media (min-width: 720px) { .line { grid-template-columns: 112px minmax(0, 1fr) auto; gap: var(--s4); } }
-.line .thumb { aspect-ratio: 1; background: var(--photo); border-radius: var(--r); display: grid; place-items: center; }
+.line .thumb { position: relative; aspect-ratio: 1; background: var(--photo); border-radius: var(--r); display: grid; place-items: center; }
 .line .thumb svg, .line .thumb img { width: 72%; height: 72%; object-fit: contain; }
 .line .info { display: grid; gap: 4px; align-content: start; min-width: 0; }
 .line .info a { font-weight: 600; font-size: var(--t-sm); line-height: 1.35; text-decoration: none; }

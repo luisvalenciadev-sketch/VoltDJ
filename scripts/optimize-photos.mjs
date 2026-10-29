@@ -7,6 +7,7 @@
  * src/data/product-photos.generated.json. El nombre del archivo es el id del producto.
  * Uso: node scripts/optimize-photos.mjs
  */
+import { createHash } from "node:crypto";
 import { readdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
@@ -82,15 +83,25 @@ async function normalize(input) {
     .toBuffer();
 }
 
+// Los archivos ya procesados se llaman <id>.<huella>.webp; la huella cambia con el
+// contenido, así navegador y Next.js nunca sirven una versión anterior en caché.
+const PROCESSED = /^(.+)\.([0-9a-f]{8})\.webp$/;
 const index = {};
 for (const file of (await readdir(DIR)).sort()) {
+  const done = file.match(PROCESSED);
+  if (done) {
+    index[done[1]] = { src: `/img/productos/${file}`, width: SIZE, height: SIZE };
+    continue;
+  }
   const src = path.join(DIR, file);
   const id = path.parse(file).name;
   // Se lee a memoria para no mantener el archivo abierto (Windows lo bloquea).
   const out = await normalize(await readFile(src));
+  const hash = createHash("sha256").update(out).digest("hex").slice(0, 8);
+  for (const old of await readdir(DIR)) if (old.startsWith(`${id}.`) && PROCESSED.test(old)) await rm(path.join(DIR, old));
   await rm(src);
-  await writeFile(path.join(DIR, `${id}.webp`), out);
-  index[id] = { src: `/img/productos/${id}.webp`, width: SIZE, height: SIZE };
+  await writeFile(path.join(DIR, `${id}.${hash}.webp`), out);
+  index[id] = { src: `/img/productos/${id}.${hash}.webp`, width: SIZE, height: SIZE };
   console.log(`${id}\t${Math.round(out.length / 1024)} KB`);
 }
 
