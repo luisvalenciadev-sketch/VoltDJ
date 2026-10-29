@@ -65,6 +65,13 @@ export const STORE: StoreConfig = {
   paymentMethods: "Transferencia bancaria",
 };
 
+/**
+ * Promoción global: descuento sobre el precio de lista en todo el catálogo.
+ * `null` desactiva la promoción en toda la tienda (precios, cinta superior y página de ofertas).
+ * `endsAt` (ISO, p. ej. "2026-11-30") es opcional; sin fecha, la ficha la marca como pendiente.
+ */
+export const PROMO: { percent: number; endsAt: string | null } | null = { percent: 15, endsAt: null };
+
 /** Etiquetas de los marcadores para datos pendientes, en el mismo orden que `topbar`. */
 export const TOPBAR_PLACEHOLDERS = ["Cobertura de envíos", "Horario de atención", "Ciudad / showroom"];
 

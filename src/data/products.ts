@@ -1,9 +1,10 @@
+import { PROMO } from "@/config/store";
 import { productPhoto } from "./product-photos";
 import type { ArtKind, Product } from "./types";
 
 /**
  * CATÁLOGO REAL de la tienda (lista entregada el 2026-10-28).
- * Precios en COP, sin precios de oferta. Una unidad de cada producto. Todos nuevos.
+ * Precios de lista en COP; el precio promocional sale de PROMO (config/store). Una unidad de cada producto. Todos nuevos.
  * Fotos: las del fabricante en public/img/productos; sin foto se muestra la ilustración del tipo de equipo.
  */
 interface Seed {
@@ -87,8 +88,9 @@ export const PRODUCTS: Product[] = SEEDS.map((s) => {
     images: photo ? [photo] : [],
     art: s.art,
     price: s.price,
-    promoPrice: null,
-    promoEndsAt: null,
+    // Redondeado al millar: en COP no se publican precios con centenas sueltas.
+    promoPrice: PROMO ? Math.round((s.price * (1 - PROMO.percent / 100)) / 1000) * 1000 : null,
+    promoEndsAt: PROMO?.endsAt ?? null,
     sku: s.model,
     availability: "disponible",
     maxQtyPerOrder: 1,
