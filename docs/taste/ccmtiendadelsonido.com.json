@@ -1,0 +1,70 @@
+{
+  "source": "https://ccmtiendadelsonido.com/",
+  "tokens": {
+    "spacing": {
+      "scale": [4, 6, 8, 10, 16, 20, 24],
+      "base_unit": 4
+    },
+    "typography": {
+      "families": ["Founder Grotesk CCM", "ui-monospace"],
+      "scale": [
+        { "role": "spec-headline", "size": "~70px", "weight": "800", "family": "Founder Grotesk CCM" },
+        { "role": "showcase-price", "size": "~36px", "weight": "800", "family": "Founder Grotesk CCM" },
+        { "role": "section-title", "size": "20.88px", "weight": "500", "family": "Founder Grotesk CCM" },
+        { "role": "card-title", "size": "14px", "weight": "500", "family": "Founder Grotesk CCM" },
+        { "role": "body", "size": "13px", "weight": "500", "family": "Founder Grotesk CCM" },
+        { "role": "countdown", "size": "~12px", "weight": "700", "family": "ui-monospace" }
+      ]
+    },
+    "colors": [
+      { "role": "background", "value": "#FFFFFF" },
+      { "role": "band-dark", "value": "#000000" },
+      { "role": "surface-dark", "value": "#191818" },
+      { "role": "surface-soft", "value": "#F2F2F0" },
+      { "role": "text-primary", "value": "#191919" },
+      { "role": "accent", "value": "#E60000" },
+      { "role": "installments", "value": "#00A650" }
+    ],
+    "radius": ["4px", "12px", "16px", "24px", "100px", "50%"],
+    "shadows": [
+      "0 1px 3px rgba(0,0,0,0.15)",
+      "0 8px 20px rgba(18,18,18,0.12), 0 2px 6px rgba(18,18,18,0.08)"
+    ],
+    "image_ratios": [
+      { "usage": "hero carousel", "ratio": "2.03:1" },
+      { "usage": "product thumbnail", "ratio": "1:1" },
+      { "usage": "store video", "ratio": "9:16" }
+    ],
+    "grid": { "max_width": "1344px", "columns": 4, "gutter": "14px" }
+  },
+  "taste": [
+    {
+      "name": "La cifra técnica y el precio son el titular",
+      "trigger": "Vender cabinas, parlantes y controladores a un comprador que compara por pulgadas, vatios y canales",
+      "decision": "Especificación (18\", 120W, 2CH) a ~70px/800 en #E60000 como titular de cada tarjeta de vitrina, en lugar de un titular aspiracional o una foto de ambiente",
+      "reason": "Quien compra un parlante de 18\" busca esa cifra antes que el modelo",
+      "evidence": ["mosaico de 4 columnas de 325.5px con gap de 14px", "rojo solo en cifras, precios y descuentos: 0.3% del área"]
+    },
+    {
+      "name": "La cuota va primero; el total, después",
+      "trigger": "Tickets de $135.000 a más de $4.500.000 en un mercado sin costumbre de pagar todo con tarjeta",
+      "decision": "'3 cuotas de $X sin interés' en verde #00A650 en cada tarjeta, banda de Addi a todo el ancho y recuadros de Sistecrédito y Addi antes del botón de compra, en lugar de mostrar solo el total",
+      "reason": "Una cuota mensual se compara con un sueldo y vuelve alcanzable el equipo",
+      "evidence": ["96 nodos de texto verde", "2 recuadros de financiación entre el precio y los botones en la ficha"]
+    },
+    {
+      "name": "El sonido se muestra con personas de la tienda, no con fotos de estudio",
+      "trigger": "El producto es sonido y no se puede mostrar en una foto",
+      "decision": "Carrusel 'Mira cómo suenan' de videos verticales 9:16 grabados por los asesores en el local, en lugar de fotos de ambiente de stock",
+      "reason": "Ver al asesor probando el equipo en la tienda física da confianza en una compra grande que se hace sin ver al vendedor",
+      "evidence": ["5 tarjetas de video de 255px visibles", "132 reseñas de Google con 5 estrellas", "dirección del local en el pie y página Tiendas en el menú"]
+    },
+    {
+      "name": "Restricción: una familia, un peso, un rojo",
+      "trigger": "Un catálogo con decenas de marcas, cada una con su logo y sus colores",
+      "decision": "Una sola familia en peso 500 y un solo rojo de acento, con la jerarquía hecha por tamaño, en lugar de una pareja de tipografías display y texto",
+      "reason": "Los logos de las marcas ya traen su propia letra; otra display convertiría la página en una pelea de marcas",
+      "evidence": ["~2.900 nodos en Founder Grotesk CCM", "432 de 644 nodos en peso 500", "#E60000 como único acento propio"]
+    }
+  ]
+}
