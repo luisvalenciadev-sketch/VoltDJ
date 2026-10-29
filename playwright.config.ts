@@ -3,6 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 const PORT = 3217;
 // Número ficticio solo para pruebas: permite verificar el enlace de WhatsApp.
 export const TEST_WHATSAPP = "570000000000";
+export const TEST_ADMIN_PASSWORD = "panel-de-prueba-2026";
 
 export default defineConfig({
   testDir: "tests/e2e",
@@ -22,6 +23,14 @@ export default defineConfig({
     url: `http://localhost:${PORT}`,
     timeout: 300_000,
     reuseExistingServer: false,
-    env: { NEXT_PUBLIC_WHATSAPP_NUMBER: TEST_WHATSAPP, NEXT_PUBLIC_SITE_URL: `http://localhost:${PORT}`, NEXT_TELEMETRY_DISABLED: "1" },
+    env: {
+      NEXT_PUBLIC_WHATSAPP_NUMBER: TEST_WHATSAPP,
+      NEXT_PUBLIC_SITE_URL: `http://localhost:${PORT}`,
+      NEXT_TELEMETRY_DISABLED: "1",
+      // Panel de guías con almacén en memoria: las pruebas nunca tocan la base real.
+      GUIDES_STORE: "memory",
+      ADMIN_PASSWORD: TEST_ADMIN_PASSWORD,
+      SESSION_SECRET: "clave-de-prueba-solo-para-e2e-0123456789abcdef",
+    },
   },
 });

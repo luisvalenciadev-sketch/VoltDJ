@@ -136,7 +136,7 @@ test("producto inexistente devuelve 404", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
 });
 
-const PAGES = ["/", "/catalogo", "/catalogo/controladores", "/producto/pioneer-dj-cdj-3000", "/carrito", "/pedido", "/contacto", "/envios-y-garantias", "/preguntas-frecuentes", "/privacidad", "/terminos"];
+const PAGES = ["/", "/catalogo", "/catalogo/controladores", "/producto/pioneer-dj-cdj-3000", "/carrito", "/pedido", "/contacto", "/envios-y-garantias", "/preguntas-frecuentes", "/seguimiento", "/admin/ingresar", "/privacidad", "/terminos"];
 
 for (const path of PAGES) {
   test(`sin scroll horizontal ni errores de accesibilidad graves: ${path}`, async ({ page }) => {
