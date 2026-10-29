@@ -41,9 +41,36 @@ export function Price({ price, promoPrice }: { price: number | null; promoPrice:
 
 export function ProductMedia({ image, art, sizes, priority }: { image: ProductImage | null; art: ArtKind; sizes: string; priority?: boolean }) {
   if (image) {
-    return <Image src={image.src} alt={image.alt} width={image.width} height={image.height} sizes={sizes} priority={priority} />;
+    return (
+      <Image
+        src={image.src}
+        alt={image.alt}
+        width={image.width}
+        height={image.height}
+        sizes={sizes}
+        priority={priority}
+        className={image.fit === "cover" ? "cover" : undefined}
+      />
+    );
   }
   return <ProductArt kind={art} />;
+}
+
+/** Crédito obligatorio para fotos de banco de imágenes (Pexels). */
+export function PhotoCredit({ image }: { image: ProductImage | null | undefined }) {
+  if (!image?.credit) return null;
+  return (
+    <p className="note">
+      Foto de referencia, no del producto exacto:{" "}
+      <a href={image.credit.source} target="_blank" rel="noopener noreferrer">
+        {image.credit.name}
+      </a>{" "}
+      en{" "}
+      <a href="https://www.pexels.com" target="_blank" rel="noopener noreferrer">
+        Pexels
+      </a>
+    </p>
+  );
 }
 
 export function Meter() {

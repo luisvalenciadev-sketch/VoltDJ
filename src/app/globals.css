@@ -98,6 +98,13 @@ main { min-height: 60vh; }
   .iconbtn .lbl { display: inline; }
 }
 
+/* ---------- Fotos ---------- */
+/* Fotos de ambiente (Pexels) llenan el marco; las de producto sobre fondo usan contain. */
+img.cover { width: 100% !important; height: 100% !important; object-fit: cover; }
+.card .img, .line .thumb, .cat .img { overflow: hidden; }
+.hero .shot .cap.credit { border-style: solid; border-color: var(--border); color: var(--fg-2); text-decoration: none; }
+.hero .shot .cap.credit:hover { color: var(--fg); }
+
 /* ---------- Hero ---------- */
 .hero { padding-block: var(--s6) var(--s7); }
 .hero .grid { display: grid; gap: var(--s5); }

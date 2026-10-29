@@ -6,11 +6,22 @@ export type ArtKind =
   | "controller" | "mixer" | "turntable" | "speaker" | "headphones"
   | "mic" | "light" | "case" | "cable" | "needle" | "stand";
 
+export interface ImageCredit {
+  name: string;
+  url: string;
+  /** Página de la foto en el banco de imágenes. */
+  source: string;
+}
+
 export interface ProductImage {
   src: string;
   alt: string;
   width: number;
   height: number;
+  /** "cover" para fotos de ambiente que llenan el marco; por defecto "contain" (foto de producto sobre fondo). */
+  fit?: "cover" | "contain";
+  /** Foto de banco de imágenes usada como referencia, no del producto exacto. */
+  credit?: ImageCredit;
 }
 
 export interface Spec {
@@ -51,6 +62,7 @@ export interface Category {
   description: string;
   art: ArtKind;
   order: number;
+  image?: ProductImage;
 }
 
 export interface Brand {

@@ -38,6 +38,19 @@ Todos los datos comerciales están en un único archivo: `src/config/store.ts`. 
 
 Las preguntas frecuentes están en `src/config/content.ts`.
 
+### Fotos de referencia (Pexels)
+
+Las fotos de `public/img` se descargaron de Pexels (licencia de uso comercial gratuito) con:
+
+```bash
+node --env-file=.env.local scripts/fetch-images.mjs            # todas
+node --env-file=.env.local scripts/fetch-images.mjs p/p06 hero # solo algunas
+```
+
+Requiere `PEXELS_API_KEY` en `.env.local`. La clave solo la usa el script: nunca llega al navegador ni al repositorio. Las búsquedas están en `JOBS` dentro del script; con `id` se fija una foto elegida a mano.
+
+Son **fotos de referencia, no del producto exacto**: la tienda lo indica junto a cada foto, con crédito al fotógrafo y enlace a Pexels. Algunas muestran logos de marcas reales. Antes de vender, reemplázalas por fotos del producto real (campo `images` del producto).
+
 ### Identidad visual
 
 Los colores, la tipografía, el espaciado y los radios están en `src/styles/tokens.css`. Las fuentes se cargan en `src/app/fonts.ts`.

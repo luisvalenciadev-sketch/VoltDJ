@@ -1,0 +1,262 @@
+{
+  "hero": {
+    "src": "/img/hero.jpg",
+    "alt": "A close-up of hands manipulating controls on a DJ mixing console indoors under low light.",
+    "width": 1600,
+    "height": 1200,
+    "credit": {
+      "name": "Ivan Mudruk",
+      "url": "https://www.pexels.com/@imudruk",
+      "source": "https://www.pexels.com/photo/hands-touching-buttons-on-mixing-console-11084635/"
+    }
+  },
+  "cat/controladores": {
+    "src": "/img/cat/controladores.jpg",
+    "alt": "Detailed view of a professional audio mixing console with knobs and controls for sound engineering.",
+    "width": 960,
+    "height": 600,
+    "credit": {
+      "name": "spemone",
+      "url": "https://www.pexels.com/@spemone-62171",
+      "source": "https://www.pexels.com/photo/selective-focus-of-black-and-silver-terminal-mixer-knobs-754855/"
+    }
+  },
+  "cat/mezcladores": {
+    "src": "/img/cat/mezcladores.jpg",
+    "alt": "Detailed view of a professional audio mixer in a music studio, highlighting control knobs and switches.",
+    "width": 960,
+    "height": 600,
+    "credit": {
+      "name": "Hendrik B",
+      "url": "https://www.pexels.com/@hendrikbgr",
+      "source": "https://www.pexels.com/photo/black-audio-mixer-744323/"
+    }
+  },
+  "cat/reproductores": {
+    "src": "/img/cat/reproductores.jpg",
+    "alt": "Detailed view of a Pioneer DJ turntable needle emphasizing music technology and nostalgia.",
+    "width": 960,
+    "height": 600,
+    "credit": {
+      "name": "Mete Kaan Özdilek",
+      "url": "https://www.pexels.com/@metekaan",
+      "source": "https://www.pexels.com/photo/brand-logo-of-dj-mixer-26315454/"
+    }
+  },
+  "cat/parlantes": {
+    "id": 11556065,
+    "src": "/img/cat/parlantes.jpg",
+    "alt": "Dynamic monochrome image capturing a live stage performance with musicians and equipment.",
+    "width": 960,
+    "height": 600,
+    "credit": {
+      "name": "Alfo Medeiros",
+      "url": "https://www.pexels.com/@alfomedeiros",
+      "source": "https://www.pexels.com/photo/grayscale-photo-of-people-performing-on-stage-11556065/"
+    }
+  },
+  "cat/audifonos": {
+    "src": "/img/cat/audifonos.jpg",
+    "alt": "Close-up of DJ headphones and turntable in a studio setting, highlighting modern music equipment.",
+    "width": 960,
+    "height": 600,
+    "credit": {
+      "name": "Ivan Mudruk",
+      "url": "https://www.pexels.com/@imudruk",
+      "source": "https://www.pexels.com/photo/close-up-of-headphones-11114670/"
+    }
+  },
+  "cat/microfonos": {
+    "src": "/img/cat/microfonos.jpg",
+    "alt": "Dynamic microphone on stand with blurred stage lights in background.",
+    "width": 960,
+    "height": 600,
+    "credit": {
+      "name": "Pixabay",
+      "url": "https://www.pexels.com/@pixabay",
+      "source": "https://www.pexels.com/photo/black-and-gray-microphone-164829/"
+    }
+  },
+  "cat/iluminacion": {
+    "src": "/img/cat/iluminacion.jpg",
+    "alt": "Overhead view of an outdoor stage with modern lighting setup against a blue sky.",
+    "width": 960,
+    "height": 600,
+    "credit": {
+      "name": "Magda Ehlers",
+      "url": "https://www.pexels.com/@magda-ehlers-pexels",
+      "source": "https://www.pexels.com/photo/stage-lights-system-12787862/"
+    }
+  },
+  "cat/accesorios": {
+    "src": "/img/cat/accesorios.jpg",
+    "alt": "Close-up of colorful patch cables connected to a network panel with labels, indoors.",
+    "width": 960,
+    "height": 600,
+    "credit": {
+      "name": "cottonbro studio",
+      "url": "https://www.pexels.com/@cottonbro",
+      "source": "https://www.pexels.com/photo/colorful-patch-cables-5658532/"
+    }
+  },
+  "p/p01": {
+    "src": "/img/p/p01.jpg",
+    "alt": "Detailed view of a Denon DJ mixing console with illuminated controls in an indoor studio setting.",
+    "width": 900,
+    "height": 900,
+    "credit": {
+      "name": "TStudio",
+      "url": "https://www.pexels.com/@tstudio-34805588",
+      "source": "https://www.pexels.com/photo/close-up-of-an-audio-mixing-console-14517352/"
+    }
+  },
+  "p/p02": {
+    "id": 14517351,
+    "src": "/img/p/p02.jpg",
+    "alt": "Detailed photo of an audio mixing console showing various control knobs and buttons.",
+    "width": 900,
+    "height": 900,
+    "credit": {
+      "name": "TStudio",
+      "url": "https://www.pexels.com/@tstudio-34805588",
+      "source": "https://www.pexels.com/photo/black-and-silver-audio-mixer-14517351/"
+    }
+  },
+  "p/p03": {
+    "src": "/img/p/p03.jpg",
+    "alt": "A close-up of a professional audio mixing console featuring a digital touchscreen interface with multiple control knobs.",
+    "width": 900,
+    "height": 900,
+    "credit": {
+      "name": "폭 폭",
+      "url": "https://www.pexels.com/@2155171677",
+      "source": "https://www.pexels.com/photo/professional-audio-mixing-console-with-touchscreen-39134201/"
+    }
+  },
+  "p/p04": {
+    "src": "/img/p/p04.jpg",
+    "alt": "A black vintage vinyl record spinning on a turntable, captured in a close-up.",
+    "width": 900,
+    "height": 900,
+    "credit": {
+      "name": "Miguel Á. Padriñán",
+      "url": "https://www.pexels.com/@padrinan",
+      "source": "https://www.pexels.com/photo/close-up-shot-of-black-vinyl-record-5764281/"
+    }
+  },
+  "p/p05": {
+    "src": "/img/p/p05.jpg",
+    "alt": "Detailed close-up of a professional DJ mixer with controls and effects, perfect for music enthusiasts.",
+    "width": 900,
+    "height": 900,
+    "credit": {
+      "name": "TStudio",
+      "url": "https://www.pexels.com/@tstudio-34805588",
+      "source": "https://www.pexels.com/photo/close-up-of-a-dj-mixer-14745818/"
+    }
+  },
+  "p/p06": {
+    "id": 34585133,
+    "src": "/img/p/p06.jpg",
+    "alt": "High-quality outdoor speaker setup ready for a live event against a vibrant blue sky.",
+    "width": 900,
+    "height": 900,
+    "credit": {
+      "name": "Caleb Oquendo",
+      "url": "https://www.pexels.com/@caleboquendo",
+      "source": "https://www.pexels.com/photo/outdoor-pa-speaker-system-against-clear-blue-sky-34585133/"
+    }
+  },
+  "p/p07": {
+    "src": "/img/p/p07.jpg",
+    "alt": "Back view of crop anonymous sound man creating musical arrangement for song while working on desktop computers with track on screen in recording studio",
+    "width": 900,
+    "height": 900,
+    "credit": {
+      "name": "Brett Sayles",
+      "url": "https://www.pexels.com/@brett-sayles",
+      "source": "https://www.pexels.com/photo/unrecognizable-sound-engineer-working-with-musical-software-on-computer-4167169/"
+    }
+  },
+  "p/p08": {
+    "id": 9058883,
+    "src": "/img/p/p08.jpg",
+    "alt": "Sleek black headphones with a reflection on a white background.",
+    "width": 900,
+    "height": 900,
+    "credit": {
+      "name": "Saeed Khokhar",
+      "url": "https://www.pexels.com/@vip-foto",
+      "source": "https://www.pexels.com/photo/close-up-shot-of-black-headphones-9058883/"
+    }
+  },
+  "p/p09": {
+    "src": "/img/p/p09.jpg",
+    "alt": "Detailed close-up shot of a metallic studio microphone on a black background, emphasizing sound recording equipment.",
+    "width": 900,
+    "height": 900,
+    "credit": {
+      "name": "FOTEROS",
+      "url": "https://www.pexels.com/@foteros",
+      "source": "https://www.pexels.com/photo/grey-condenser-microphone-close-up-photography-352505/"
+    }
+  },
+  "p/p10": {
+    "id": 2247678,
+    "src": "/img/p/p10.jpg",
+    "alt": "Artist on stage with vibrant orange lights during a live concert in Hindmarsh, Australia.",
+    "width": 900,
+    "height": 900,
+    "credit": {
+      "name": "Eric Smart",
+      "url": "https://www.pexels.com/@erxmart",
+      "source": "https://www.pexels.com/photo/person-singing-on-stage-2247678/"
+    }
+  },
+  "p/p11": {
+    "src": "/img/p/p11.jpg",
+    "alt": "Aerial view of a camera and accessories on grass, showcasing photography gear outdoors.",
+    "width": 900,
+    "height": 900,
+    "credit": {
+      "name": "Mad Knoxx Deluxe",
+      "url": "https://www.pexels.com/@madknoxxdeluxe",
+      "source": "https://www.pexels.com/photo/photography-equipment-in-outdoor-setting-31453948/"
+    }
+  },
+  "p/p12": {
+    "id": 12997214,
+    "src": "/img/p/p12.jpg",
+    "alt": "Close-up of red, green, and blue RCA connectors on a white surface, capturing vibrant color contrast.",
+    "width": 900,
+    "height": 900,
+    "credit": {
+      "name": "Srattha Nualsate",
+      "url": "https://www.pexels.com/@srattha-nualsate-2695613",
+      "source": "https://www.pexels.com/photo/colorful-cables-on-a-white-surface-12997214/"
+    }
+  },
+  "p/p13": {
+    "src": "/img/p/p13.jpg",
+    "alt": "Close-up of a spinning vinyl record on a turntable, capturing the nostalgic essence of analog music.",
+    "width": 900,
+    "height": 900,
+    "credit": {
+      "name": "Chris R.",
+      "url": "https://www.pexels.com/@chris-r-2147603956",
+      "source": "https://www.pexels.com/photo/classic-vinyl-record-spinning-on-turntable-31805824/"
+    }
+  },
+  "p/p14": {
+    "id": 2659939,
+    "src": "/img/p/p14.jpg",
+    "alt": "A minimalist desk setup featuring a laptop, speakers, and a cactus plant.",
+    "width": 900,
+    "height": 900,
+    "credit": {
+      "name": "San Engineer",
+      "url": "https://www.pexels.com/@sanengineer",
+      "source": "https://www.pexels.com/photo/silver-macbook-pro-2659939/"
+    }
+  }
+}

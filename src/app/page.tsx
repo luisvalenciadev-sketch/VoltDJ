@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ProductArt } from "@/components/ProductArt";
 import { ProductCard } from "@/components/ProductCard";
@@ -7,7 +8,10 @@ import { FaqList, PolicyList } from "@/components/Content";
 import { FAQ } from "@/config/content";
 import { STORE } from "@/config/store";
 import { getBrands, getCategories, getProducts } from "@/data/catalog";
+import { stockImage } from "@/data/stock-images";
 import { hasPromo } from "@/lib/pricing";
+
+const hero = stockImage("hero", "DJ mezclando en un controlador");
 
 export default async function HomePage() {
   const [products, categories, brands] = await Promise.all([getProducts(), getCategories(), getBrands()]);
@@ -39,8 +43,21 @@ export default async function HomePage() {
             </div>
           </div>
           <div className="shot">
-            <ProductArt kind="controller" />
-            <span className="cap">Fotografía autorizada pendiente · 1600×1200</span>
+            {hero ? (
+              <>
+                <Image src={hero.src} alt={hero.alt} width={hero.width} height={hero.height} sizes="(min-width: 900px) 50vw, 100vw" priority className="cover" />
+                {hero.credit && (
+                  <a className="cap credit" href={hero.credit.source} target="_blank" rel="noopener noreferrer">
+                    Foto: {hero.credit.name} / Pexels
+                  </a>
+                )}
+              </>
+            ) : (
+              <>
+                <ProductArt kind="controller" />
+                <span className="cap">Fotografía autorizada pendiente · 1600×1200</span>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -57,7 +74,13 @@ export default async function HomePage() {
           <div className="cats">
             {categories.map((c) => (
               <Link key={c.id} className="cat" href={`/catalogo/${c.slug}`}>
-                <span className="img"><ProductArt kind={c.art} /></span>
+                <span className="img">
+                  {c.image ? (
+                    <Image src={c.image.src} alt="" width={c.image.width} height={c.image.height} sizes="(min-width: 720px) 25vw, 50vw" className="cover" />
+                  ) : (
+                    <ProductArt kind={c.art} />
+                  )}
+                </span>
                 <span className="meta">
                   <b>{c.name}</b>
                   <span>{products.filter((p) => p.categoryId === c.id).length}<span className="sr-only"> productos</span></span>

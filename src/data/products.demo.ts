@@ -1,3 +1,4 @@
+import { stockImage } from "./stock-images";
 import type { Product, Spec } from "./types";
 
 /**
@@ -9,7 +10,7 @@ const UPDATED = "2026-10-28";
 
 type Seed = Omit<Product, "images" | "status" | "isDemo" | "updatedAt" | "promoEndsAt"> & { promoEndsAt?: string | null };
 const demo = (p: Seed): Product => ({
-  images: [],
+  images: [stockImage(`p/${p.id}`, `Foto de referencia: ${p.name}`)].filter((i) => i !== undefined),
   status: "published",
   isDemo: true,
   updatedAt: UPDATED,
