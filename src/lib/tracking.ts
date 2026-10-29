@@ -38,12 +38,28 @@ export interface TrackingEvent {
   note?: string;
 }
 
+/** Línea del pedido. El precio queda congelado al crear la guía: si el catálogo cambia, el pedido no. */
+export interface OrderLine {
+  /** Id del producto del catálogo, o null si se escribió a mano. */
+  productId: string | null;
+  name: string;
+  qty: number;
+  /** COP, entero. */
+  unitPrice: number;
+}
+
 export interface Guide {
   code: string;
   customerName: string;
   /** Solo para el panel (enviar el enlace por WhatsApp). Nunca se muestra en la consulta pública. */
   phone: string | null;
   city: string | null;
+  lines: OrderLine[];
+  /** Costo de envío en COP (0 si va incluido o se cobra aparte). */
+  shipping: number;
+  /** Total recibido hasta ahora en COP. */
+  paid: number;
+  /** Texto libre de guías antiguas, anteriores a las líneas de producto. */
   items: string;
   carrier: string | null;
   trackingNumber: string | null;
@@ -55,6 +71,26 @@ export interface Guide {
   updatedAt: string;
 }
 
+export type PaymentState = "sin_pago" | "parcial" | "pagado";
+export const PAYMENT_LABEL: Record<PaymentState, string> = { sin_pago: "Sin pago", parcial: "Pago parcial", pagado: "Pagado" };
+
+/** Cuentas del pedido: lo pendiente es lo que se cobra al entregar. */
+export function orderTotals(g: Pick<Guide, "lines" | "shipping" | "paid">) {
+  const subtotal = g.lines.reduce((s, l) => s + l.qty * l.unitPrice, 0);
+  const total = subtotal + g.shipping;
+  const paid = Math.min(Math.max(0, g.paid), total);
+  const pending = total - paid;
+  const state: PaymentState = total > 0 && pending === 0 ? "pagado" : paid > 0 ? "parcial" : "sin_pago";
+  return { subtotal, total, paid, pending, state, units: g.lines.reduce((s, l) => s + l.qty, 0) };
+}
+
+/** Pesos escritos a mano ("1.105.000", "$ 800000") a entero. Vacío = 0; texto inválido = null. */
+export function parseCOP(input: string): number | null {
+  const clean = input.replace(/[$\s.]/g, "").replace(/,00$/, "");
+  if (!clean) return 0;
+  return /^\d{1,11}$/.test(clean) ? Number(clean) : null;
+}
+
 /** Calendario sugerido al crear una guía automática: días después de la fecha de inicio. */
 export const DEFAULT_OFFSETS: Record<StepId, number> = {
   confirmado: 0,
@@ -64,6 +100,20 @@ export const DEFAULT_OFFSETS: Record<StepId, number> = {
   en_reparto: 4,
   entregado: 5,
 };
+
+/** Calendarios de un clic para el caso común; cada fecha se puede ajustar después. */
+export const SCHEDULE_PRESETS: { id: string; label: string; hint: string; offsets: Record<StepId, number> }[] = [
+  { id: "rapido", label: "Rápido", hint: "2 días · misma ciudad", offsets: { confirmado: 0, pago_recibido: 0, preparando: 0, enviado: 1, en_reparto: 2, entregado: 2 } },
+  { id: "estandar", label: "Estándar", hint: "5 días · nacional", offsets: DEFAULT_OFFSETS },
+  { id: "lejano", label: "Lejano", hint: "8 días · zonas apartadas", offsets: { confirmado: 0, pago_recibido: 0, preparando: 1, enviado: 2, en_reparto: 6, entregado: 8 } },
+];
+
+/** Siguiente paso de la lista tras el estado actual (para el botón "Marcar como…"). */
+export function nextStep(current: StatusId | null): StepId | null {
+  if (current === "cancelado" || current === "entregado") return null;
+  const i = current ? STEPS.findIndex((s) => s.id === current) : -1;
+  return STEPS[i + 1]?.id ?? null;
+}
 
 const byDate = (a: TrackingEvent, b: TrackingEvent) => Date.parse(a.at) - Date.parse(b.at);
 

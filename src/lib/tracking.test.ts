@@ -8,6 +8,9 @@ import {
   isoToLocalInput,
   localInputToISO,
   nextScheduled,
+  nextStep,
+  orderTotals,
+  parseCOP,
   normalizeGuideCode,
   timeline,
   type Guide,
@@ -74,6 +77,36 @@ describe("códigos de guía", () => {
     expect(normalizeGuideCode(" vd-7k4m q2x9 ")).toBe("VD-7K4M-Q2X9");
     expect(normalizeGuideCode("7k4mq2x9")).toBe("VD-7K4M-Q2X9");
     expect(normalizeGuideCode("VD-123")).toBeNull();
+  });
+});
+
+describe("cuentas del pedido", () => {
+  const lines = [
+    { productId: "a", name: "DDJ-FLX4", qty: 1, unitPrice: 1_105_000 },
+    { productId: null, name: "Cable RCA", qty: 2, unitPrice: 25_000 },
+  ];
+  it("suma productos y envío, y calcula lo pendiente para la entrega", () => {
+    expect(orderTotals({ lines, shipping: 20_000, paid: 600_000 })).toMatchObject({ subtotal: 1_155_000, total: 1_175_000, paid: 600_000, pending: 575_000, state: "parcial", units: 3 });
+  });
+  it("distingue sin pago, parcial y pagado; nunca da pendiente negativo", () => {
+    expect(orderTotals({ lines, shipping: 0, paid: 0 }).state).toBe("sin_pago");
+    expect(orderTotals({ lines, shipping: 0, paid: 1_155_000 }).state).toBe("pagado");
+    expect(orderTotals({ lines, shipping: 0, paid: 9_999_999 })).toMatchObject({ paid: 1_155_000, pending: 0 });
+  });
+  it("lee pesos escritos a mano", () => {
+    expect(parseCOP("1.105.000")).toBe(1_105_000);
+    expect(parseCOP("$ 800000")).toBe(800_000);
+    expect(parseCOP("")).toBe(0);
+    expect(parseCOP("mil")).toBeNull();
+  });
+});
+
+describe("siguiente paso", () => {
+  it("propone el paso que sigue y nada al terminar", () => {
+    expect(nextStep(null)).toBe("confirmado");
+    expect(nextStep("preparando")).toBe("enviado");
+    expect(nextStep("entregado")).toBeNull();
+    expect(nextStep("cancelado")).toBeNull();
   });
 });
 

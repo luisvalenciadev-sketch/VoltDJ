@@ -6,7 +6,8 @@ import { WhatsAppIcon } from "@/components/icons";
 import { Breadcrumbs } from "@/components/ui";
 import { STORE } from "@/config/store";
 import { guidesStore } from "@/lib/guides-store";
-import { currentStatus, formatTrackingDate, normalizeGuideCode, STATUS_LABEL, timeline } from "@/lib/tracking";
+import { formatCOP } from "@/lib/pricing";
+import { currentStatus, formatTrackingDate, normalizeGuideCode, orderTotals, STATUS_LABEL, timeline } from "@/lib/tracking";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 
 type Params = Promise<{ codigo: string }>;
@@ -49,6 +50,7 @@ export default async function TrackingPage({ params }: { params: Params }) {
 
   const now = new Date();
   const current = currentStatus(guide, now);
+  const totals = orderTotals(guide);
   const firstName = guide.customerName.split(" ")[0];
   const help = buildWhatsAppLink(`Hola ${STORE.name}, tengo una consulta sobre mi pedido ${guide.code}.`);
 
@@ -88,7 +90,7 @@ export default async function TrackingPage({ params }: { params: Params }) {
                 <dd>{guide.city}</dd>
               </>
             )}
-            {guide.items && (
+            {guide.lines.length === 0 && guide.items && (
               <>
                 <dt>Productos</dt>
                 <dd className="pre">{guide.items}</dd>
@@ -96,6 +98,42 @@ export default async function TrackingPage({ params }: { params: Params }) {
             )}
           </dl>
           {!guide.carrier && !guide.trackingNumber && <p className="note">Cuando despachemos tu pedido verás aquí la transportadora y su número de guía.</p>}
+          {guide.lines.length > 0 && (
+            <>
+              <h2 className="disp">Tu pedido</h2>
+              <ul className="order-summary">
+                {guide.lines.map((l, i) => (
+                  <li key={i}>
+                    <span>
+                      {l.qty} × {l.name}
+                    </span>
+                    <span className="num">{formatCOP(l.qty * l.unitPrice)}</span>
+                  </li>
+                ))}
+                {guide.shipping > 0 && (
+                  <li>
+                    <span>Envío</span>
+                    <span className="num">{formatCOP(guide.shipping)}</span>
+                  </li>
+                )}
+              </ul>
+              <dl className="totals">
+                <div>
+                  <dt>Total</dt>
+                  <dd className="num">{formatCOP(totals.total)}</dd>
+                </div>
+                <div>
+                  <dt>Pagado</dt>
+                  <dd className="num">{formatCOP(totals.paid)}</dd>
+                </div>
+                <div className="due" data-state={totals.state}>
+                  <dt>{totals.pending > 0 ? "Pendiente al recibir" : "Pendiente"}</dt>
+                  <dd className="num">{formatCOP(totals.pending)}</dd>
+                </div>
+              </dl>
+              {totals.pending > 0 && <p className="note">El saldo pendiente se paga al recibir el pedido, según lo acordado con el asesor.</p>}
+            </>
+          )}
           {help && (
             <a className="btn btn-secondary btn-block" href={help} target="_blank" rel="noopener noreferrer">
               <WhatsAppIcon /> ¿Dudas? Escríbenos
