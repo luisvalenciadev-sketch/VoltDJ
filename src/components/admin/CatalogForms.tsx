@@ -30,7 +30,7 @@ import { AVAILABILITY_LABEL, formatCOP } from "@/lib/pricing";
 
 // ---------- Piezas comunes ----------
 
-function Message({ state }: { state: FormState }) {
+export function Message({ state }: { state: FormState }) {
   if (!state) return null;
   return (
     <p className={`alert ${state.error ? "err" : "ok"}`} role={state.error ? "alert" : "status"}>
@@ -57,7 +57,7 @@ function MoneyInput({ id, name, label, value, onChange, hint, placeholder = "0" 
   );
 }
 
-function Section({ id, title, hint, children }: { id: string; title: string; hint?: string; children: React.ReactNode }) {
+export function Section({ id, title, hint, children }: { id: string; title: string; hint?: string; children: React.ReactNode }) {
   return (
     <section className="aform-sec" aria-labelledby={`sec-${id}`}>
       <header>
@@ -242,7 +242,7 @@ function ImageManager({ images, onChange, mode, baseName, alt }: { images: Produ
 }
 
 /** Una sola imagen (categoría o logo de marca). */
-function SingleImage({ label, value, onChange, mode, baseName, keepAlpha }: { label: string; value: ProductImage | null; onChange: (v: ProductImage | null) => void; mode: UploadMode; baseName: string; keepAlpha?: boolean }) {
+export function SingleImage({ label, value, onChange, mode, baseName, keepAlpha }: { label: string; value: ProductImage | null; onChange: (v: ProductImage | null) => void; mode: UploadMode; baseName: string; keepAlpha?: boolean }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const id = useId();

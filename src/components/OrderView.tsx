@@ -7,6 +7,7 @@ import { summarize, type CartItem } from "@/lib/cart";
 import { formatCOP } from "@/lib/pricing";
 import { buildOrderMessage, buildWhatsAppLink, createOrderId, MAX_CITY_LENGTH } from "@/lib/whatsapp";
 import { useCart } from "@/store/cart-store";
+import { useStoreInfo } from "@/store/store-info";
 import { useToast } from "@/store/toast";
 import { CartLines, SavingsRows, Steps } from "./CartLines";
 import { CartSkeleton, EmptyCart } from "./CartView";
@@ -16,7 +17,7 @@ const ORDER_KEY = "voltdj.order.v1";
 const signature = (items: CartItem[]) => items.map((i) => `${i.id}:${i.qty}`).sort().join("|");
 
 /** ID provisional estable mientras el contenido del carrito no cambie. */
-function useOrderId(items: CartItem[], ready: boolean) {
+function useOrderId(items: CartItem[], ready: boolean, prefix: string) {
   const [id, setId] = useState<string | null>(null);
   const sig = signature(items);
   useEffect(() => {
@@ -26,12 +27,12 @@ function useOrderId(items: CartItem[], ready: boolean) {
       stored = JSON.parse(sessionStorage.getItem(ORDER_KEY) ?? "null");
     } catch {}
     if (stored && stored.sig === sig && typeof stored.id === "string") return setId(stored.id);
-    const next = createOrderId();
+    const next = createOrderId(prefix);
     try {
       sessionStorage.setItem(ORDER_KEY, JSON.stringify({ id: next, sig }));
     } catch {}
     setId(next);
-  }, [sig, ready]);
+  }, [sig, ready, prefix]);
   return id;
 }
 
@@ -40,10 +41,11 @@ export function OrderView({ catalog }: { catalog: CartProduct[] }) {
   const toast = useToast();
   const [city, setCity] = useState("");
   const [opened, setOpened] = useState(false);
-  const orderId = useOrderId(cart.items, cart.ready);
+  const store = useStoreInfo();
+  const orderId = useOrderId(cart.items, cart.ready, store.orderIdPrefix);
   const s = useMemo(() => summarize(cart.items, catalog), [cart.items, catalog]);
-  const message = orderId ? buildOrderMessage(s, { orderId, city }) : "";
-  const link = message ? buildWhatsAppLink(message) : null;
+  const message = orderId ? buildOrderMessage(s, { orderId, city, storeName: store.name }) : "";
+  const link = message ? buildWhatsAppLink(message, store.whatsappNumber) : null;
 
   if (!cart.ready || (cart.items.length > 0 && !orderId)) return <><Steps current={1} /><CartSkeleton /></>;
   if (!s.orderable.length) {

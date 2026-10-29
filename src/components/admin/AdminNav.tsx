@@ -10,6 +10,7 @@ const LINKS = [
   { href: "/admin/categorias", label: "Categorías", match: (p: string) => p.startsWith("/admin/categorias") },
   { href: "/admin/marcas", label: "Marcas", match: (p: string) => p.startsWith("/admin/marcas") },
   { href: "/admin/importar", label: "Importar / exportar", match: (p: string) => p.startsWith("/admin/importar") },
+  { href: "/admin/configuracion", label: "Configuración", match: (p: string) => p.startsWith("/admin/configuracion") },
 ];
 
 /** Secciones del panel. En celular se desplaza de lado, como las pestañas de la lista de guías. */

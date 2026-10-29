@@ -1,4 +1,4 @@
-import { STORE } from "@/config/store";
+import { SITE } from "@/config/store";
 import type { Availability } from "@/data/types";
 
 interface Priced {
@@ -6,9 +6,9 @@ interface Priced {
   promoPrice: number | null;
 }
 
-const currency = new Intl.NumberFormat(STORE.locale, {
+const currency = new Intl.NumberFormat(SITE.locale, {
   style: "currency",
-  currency: STORE.currency,
+  currency: SITE.currency,
   maximumFractionDigits: 0,
   minimumFractionDigits: 0,
 });

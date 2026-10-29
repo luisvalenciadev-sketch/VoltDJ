@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PolicyList } from "@/components/Content";
 import { Breadcrumbs, Pending } from "@/components/ui";
-import { STORE } from "@/config/store";
+import { getStore } from "@/data/store";
 
 export const metadata: Metadata = {
   title: "Envíos y garantías",
@@ -9,7 +9,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/envios-y-garantias" },
 };
 
-export default function ShippingPage() {
+export default async function ShippingPage() {
+  const store = await getStore();
   return (
     <div className="wrap">
       <Breadcrumbs items={[{ label: "Inicio", href: "/" }, { label: "Envíos y garantías" }]} />
@@ -20,23 +21,23 @@ export default function ShippingPage() {
       <div className="split" style={{ paddingBottom: "var(--s7)" }}>
         <section className="panel" id="envios" aria-labelledby="h-env">
           <h2 id="h-env">Envíos</h2>
-          <p className="muted">{STORE.shipping.summary ?? <Pending>Resumen de la política de envíos</Pending>}</p>
+          <p className="muted">{store.shipping.summary ?? <Pending>Resumen de la política de envíos</Pending>}</p>
           <PolicyList
-            items={STORE.shipping.details}
+            items={store.shipping.details}
             placeholders={["Ciudades y transportadoras", "Tiempo estimado por zona", "Costo o regla de envío gratis", "Qué hacer si el paquete llega dañado"]}
           />
         </section>
         <section className="panel" id="garantias" aria-labelledby="h-gar">
           <h2 id="h-gar">Garantías</h2>
-          <p className="muted">{STORE.warranty.summary ?? <Pending>Resumen de la política de garantía</Pending>}</p>
+          <p className="muted">{store.warranty.summary ?? <Pending>Resumen de la política de garantía</Pending>}</p>
           <PolicyList
-            items={STORE.warranty.details}
+            items={store.warranty.details}
             placeholders={["Duración por categoría o marca", "Qué cubre y qué no", "Documentos necesarios", "Cómo y dónde se hace un reclamo"]}
           />
         </section>
         <section className="panel" id="cambios" aria-labelledby="h-cam">
           <h2 id="h-cam">Cambios y devoluciones</h2>
-          <p className="muted">{STORE.returnsPolicy ?? <Pending>Política de cambios y devoluciones</Pending>}</p>
+          <p className="muted">{store.returnsPolicy ?? <Pending>Política de cambios y devoluciones</Pending>}</p>
           <p className="muted">Escríbenos por WhatsApp con tu número de pedido para gestionarlo.</p>
         </section>
       </div>

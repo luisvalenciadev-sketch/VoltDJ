@@ -1,15 +1,13 @@
 import Link from "next/link";
 import type { Product } from "@/data/types";
 import { discountPercent } from "@/lib/pricing";
-import { buildProductMessage, buildWhatsAppLink } from "@/lib/whatsapp";
-import { WhatsAppIcon } from "./icons";
+import { ProductWhatsApp } from "./ProductWhatsApp";
 import { Tilt } from "./Tilt";
 import { AvailabilityBadge, Price, ProductMedia } from "./ui";
 
 export function ProductCard({ product: p, brand }: { product: Product; brand: string }) {
   const off = discountPercent(p);
   const href = `/producto/${p.slug}`;
-  const wa = buildWhatsAppLink(buildProductMessage(p));
   return (
     <article className="card" aria-labelledby={`pc-${p.id}`}>
       <Tilt className="img" max={6}>
@@ -25,11 +23,7 @@ export function ProductCard({ product: p, brand }: { product: Product; brand: st
         <AvailabilityBadge value={p.availability} />
         <div className="foot">
           <Price price={p.price} promoPrice={p.promoPrice} />
-          {wa && (
-            <a className="iconbtn wa" href={wa} target="_blank" rel="noopener noreferrer" aria-label={`Consultar ${p.name} por WhatsApp`}>
-              <WhatsAppIcon />
-            </a>
-          )}
+          <ProductWhatsApp product={{ name: p.name, sku: p.sku, price: p.price, promoPrice: p.promoPrice }} />
         </div>
       </div>
     </article>

@@ -22,7 +22,7 @@ npm run dev                  # http://localhost:3000
 
 ### Número de WhatsApp
 
-En `.env.local` (o en las variables de entorno del hosting):
+Se edita en el panel (`/admin/configuracion`). La variable de entorno es solo el valor inicial, mientras la tienda no guarde otro:
 
 ```
 NEXT_PUBLIC_WHATSAPP_NUMBER=57XXXXXXXXXX   # solo dígitos, con indicativo de país, sin "+"
@@ -30,11 +30,18 @@ NEXT_PUBLIC_SITE_URL=https://tu-dominio.com
 ```
 
 - Si el número falta o es inválido, la tienda **no inventa uno**: oculta los accesos rápidos a WhatsApp y deshabilita el botón de envío del pedido con un aviso.
-- Las variables `NEXT_PUBLIC_*` se incrustan al compilar. **Después de cambiarlas hay que volver a ejecutar `npm run build`.**
+- Las variables `NEXT_PUBLIC_*` se incrustan al compilar. **Después de cambiarlas hay que volver a ejecutar `npm run build`.** El número guardado en el panel no necesita recompilar.
 
 ### Datos de la tienda
 
-Todos los datos comerciales están en un único archivo: `src/config/store.ts`. Ahí se definen el nombre, la promesa, la barra superior, la razón social y el NIT, el correo, la dirección, el horario, las redes, las políticas de envío y garantía, y los medios de pago. Un valor `null` se muestra como "pendiente".
+Se editan en el panel, en **Configuración** (`/admin/configuracion`), y se guardan en Neon (tabla `settings`):
+
+- **Tienda:** nombre, eslogan, descripción, WhatsApp de pedidos, teléfono, correo, dirección, horario, razón social, NIT, prefijo de pedidos, cinta superior y redes.
+- **Marca:** logo para fondo oscuro y para fondo claro, ícono de la pestaña y color de acento. El color debe tener contraste de 4,5:1 con el fondo; si no lo tiene, el panel sugiere el mismo tono más claro. El texto de los botones (oscuro o blanco) se elige solo.
+- **Políticas:** envíos, garantía, cambios, medios de pago y el texto de privacidad y de términos, con vista previa. Formato: `## ` para subtítulos, `- ` para listas, línea en blanco entre párrafos.
+- **SEO:** título y descripción para Google e imagen para compartir el enlace.
+
+`src/config/store.ts` guarda solo los valores iniciales (`initialStore`, o `blankStore` con `CATALOG_SEED=none`) y lo que no cambia desde el panel (`SITE`: URL, idioma y moneda). Un valor vacío se muestra como "pendiente".
 
 Las preguntas frecuentes están en `src/config/content.ts`.
 
@@ -78,10 +85,11 @@ El catálogo se administra en el panel: `/admin/productos`, `/admin/inventario`,
 | `src/lib/db.ts` | Esquema y migraciones: se aplican solas en la primera petición |
 | `src/lib/inventory.ts` | Disponibilidad calculada desde el stock y promoción aplicada |
 | `src/lib/catalog-import.ts` | Importación y exportación CSV, plantilla y WooCommerce |
+| `src/data/store.ts` / `src/lib/settings-store.ts` | Datos de la tienda: caché con la etiqueta `settings` y almacén (Neon, memoria o solo lectura) |
 
 Reglas de los datos:
 - Precio vacío muestra "Precio por confirmar" y no suma al subtotal.
-- El precio rebajado propio debe ser menor que el precio; gana sobre la promoción general de `src/config/store.ts`.
+- El precio rebajado propio debe ser menor que el precio; gana sobre la promoción general de `src/config/store.ts` (`PROMO`, pasa al panel en la fase 3).
 - La disponibilidad sale del stock: sin control de inventario → Disponible; 0 → Agotado (o Bajo pedido si se permite); hasta el umbral → Pocas unidades. Los agotados no se pueden añadir al carrito y nadie puede pedir más unidades de las que hay.
 - Borrador o archivado despublica el producto. Una categoría o marca oculta oculta también sus productos.
 
@@ -107,8 +115,8 @@ src/
 
 ```bash
 npm run typecheck
-npm test            # Vitest: lógica y componentes (84 pruebas)
-npm run test:e2e    # Playwright: escritorio, tablet, móvil y panel de catálogo (88 pruebas)
+npm test            # Vitest: lógica y componentes (94 pruebas)
+npm run test:e2e    # Playwright: escritorio, tablet, móvil, panel de catálogo y configuración (93 pruebas)
 ```
 
 La primera vez, para las pruebas e2e: `npx playwright install chromium`. Usan el puerto 3217 y un número de WhatsApp ficticio de prueba.
@@ -130,8 +138,7 @@ npm run start   # puerto 3000 por defecto; -p para cambiarlo
 Antes de publicar:
 1. Configura `NEXT_PUBLIC_WHATSAPP_NUMBER` y `NEXT_PUBLIC_SITE_URL` en el hosting.
 2. Conecta en Vercel las integraciones **Neon** (catálogo y guías) y **Blob** (fotos del panel), y define `ADMIN_PASSWORD` y `SESSION_SECRET`. Para una tienda nueva que debe arrancar vacía, define también `CATALOG_SEED=none` antes del primer despliegue.
-3. Completa `src/config/store.ts`.
-3. Reemplaza los textos legales de `/privacidad` y `/terminos` por los aprobados por la tienda.
+3. Completa los datos en `/admin/configuracion`, incluidos los textos legales de privacidad y términos aprobados por la tienda.
 4. Reemplaza la ilustración del hero por una fotografía autorizada.
 
 No hay credenciales en el repositorio: `.env*` está en `.gitignore`, salvo `.env.example`.

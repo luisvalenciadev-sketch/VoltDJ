@@ -1,19 +1,21 @@
 import Link from "next/link";
-import { phoneHref, STORE } from "@/config/store";
+import { phoneHref } from "@/config/store";
+import { getStore } from "@/data/store";
 import type { Category } from "@/data/types";
 import { Logo } from "./Header";
 import { Pending } from "./ui";
 
-export function Footer({ categories, showOffers }: { categories: Category[]; showOffers: boolean }) {
+export async function Footer({ categories, showOffers }: { categories: Category[]; showOffers: boolean }) {
+  const store = await getStore();
   const year = new Date().getFullYear();
   return (
     <footer className="ft">
       <div className="wrap">
         <div className="cols">
           <div>
-            <Logo />
-            <p>{STORE.tagline}</p>
-            <p>{STORE.legalName && STORE.taxId ? `${STORE.legalName} · NIT ${STORE.taxId}` : <Pending>Razón social · NIT</Pending>}</p>
+            <Logo store={store} />
+            {store.tagline && <p>{store.tagline}</p>}
+            <p>{store.legalName && store.taxId ? `${store.legalName} · NIT ${store.taxId}` : <Pending>Razón social · NIT</Pending>}</p>
           </div>
           <div>
             <h2>Tienda</h2>
@@ -37,13 +39,13 @@ export function Footer({ categories, showOffers }: { categories: Category[]; sho
           <div>
             <h2>Contacto</h2>
             <ul>
-              <li>{STORE.whatsappNumber ? <Link href="/contacto">WhatsApp comercial</Link> : <Pending>WhatsApp comercial</Pending>}</li>
-              <li>{STORE.email ? <a href={`mailto:${STORE.email}`}>{STORE.email}</a> : <Pending>Correo</Pending>}</li>
-              {STORE.phone && <li><a href={phoneHref(STORE.phone)}>Tel. {STORE.phone}</a></li>}
-              <li>{STORE.address ?? <Pending>Dirección / showroom</Pending>}</li>
-              <li>{STORE.hours ?? <Pending>Horario</Pending>}</li>
-              {STORE.social.length ? (
-                STORE.social.map((s) => (
+              <li>{store.whatsappNumber ? <Link href="/contacto">WhatsApp comercial</Link> : <Pending>WhatsApp comercial</Pending>}</li>
+              <li>{store.email ? <a href={`mailto:${store.email}`}>{store.email}</a> : <Pending>Correo</Pending>}</li>
+              {store.phone && <li><a href={phoneHref(store.phone)}>Tel. {store.phone}</a></li>}
+              <li>{store.address ?? <Pending>Dirección / showroom</Pending>}</li>
+              <li>{store.hours ?? <Pending>Horario</Pending>}</li>
+              {store.social.length ? (
+                store.social.map((s) => (
                   <li key={s.url}><a href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a></li>
                 ))
               ) : (
@@ -54,7 +56,7 @@ export function Footer({ categories, showOffers }: { categories: Category[]; sho
         </div>
         <div className="legal">
           <span>
-            © {year} {STORE.name} · Fotos:{" "}
+            © {year} {store.name} · Fotos:{" "}
             <a href="https://www.pexels.com" target="_blank" rel="noopener noreferrer">Pexels</a>
           </span>
           <span className="row-wrap" style={{ gap: "var(--s4)" }}>

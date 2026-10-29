@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { AdvanceForm, CopyLink, DeleteGuideButton, EditDetailsForm, PaymentForm, StatusModes } from "@/components/admin/AdminForms";
 import { WhatsAppIcon } from "@/components/icons";
 import { TrackingTimeline } from "@/components/TrackingTimeline";
-import { STORE } from "@/config/store";
+import { SITE } from "@/config/store";
+import { getStore } from "@/data/store";
 import { requireAdmin } from "@/lib/admin-auth";
 import { adminCatalog } from "@/lib/admin-catalog";
 import { guidesStore } from "@/lib/guides-store";
@@ -27,6 +28,7 @@ export default async function GuideAdminPage({ params, searchParams }: { params:
   await requireAdmin();
   const code = normalizeGuideCode((await params).codigo);
   const store = guidesStore();
+  const shop = await getStore();
   const guide = code && store ? await store.get(code) : null;
   if (!guide) notFound();
   const created = Boolean((await searchParams).creada);
@@ -39,12 +41,12 @@ export default async function GuideAdminPage({ params, searchParams }: { params:
   const locked = isOrderLocked(cur?.status);
   const today = new Date(now.getTime() - 5 * 3_600_000);
   const dayPlus = (n: number) => new Date(today.getTime() + n * 86_400_000).toISOString().slice(0, 10);
-  const publicUrl = new URL(`/seguimiento/${guide.code}`, STORE.siteUrl).toString();
+  const publicUrl = new URL(`/seguimiento/${guide.code}`, SITE.url).toString();
   const firstName = guide.customerName.split(" ")[0];
   const pendingLine = totals.pending > 0 ? `\nSaldo pendiente para la entrega: ${formatCOP(totals.pending)}` : "";
   // Mensaje listo para el cliente: el asesor solo pulsa enviar en WhatsApp.
   const toCustomer = guide.phone
-    ? buildWhatsAppLink(`Hola ${firstName}, tu pedido en ${STORE.name} ya tiene guía de seguimiento.\nCódigo: ${guide.code}${pendingLine}\nConsúltalo aquí: ${publicUrl}`, guide.phone)
+    ? buildWhatsAppLink(`Hola ${firstName}, tu pedido en ${shop.name} ya tiene guía de seguimiento.\nCódigo: ${guide.code}${pendingLine}\nConsúltalo aquí: ${publicUrl}`, guide.phone)
     : null;
 
   return (

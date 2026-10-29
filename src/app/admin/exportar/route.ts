@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { STORE } from "@/config/store";
+import { SITE } from "@/config/store";
 import { SESSION_COOKIE, verifyAdminToken } from "@/lib/admin-auth";
 import { exportCatalogCsv, templateCsv } from "@/lib/catalog-import";
 import { catalogStore } from "@/lib/catalog-store";
@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   }
   const template = new URL(request.url).searchParams.has("plantilla");
   const day = new Date().toISOString().slice(0, 10);
-  const body = template ? templateCsv() : exportCatalogCsv(await catalogStore().snapshot(), STORE.siteUrl);
+  const body = template ? templateCsv() : exportCatalogCsv(await catalogStore().snapshot(), SITE.url);
   return new Response(body, {
     headers: {
       "content-type": "text/csv; charset=utf-8",

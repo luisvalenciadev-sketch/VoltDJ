@@ -1,6 +1,14 @@
 # Plan técnico — Panel de administración completo
 
-Estado: **fase 1 construida** en la rama `feat/panel-fase-1` · 2026-10-29
+Estado: **fase 1** construida en `feat/panel-fase-1` · **fase 2** construida en `feat/panel-fase-2` · 2026-10-29
+
+### Cambios respecto al plan en la fase 2
+
+- **Una sola fila `store` en `settings`**, no una por bloque: tienda, marca, políticas y SEO se guardan juntos y se combinan campo por campo con los valores iniciales (`mergeStore`). Un campo nuevo del código aparece solo en las tiendas que ya guardaron.
+- **Componentes de cliente por contexto, no por props:** el layout pasa nombre, WhatsApp y prefijo de pedidos a `StoreInfoProvider`; el carrito, el pedido y el botón de WhatsApp de las tarjetas lo leen de ahí.
+- **Contraste exigido, no solo avisado:** el acento debe dar 4,5:1 con el fondo, porque se usa como texto (precios rebajados, pasos activos). Si no llega, el panel ofrece el mismo tono aclarado lo justo.
+- **Textos legales:** formato mínimo (`## `, `- `, párrafos) en lugar de un editor enriquecido. No admite HTML.
+- **Pendiente para fases siguientes:** el texto del héroe y las preguntas frecuentes siguen en el código (fase 4); `PROMO` y los medios de pago con cuotas, en la fase 3. El prefijo de las guías de seguimiento sigue fijo.
 
 ### Cambios respecto al plan en la fase 1
 

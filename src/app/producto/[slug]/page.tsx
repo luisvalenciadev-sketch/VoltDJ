@@ -5,7 +5,8 @@ import { Gallery } from "@/components/Gallery";
 import { ChatIcon, InfoIcon, ShieldIcon, TruckIcon, WarnIcon, WhatsAppIcon } from "@/components/icons";
 import { ProductCard } from "@/components/ProductCard";
 import { AvailabilityBadge, Breadcrumbs, Pending } from "@/components/ui";
-import { STORE } from "@/config/store";
+import { SITE } from "@/config/store";
+import { getStore } from "@/data/store";
 import { getBrands, getCategories, getProductBySlug, getProducts, toCartProduct } from "@/data/catalog";
 import type { Product } from "@/data/types";
 import { canAddToCart, discountPercent, formatCOP, hasPromo, unitPrice } from "@/lib/pricing";
@@ -47,14 +48,14 @@ function productJsonLd(p: Product, brand: string) {
     sku: p.sku,
     description: p.description,
     brand: { "@type": "Brand", name: brand },
-    image: p.images.map((i) => new URL(i.src, STORE.siteUrl).toString()),
+    image: p.images.map((i) => new URL(i.src, SITE.url).toString()),
     ...(price != null && {
       offers: {
         "@type": "Offer",
-        priceCurrency: STORE.currency,
+        priceCurrency: SITE.currency,
         price,
         availability: `https://schema.org/${availability[p.availability]}`,
-        url: new URL(`/producto/${p.slug}`, STORE.siteUrl).toString(),
+        url: new URL(`/producto/${p.slug}`, SITE.url).toString(),
       },
     }),
   };
@@ -63,7 +64,7 @@ function productJsonLd(p: Product, brand: string) {
 export default async function ProductPage({ params }: { params: Params }) {
   const p = await getProductBySlug((await params).slug);
   if (!p) notFound();
-  const [brands, categories, all] = await Promise.all([getBrands(), getCategories(), getProducts()]);
+  const [brands, categories, all, store] = await Promise.all([getBrands(), getCategories(), getProducts(), getStore()]);
   const brand = brands.find((b) => b.id === p.brandId)?.name ?? "";
   const category = categories.find((c) => c.id === p.categoryId);
   const brandName = (id: string) => brands.find((b) => b.id === id)?.name ?? "";
@@ -71,7 +72,7 @@ export default async function ProductPage({ params }: { params: Params }) {
     ...all.filter((x) => x.id !== p.id && x.categoryId === p.categoryId),
     ...all.filter((x) => x.id !== p.id && x.categoryId === "accesorios" && p.categoryId !== "accesorios"),
   ].slice(0, 4);
-  const wa = buildWhatsAppLink(buildProductMessage(p));
+  const wa = buildWhatsAppLink(buildProductMessage(p, store.name), store.whatsappNumber);
   const cartProduct = toCartProduct(p, brands);
   const promo = hasPromo(p);
 
@@ -112,7 +113,7 @@ export default async function ProductPage({ params }: { params: Params }) {
             {/* Solo la promoción general tiene fecha de fin; un precio rebajado propio del producto no la necesita. */}
             {promo && p.promoEndsAt && (
               <p className="note">
-                {`Promoción vigente hasta el ${new Date(p.promoEndsAt).toLocaleDateString(STORE.locale, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })} o hasta agotar unidades.`}
+                {`Promoción vigente hasta el ${new Date(p.promoEndsAt).toLocaleDateString(SITE.locale, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })} o hasta agotar unidades.`}
               </p>
             )}
             {p.availability === "agotado" && (
@@ -140,8 +141,8 @@ export default async function ProductPage({ params }: { params: Params }) {
               </a>
             )}
             <div className="assure">
-              <div><TruckIcon /><span><b>Envío:</b> {STORE.shipping.summary ?? <Pending>condiciones de envío</Pending>}</span></div>
-              <div><ShieldIcon /><span><b>Garantía:</b> {STORE.warranty.summary ?? <Pending>política de garantía</Pending>}</span></div>
+              <div><TruckIcon /><span><b>Envío:</b> {store.shipping.summary ?? <Pending>condiciones de envío</Pending>}</span></div>
+              <div><ShieldIcon /><span><b>Garantía:</b> {store.warranty.summary ?? <Pending>política de garantía</Pending>}</span></div>
               <div><ChatIcon /><span><b>Confirmación:</b> el asesor confirma disponibilidad y costo de envío antes de que pagues.</span></div>
             </div>
           </div>

@@ -8,7 +8,7 @@ import { PauseOffscreen, Tilt } from "@/components/Tilt";
 import { Meter, Pending, Price, ProductMedia } from "@/components/ui";
 import { FaqList } from "@/components/Content";
 import { FAQ } from "@/config/content";
-import { STORE } from "@/config/store";
+import { getStore } from "@/data/store";
 import { getBrands, getCategories, getProducts } from "@/data/catalog";
 import { hasPromo } from "@/lib/pricing";
 
@@ -37,7 +37,7 @@ const EQ_BARS = Array.from({ length: EQ_COLS * EQ_ROWS }, (_, i) => {
  * Cada sección tiene un único "ver más" en su cabecera: nunca dos CTAs compitiendo.
  */
 export default async function HomePage() {
-  const [products, categories, brands] = await Promise.all([getProducts(), getCategories(), getBrands()]);
+  const [products, categories, brands, store] = await Promise.all([getProducts(), getCategories(), getBrands(), getStore()]);
   const brandName = (id: string) => brands.find((b) => b.id === id)?.name ?? "";
   const categoryName = (id: string) => categories.find((c) => c.id === id)?.name ?? "";
   const featured = products.filter((p) => p.featured).slice(0, 4);
@@ -45,7 +45,9 @@ export default async function HomePage() {
   const accessories = products.filter((p) => p.categoryId === "accesorios").slice(0, 4);
   const catalogBrands = brands.filter((b) => products.some((p) => p.brandId === b.id));
   const starImage = featured.find((p) => p.images[0])?.images[0] ?? null;
-  const [line1, line2, line3] =STORE.tagline.split(". ").map((s) => s.replace(/\.$/, ""));
+  // Una frase por línea y la última resaltada: "Tu sonido. Tu energía. Tu escenario." da tres líneas.
+  const lines = (store.tagline || store.name).split(/(?<=[.!?])\s+/).filter(Boolean);
+  const last = lines.pop() ?? "";
 
   return (
     <>
@@ -79,9 +81,13 @@ export default async function HomePage() {
                 Equipos DJ y audio profesional
               </p>
               <h1 className="disp">
-                {line1}.<br />
-                {line2}.<br />
-                <em>{line3}.</em>
+                {lines.map((l, i) => (
+                  <span key={i}>
+                    {l}
+                    <br />
+                  </span>
+                ))}
+                <em>{last}</em>
               </h1>
               <p className="lead">Sistemas todo en uno, controladores, reproductores, parlantes y monitores para cabina, estudio y eventos. Arma tu pedido y confírmalo con un asesor por WhatsApp.</p>
               <div className="ctas">
@@ -233,13 +239,13 @@ export default async function HomePage() {
             <div className="benefit">
               <TruckIcon />
               <b>Envíos</b>
-              <p>{STORE.shipping.summary ?? <Pending>Cobertura y tiempos de envío</Pending>}</p>
+              <p>{store.shipping.summary ?? <Pending>Cobertura y tiempos de envío</Pending>}</p>
               <Link className="link" href="/envios-y-garantias">Política de envíos</Link>
             </div>
             <div className="benefit">
               <ShieldIcon />
               <b>Garantía</b>
-              <p>{STORE.warranty.summary ?? <Pending>Garantía por marca o tienda</Pending>}</p>
+              <p>{store.warranty.summary ?? <Pending>Garantía por marca o tienda</Pending>}</p>
               <Link className="link" href="/envios-y-garantias#garantias">Política de garantías</Link>
             </div>
           </div>

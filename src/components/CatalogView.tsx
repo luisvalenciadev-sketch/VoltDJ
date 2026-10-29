@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getBrands, getCategories, getProducts } from "@/data/catalog";
+import { getStore } from "@/data/store";
 import { filterProducts, toSearchParams, type CatalogQuery } from "@/lib/catalog-filter";
 import { AVAILABILITY_LABEL, formatCOP, hasPromo } from "@/lib/pricing";
 import { buildGeneralMessage, buildWhatsAppLink } from "@/lib/whatsapp";
@@ -18,7 +19,7 @@ interface Props {
 }
 
 export async function CatalogView({ query, basePath, title, intro, crumbs, lockedPromo }: Props) {
-  const [all, categories, brands] = await Promise.all([getProducts(), getCategories(), getBrands()]);
+  const [all, categories, brands, store] = await Promise.all([getProducts(), getCategories(), getBrands(), getStore()]);
   const effective = lockedPromo ? { ...query, promo: true } : query;
   const results = filterProducts(all, effective, { brands, categories });
   const brandName = (id: string) => brands.find((b) => b.id === id)?.name ?? id;
@@ -44,7 +45,7 @@ export async function CatalogView({ query, basePath, title, intro, crumbs, locke
       : []),
   ];
   const clearHref = basePath === "/buscar" && query.q ? `/buscar?q=${encodeURIComponent(query.q)}` : basePath;
-  const wa = buildWhatsAppLink(buildGeneralMessage(query.q || undefined));
+  const wa = buildWhatsAppLink(buildGeneralMessage(store.name, query.q || undefined), store.whatsappNumber);
 
   return (
     <div className="wrap">

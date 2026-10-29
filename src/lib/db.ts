@@ -122,6 +122,18 @@ const MIGRATIONS: Migration[] = [
       ]);
     },
   },
+  {
+    // Datos de la tienda, marca, políticas y SEO. Sin fila, la tienda usa los valores iniciales del código.
+    id: "003_ajustes",
+    async run(sql) {
+      await sql`
+        create table if not exists settings (
+          key text primary key,
+          value jsonb not null,
+          updated_at timestamptz not null default now()
+        )`;
+    },
+  },
 ];
 
 let ready: Promise<void> | null = null;

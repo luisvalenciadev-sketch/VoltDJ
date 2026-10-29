@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { CartProduct } from "@/data/types";
 import { summarize } from "./cart";
 import { formatCOP } from "./pricing";
-import { buildOrderMessage, buildProductMessage, buildWhatsAppLink, createOrderId, isWhatsAppConfigured, sanitizeCity } from "./whatsapp";
+import { buildOrderMessage, buildProductMessage, buildWhatsAppLink, createOrderId, isWhatsAppConfigured, normalizeWhatsApp, sanitizeCity } from "./whatsapp";
 
 const p = (id: string, over: Partial<CartProduct> = {}): CartProduct => ({
   id, slug: id, name: `Producto ${id}`, brand: "M", sku: `REF-${id}`, art: "mic", image: null,
@@ -22,6 +22,12 @@ describe("configuración del número", () => {
     expect(isWhatsAppConfigured("57300")).toBe(false);
     expect(isWhatsAppConfigured("+573001234567")).toBe(false);
     expect(isWhatsAppConfigured("573001234567")).toBe(true);
+  });
+  it("completa el indicativo de un celular colombiano escrito en el panel", () => {
+    expect(normalizeWhatsApp("300 123 4567")).toBe("573001234567");
+    expect(normalizeWhatsApp("+57 300 123 4567")).toBe("573001234567");
+    expect(normalizeWhatsApp("")).toBe("");
+    expect(normalizeWhatsApp("12345")).toBeNull();
   });
   it("no genera enlace si el número no está configurado", () => {
     expect(buildWhatsAppLink("hola", "")).toBeNull();
@@ -88,7 +94,7 @@ describe("buildOrderMessage", () => {
   });
 
   it("no afirma que el pedido esté confirmado", () => {
-    const msg = buildOrderMessage(summarize([{ id: "b", qty: 1, seenPrice: null }], catalog), { orderId: "X" });
+    const msg = buildOrderMessage(summarize([{ id: "b", qty: 1, seenPrice: null }], catalog), { orderId: "X", storeName: "S" });
     expect(msg.toLowerCase()).not.toMatch(/confirmado|recibido/);
   });
 });
@@ -109,7 +115,7 @@ describe("buildProductMessage", () => {
 
 describe("createOrderId", () => {
   it("genera un identificador con prefijo, fecha y código", () => {
-    expect(createOrderId(new Date(2026, 9, 28), () => 0)).toBe("VD-261028-AAAA");
-    expect(createOrderId()).toMatch(/^VD-\d{6}-[A-Z2-9]{4}$/);
+    expect(createOrderId("VD", new Date(2026, 9, 28), () => 0)).toBe("VD-261028-AAAA");
+    expect(createOrderId("VD")).toMatch(/^VD-\d{6}-[A-Z2-9]{4}$/);
   });
 });

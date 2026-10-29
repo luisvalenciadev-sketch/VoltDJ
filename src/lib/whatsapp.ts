@@ -1,4 +1,3 @@
-import { STORE } from "@/config/store";
 import type { CartSummary } from "./cart";
 import { discountPercent, formatCOP, unitPrice } from "./pricing";
 
@@ -9,11 +8,22 @@ import { discountPercent, formatCOP, unitPrice } from "./pricing";
  */
 export const MAX_CITY_LENGTH = 60;
 
-export function isWhatsAppConfigured(number = STORE.whatsappNumber): boolean {
+export function isWhatsAppConfigured(number: string): boolean {
   return /^\d{10,15}$/.test(number);
 }
 
-export function buildWhatsAppLink(text: string, number = STORE.whatsappNumber): string | null {
+/**
+ * Número escrito en el panel a formato internacional. Un celular colombiano escrito como se dicta
+ * ("300 123 4567") se completa con el 57; cualquier otro debe traer su indicativo. Vacío = sin WhatsApp; null = inválido.
+ */
+export function normalizeWhatsApp(raw: string): string | null {
+  let d = raw.replace(/\D/g, "");
+  if (d === "") return "";
+  if (/^3\d{9}$/.test(d)) d = `57${d}`;
+  return isWhatsAppConfigured(d) ? d : null;
+}
+
+export function buildWhatsAppLink(text: string, number: string): string | null {
   if (!isWhatsAppConfigured(number)) return null;
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }
@@ -24,10 +34,9 @@ export function sanitizeCity(city: string | undefined): string {
 
 export function buildOrderMessage(
   summary: Pick<CartSummary, "orderable" | "subtotal" | "hasUnpriced"> & Partial<Pick<CartSummary, "listSubtotal" | "savings">>,
-  opts: { orderId: string; city?: string; storeName?: string },
+  opts: { orderId: string; city?: string; storeName: string },
 ): string {
-  const storeName = opts.storeName ?? STORE.name;
-  const out: string[] = [`Hola ${storeName}, quiero consultar este pedido.`, `Pedido provisional: ${opts.orderId}`, ""];
+  const out: string[] = [`Hola ${opts.storeName}, quiero consultar este pedido.`, `Pedido provisional: ${opts.orderId}`, ""];
   summary.orderable.forEach((line, i) => {
     out.push(`${i + 1}. ${line.product.name}`);
     out.push(`   Ref.: ${line.product.sku}`);
@@ -57,7 +66,7 @@ export function buildOrderMessage(
 
 export function buildProductMessage(
   p: { name: string; sku: string; price: number | null; promoPrice: number | null },
-  storeName = STORE.name,
+  storeName: string,
 ): string {
   const u = unitPrice(p);
   return [
@@ -72,12 +81,12 @@ export function buildProductMessage(
   ].join("\n");
 }
 
-export function buildGeneralMessage(topic?: string, storeName = STORE.name): string {
+export function buildGeneralMessage(storeName: string, topic?: string): string {
   return topic ? `Hola ${storeName}, busco: ${topic.slice(0, 80)}. ¿Lo tienen o lo pueden conseguir?` : `Hola ${storeName}, quiero hacer una consulta.`;
 }
 
 /** Identificador provisional legible, p. ej. VD-261028-4F7K. No es una confirmación. */
-export function createOrderId(date = new Date(), random = Math.random): string {
+export function createOrderId(prefix: string, date = new Date(), random = Math.random): string {
   const ymd =
     String(date.getFullYear()).slice(2) +
     String(date.getMonth() + 1).padStart(2, "0") +
@@ -85,5 +94,5 @@ export function createOrderId(date = new Date(), random = Math.random): string {
   const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
   let code = "";
   for (let i = 0; i < 4; i++) code += alphabet[Math.floor(random() * alphabet.length)];
-  return `${STORE.orderIdPrefix}-${ymd}-${code}`;
+  return `${prefix}-${ymd}-${code}`;
 }

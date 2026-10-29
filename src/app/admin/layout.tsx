@@ -7,7 +7,7 @@ import { LogoMark } from "@/components/icons";
 import { SESSION_COOKIE, verifyAdminToken } from "@/lib/admin-auth";
 
 // El panel nunca se indexa.
-export const metadata: Metadata = { title: { default: "Panel", template: "%s · Panel VOLT DJ" }, robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: { default: "Panel", template: "%s · Panel" }, robots: { index: false, follow: false } };
 
 /** Barra propia del panel: lo justo para trabajar (marca, volver a la tienda, salir). */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

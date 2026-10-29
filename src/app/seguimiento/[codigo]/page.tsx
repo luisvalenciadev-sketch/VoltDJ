@@ -5,7 +5,7 @@ import { RescheduleForm } from "@/components/RescheduleForm";
 import { TrackingStepper } from "@/components/TrackingTimeline";
 import { WhatsAppIcon } from "@/components/icons";
 import { Breadcrumbs } from "@/components/ui";
-import { STORE } from "@/config/store";
+import { getStore } from "@/data/store";
 import { guidesStore } from "@/lib/guides-store";
 import { formatCOP } from "@/lib/pricing";
 import { currentStatus, formatTrackingDate, normalizeGuideCode, orderTotals, PAYMENT_LABEL, STATUS_LABEL, timeline } from "@/lib/tracking";
@@ -25,11 +25,12 @@ export default async function TrackingPage({ params }: { params: Params }) {
   await connection();
   const code = normalizeGuideCode(decodeURIComponent((await params).codigo));
   const store = guidesStore();
+  const shop = await getStore();
   const guide = code && store ? await store.get(code) : null;
   const crumbs = [{ label: "Inicio", href: "/" }, { label: "Rastrear pedido", href: "/seguimiento" }, { label: code ?? "Guía" }];
 
   if (!guide) {
-    const help = buildWhatsAppLink(`Hola ${STORE.name}, no encuentro mi pedido con el código ${code ?? ""}. ¿Me ayudan?`);
+    const help = buildWhatsAppLink(`Hola ${shop.name}, no encuentro mi pedido con el código ${code ?? ""}. ¿Me ayudan?`, shop.whatsappNumber);
     return (
       <div className="wrap track">
         <Breadcrumbs items={crumbs} />
@@ -59,7 +60,7 @@ export default async function TrackingPage({ params }: { params: Params }) {
   const active = steps.find((s) => s.state === "current");
   const totals = orderTotals(guide);
   const paidPct = totals.total ? Math.round((totals.paid / totals.total) * 100) : 0;
-  const help = buildWhatsAppLink(`Hola ${STORE.name}, tengo una consulta sobre mi pedido ${guide.code}.`);
+  const help = buildWhatsAppLink(`Hola ${shop.name}, tengo una consulta sobre mi pedido ${guide.code}.`, shop.whatsappNumber);
   // Rango que el cliente puede elegir al reprogramar (mañana a 30 días, hora de Colombia).
   const today = new Date(now.getTime() - 5 * 3_600_000);
   const dayPlus = (n: number) => new Date(today.getTime() + n * 86_400_000).toISOString().slice(0, 10);

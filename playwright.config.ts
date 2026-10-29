@@ -14,14 +14,21 @@ export default defineConfig({
   reporter: [["list"]],
   use: { baseURL: `http://localhost:${PORT}`, trace: "retain-on-failure" },
   projects: [
-    { name: "escritorio", testIgnore: /catalogo\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } } },
-    { name: "tablet", testIgnore: /catalogo\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 820, height: 1180 }, hasTouch: true } },
-    { name: "movil", testIgnore: /catalogo\.spec/, use: { ...devices["Pixel 7"] } },
+    { name: "escritorio", testIgnore: /(catalogo|configuracion)\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } } },
+    { name: "tablet", testIgnore: /(catalogo|configuracion)\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 820, height: 1180 }, hasTouch: true } },
+    { name: "movil", testIgnore: /(catalogo|configuracion)\.spec/, use: { ...devices["Pixel 7"] } },
     // El panel de catálogo crea productos en el catálogo compartido (memoria del servidor): corre al final,
     // cuando las pruebas de la tienda (que cuentan los 28 productos) ya terminaron.
     {
       name: "panel-catalogo",
       testMatch: /catalogo\.spec/,
+      dependencies: ["escritorio", "tablet", "movil"],
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } },
+    },
+    // Cambia el nombre, el color y los textos de toda la tienda: también al final.
+    {
+      name: "panel-configuracion",
+      testMatch: /configuracion\.spec/,
       dependencies: ["escritorio", "tablet", "movil"],
       use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } },
     },

@@ -1,19 +1,13 @@
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { CartProduct } from "@/data/types";
 import { CART_STORAGE_KEY, CartProvider } from "@/store/cart-store";
+import { StoreInfoProvider } from "@/store/store-info";
 import { ToastProvider } from "@/store/toast";
-
-// Número ficticio solo para pruebas: activa el enlace de WhatsApp.
-vi.mock("@/config/store", async (orig) => {
-  const mod = await orig<typeof import("@/config/store")>();
-  return { ...mod, STORE: { ...mod.STORE, whatsappNumber: "570000000000" } };
-});
-
-const { AddToCart } = await import("./AddToCart");
-const { CartView } = await import("./CartView");
-const { OrderView } = await import("./OrderView");
+import { AddToCart } from "./AddToCart";
+import { CartView } from "./CartView";
+import { OrderView } from "./OrderView";
 
 const catalog: CartProduct[] = [
   { id: "a", slug: "a", name: "Controlador A", brand: "Marca", sku: "REF-A", art: "controller", image: null, price: 1890000, promoPrice: 1690000, availability: "disponible", maxQtyPerOrder: 3 },
@@ -21,10 +15,13 @@ const catalog: CartProduct[] = [
   { id: "c", slug: "c", name: "Monitores C", brand: "Marca", sku: "REF-C", art: "speaker", image: null, price: 100000, promoPrice: null, availability: "agotado", maxQtyPerOrder: 2 },
 ];
 
+// Número ficticio solo para pruebas: activa el enlace de WhatsApp.
 const wrap = (ui: React.ReactNode) => (
-  <CartProvider>
-    <ToastProvider>{ui}</ToastProvider>
-  </CartProvider>
+  <StoreInfoProvider value={{ name: "VOLT DJ", whatsappNumber: "570000000000", orderIdPrefix: "VD" }}>
+    <CartProvider>
+      <ToastProvider>{ui}</ToastProvider>
+    </CartProvider>
+  </StoreInfoProvider>
 );
 
 describe("AddToCart", () => {
