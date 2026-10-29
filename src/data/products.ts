@@ -2,7 +2,7 @@ import type { ArtKind, Product } from "./types";
 
 /**
  * CATÁLOGO REAL de la tienda (lista entregada el 2026-10-28).
- * Precios en COP, sin precios de oferta. Una unidad de cada producto.
+ * Precios en COP, sin precios de oferta. Una unidad de cada producto. Todos nuevos.
  * Fotos pendientes: mientras no haya fotos reales se muestra la ilustración del tipo de equipo.
  */
 interface Seed {
@@ -81,7 +81,7 @@ export const PRODUCTS: Product[] = SEEDS.map((s) => {
     name,
     brandId: s.brandId,
     categoryId: s.categoryId,
-    description: `${s.type} ${brand} ${s.model}. Escríbenos por WhatsApp para confirmar disponibilidad, estado y costo de envío a tu ciudad.`,
+    description: `${s.type} ${brand} ${s.model}, nuevo. Escríbenos por WhatsApp para confirmar disponibilidad, estado y costo de envío a tu ciudad.`,
     images: [],
     art: s.art,
     price: s.price,
@@ -94,6 +94,7 @@ export const PRODUCTS: Product[] = SEEDS.map((s) => {
       { label: "Marca", value: brand },
       { label: "Modelo", value: s.model },
       { label: "Tipo", value: s.type },
+      { label: "Estado", value: "Nuevo" },
       ...(s.extra ?? []).map(([label, value]) => ({ label, value })),
     ],
     status: "published",

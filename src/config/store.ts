@@ -25,6 +25,7 @@ export interface StoreConfig {
   shipping: { summary: string | null; details: string[] | null };
   warranty: { summary: string | null; details: string[] | null };
   paymentMethods: string | null;
+  returnsPolicy: string | null;
 }
 
 export const STORE: StoreConfig = {
@@ -37,14 +38,15 @@ export const STORE: StoreConfig = {
   currency: "COP",
   whatsappNumber: (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "").replace(/\D/g, ""),
   orderIdPrefix: "VD",
-  topbar: ["Envíos a todo Colombia", null, "Tienda en Ibagué · Calle 17 #4-91, Centro"],
+  topbar: ["Envíos a todo Colombia", "Online 24/7 · Local L–V 8 a. m.–5 p. m., S–D 9 a. m.–2 p. m.", "Tienda en Ibagué · Calle 17 #4-91, Centro"],
   legalName: "CD-R SDJ COLOMBIA",
   taxId: "1110518122-5",
   email: "cdr.sdjcolombia@gmail.com",
   phone: "324 203 8766",
   address: "Calle 17 #4-91, Centro, Ibagué, Tolima",
-  hours: null,
-  social: [],
+  hours: "Tienda online 24/7. Local: lunes a viernes de 8:00 a. m. a 5:00 p. m.; sábados y domingos de 9:00 a. m. a 2:00 p. m.",
+  returnsPolicy: "Cambios y devoluciones dentro de los 3 días siguientes a la entrega.",
+  social: [{ label: "Instagram @cdrsdjcolombia", url: "https://www.instagram.com/cdrsdjcolombia" }],
   shipping: {
     summary: "Envíos a todo Colombia. El costo y el tiempo de entrega se confirman por WhatsApp según tu ciudad.",
     details: [

@@ -29,7 +29,8 @@ export default function TermsPage() {
         <h2>Condiciones comerciales</h2>
         <p>
           Medio de pago: {STORE.paymentMethods}. Envíos: {STORE.shipping.summary} Garantía: {STORE.warranty.summary}{" "}
-          <Pending>Derecho de retracto, devoluciones y PQR</Pending>
+          Cambios y devoluciones: {STORE.returnsPolicy} Todos los equipos son nuevos.{" "}
+          <Pending>Procedimiento de PQR</Pending>
         </p>
       </div>
     </div>

@@ -47,6 +47,14 @@ export default function ContactPage() {
             <li><span>Correo</span><span>{STORE.email ? <a href={`mailto:${STORE.email}`}>{STORE.email}</a> : <Pending>Correo</Pending>}</span></li>
             <li><span>Teléfono</span><span>{STORE.phone ? <a href={phoneHref(STORE.phone)}>{STORE.phone}</a> : <Pending>Teléfono</Pending>}</span></li>
             <li><span>Tienda</span><span>{STORE.address ?? <Pending>Dirección / showroom</Pending>}</span></li>
+            {STORE.social.map((s) => (
+              <li key={s.url}>
+                <span>Redes</span>
+                <span>
+                  <a href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a>
+                </span>
+              </li>
+            ))}
             <li><span>Razón social</span><span>{STORE.legalName ?? <Pending>Razón social</Pending>}</span></li>
             <li><span>NIT</span><span>{STORE.taxId ?? <Pending>NIT</Pending>}</span></li>
           </ul>

@@ -34,6 +34,11 @@ export default function ShippingPage() {
             placeholders={["Duración por categoría o marca", "Qué cubre y qué no", "Documentos necesarios", "Cómo y dónde se hace un reclamo"]}
           />
         </section>
+        <section className="panel" id="cambios" aria-labelledby="h-cam">
+          <h2 id="h-cam">Cambios y devoluciones</h2>
+          <p className="muted">{STORE.returnsPolicy ?? <Pending>Política de cambios y devoluciones</Pending>}</p>
+          <p className="muted">Escríbenos por WhatsApp con tu número de pedido para gestionarlo.</p>
+        </section>
       </div>
     </div>
   );
