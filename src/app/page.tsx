@@ -140,6 +140,9 @@ export default async function HomePage() {
                 const model = p.name.startsWith(`${brand} `) ? p.name.slice(brand.length + 1) : p.name;
                 return (
                   <article key={p.id} className="billboard" data-field={i % 4} aria-labelledby={`bb-${p.id}`}>
+                    {/* Enlace a toda la banda como hijo directo: dentro de .txt, la animación de scroll
+                        (transform) lo encerraría y solo el título sería clicable. */}
+                    <Link className="billboard-link" href={`/producto/${p.slug}`} aria-label={`Ver producto: ${p.name}`} />
                     <div className="pose">
                       <Tilt className="tilt" max={8} lift={24} host=".billboard">
                         <div className="angle">
@@ -150,10 +153,8 @@ export default async function HomePage() {
                     <div className="txt">
                       <span className="brand">{brand} · {categoryName(p.categoryId)}</span>
                       <h3 className="disp" id={`bb-${p.id}`}>
-                        <Link href={`/producto/${p.slug}`}>
-                          <span className="sr-only">{brand} </span>
-                          {model}
-                        </Link>
+                        <span className="sr-only">{brand} </span>
+                        {model}
                       </h3>
                       <Price price={p.price} promoPrice={p.promoPrice} />
                       <span className="go" aria-hidden="true">Ver producto</span>
