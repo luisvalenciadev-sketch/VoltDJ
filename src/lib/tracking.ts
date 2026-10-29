@@ -9,26 +9,45 @@
  * Al pasar de auto a manual se congela lo ya ocurrido; al volver a auto se arma un calendario nuevo.
  */
 export const STEPS = [
-  { id: "confirmado", label: "Pedido confirmado", detail: "Un asesor confirmó tu pedido por WhatsApp." },
-  { id: "pago_recibido", label: "Pago recibido", detail: "Recibimos y verificamos tu pago." },
-  { id: "preparando", label: "Preparando tu pedido", detail: "Revisamos y empacamos tus equipos." },
-  { id: "enviado", label: "Enviado", detail: "Tu pedido salió con la transportadora." },
-  { id: "en_reparto", label: "En reparto", detail: "La transportadora lo está llevando a tu dirección." },
-  { id: "entregado", label: "Entregado", detail: "Tu pedido fue entregado. ¡Que lo disfrutes!" },
+  { id: "confirmado", label: "Pedido confirmado", short: "Confirmado", detail: "Un asesor confirmó tu pedido por WhatsApp." },
+  { id: "pago_recibido", label: "Pago recibido", short: "Pago", detail: "Recibimos y verificamos tu pago." },
+  { id: "preparando", label: "Preparando tu pedido", short: "Preparando", detail: "Revisamos y empacamos tus equipos." },
+  { id: "enviado", label: "Enviado", short: "Enviado", detail: "Tu pedido salió con la transportadora." },
+  { id: "en_reparto", label: "En reparto", short: "En reparto", detail: "La transportadora lo está llevando a tu dirección." },
+  { id: "entregado", label: "Entregado", short: "Entregado", detail: "Tu pedido fue entregado. ¡Que lo disfrutes!" },
 ] as const;
 
 export type StepId = (typeof STEPS)[number]["id"];
-export type StatusId = StepId | "cancelado";
+/** Desvíos de la entrega: no son pasos de la lista; aparecen antes de "Entregado" mientras duran. */
+export type ExceptionId = "entrega_fallida" | "reprogramado";
+export type StatusId = StepId | ExceptionId | "cancelado";
 export type Mode = "auto" | "manual";
 
-export const CANCELLED = { id: "cancelado", label: "Pedido cancelado", detail: "Este pedido fue cancelado. Escríbenos si tienes dudas." } as const;
+export const CANCELLED = { id: "cancelado", label: "Pedido cancelado", short: "Cancelado", detail: "Este pedido fue cancelado. Escríbenos si tienes dudas." } as const;
+export const EXCEPTIONS: Record<ExceptionId, { id: ExceptionId; label: string; short: string; detail: string }> = {
+  entrega_fallida: { id: "entrega_fallida", label: "Entrega fallida", short: "Falló entrega", detail: "No pudimos entregar tu pedido. Elige una nueva fecha y lo intentamos de nuevo." },
+  reprogramado: { id: "reprogramado", label: "Entrega reprogramada", short: "Reprogramado", detail: "Tu entrega quedó reprogramada." },
+};
+export const isException = (s: StatusId | null | undefined): s is ExceptionId => s === "entrega_fallida" || s === "reprogramado";
 
 export const STATUS_LABEL: Record<StatusId, string> = {
   ...(Object.fromEntries(STEPS.map((s) => [s.id, s.label])) as Record<StepId, string>),
+  entrega_fallida: EXCEPTIONS.entrega_fallida.label,
+  reprogramado: EXCEPTIONS.reprogramado.label,
   cancelado: CANCELLED.label,
 };
 
 export const isStatus = (v: unknown): v is StatusId => typeof v === "string" && v in STATUS_LABEL;
+
+/** Motivos frecuentes de una entrega fallida (el asesor elige uno; el cliente lo ve). */
+export const FAIL_REASONS = ["No había nadie en la dirección", "El cliente no contestó el teléfono", "Dirección incorrecta o incompleta", "El cliente pidió cambiar la fecha", "Zona sin acceso para la transportadora"];
+
+/**
+ * Desde que el pedido sale a reparto, sus productos y montos quedan fijos: cambiarlos con el
+ * paquete en camino descuadra lo que se cobra en la entrega. Los pagos sí se pueden registrar.
+ */
+export const LOCKED_FROM: StatusId[] = ["en_reparto", "entrega_fallida", "reprogramado", "entregado", "cancelado"];
+export const isOrderLocked = (s: StatusId | null | undefined) => Boolean(s && LOCKED_FROM.includes(s));
 
 /** Un paso con fecha: en "auto" es el plan; en "manual" es el historial de cambios. */
 export interface TrackingEvent {
@@ -36,7 +55,33 @@ export interface TrackingEvent {
   /** ISO 8601 con zona. */
   at: string;
   note?: string;
+  /** Solo en "entregado": quién recibió el pedido. */
+  receivedBy?: string;
+  /** Solo en "reprogramado": nueva fecha acordada, "AAAA-MM-DD". */
+  rescheduledFor?: string;
 }
+
+/** Fecha sin hora ("2026-11-05") en palabras: "jueves 5 de noviembre". */
+export function formatDay(day: string): string {
+  return new Date(`${day}T12:00:00Z`).toLocaleDateString("es-CO", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" });
+}
+
+/**
+ * Fecha que el cliente elige para reprogramar: desde mañana hasta 30 días (hora de Colombia).
+ * Devuelve la fecha normalizada o un mensaje de error para mostrarle.
+ */
+export function validateRescheduleDay(day: string, now: Date = new Date()): { day: string } | { error: string } {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || Number.isNaN(Date.parse(`${day}T12:00:00Z`))) return { error: "Elige una fecha válida." };
+  const today = new Date(now.getTime() - 5 * 3_600_000).toISOString().slice(0, 10); // hoy en Colombia
+  const plus = (n: number) => new Date(Date.parse(`${today}T12:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
+  if (day < plus(1)) return { error: "La nueva fecha debe ser a partir de mañana." };
+  if (day > plus(30)) return { error: "Elige una fecha dentro de los próximos 30 días." };
+  return { day };
+}
+
+/** Nombres de ejemplo para probar "Entregado a…" mientras se valida el dato real con la transportadora. */
+const SAMPLE_RECIPIENTS = ["Carolina Restrepo", "Andrés Ríos", "Marta Lucía Gómez", "Julián Cárdenas", "Paola Herrera", "Santiago Muñoz", "Diana Ospina", "Felipe Arango"];
+export const sampleRecipient = (random: () => number = Math.random) => SAMPLE_RECIPIENTS[Math.floor(random() * SAMPLE_RECIPIENTS.length)];
 
 /** Línea del pedido. El precio queda congelado al crear la guía: si el catálogo cambia, el pedido no. */
 export interface OrderLine {
@@ -111,6 +156,8 @@ export const SCHEDULE_PRESETS: { id: string; label: string; hint: string; offset
 /** Siguiente paso de la lista tras el estado actual (para el botón "Marcar como…"). */
 export function nextStep(current: StatusId | null): StepId | null {
   if (current === "cancelado" || current === "entregado") return null;
+  // Tras una entrega fallida o reprogramada, lo siguiente es volver a salir a reparto.
+  if (isException(current)) return "en_reparto";
   const i = current ? STEPS.findIndex((s) => s.id === current) : -1;
   return STEPS[i + 1]?.id ?? null;
 }
@@ -138,6 +185,8 @@ export type TimelineState = "done" | "current" | "pending";
 export interface TimelineItem {
   id: StatusId;
   label: string;
+  /** Etiqueta corta para la vista horizontal (cabe en 1–2 líneas en un celular). */
+  short: string;
   detail: string;
   state: TimelineState;
   /** Fecha en que ocurrió (solo pasos hechos o actual). */
@@ -158,8 +207,32 @@ export function timeline(guide: Pick<Guide, "events">, now: Date = new Date()): 
   if (current?.status === "cancelado") {
     const reached = STEPS.filter((s) => lastAt(s.id));
     return [
-      ...reached.map((s) => ({ id: s.id, label: s.label, detail: s.detail, state: "done" as const, at: lastAt(s.id)!.at, note: lastAt(s.id)!.note })),
-      { id: CANCELLED.id, label: CANCELLED.label, detail: CANCELLED.detail, state: "current", at: current.at, note: current.note },
+      ...reached.map((s) => ({ id: s.id, label: s.label, short: s.short, detail: s.detail, state: "done" as const, at: lastAt(s.id)!.at, note: lastAt(s.id)!.note })),
+      { id: CANCELLED.id, label: CANCELLED.label, short: CANCELLED.short, detail: CANCELLED.detail, state: "current", at: current.at, note: current.note },
+    ];
+  }
+
+  const detailFor = (id: StepId, ev?: TrackingEvent) => (id === "entregado" && ev?.receivedBy ? `Recibido por ${ev.receivedBy}.` : STEPS.find((s) => s.id === id)!.detail);
+
+  // Desvío de entrega vigente: todo hasta "En reparto" quedó hecho; el desvío es el paso actual
+  // (si es reprogramación, se muestra también la entrega fallida que la originó) y "Entregado" sigue pendiente.
+  if (isException(current?.status)) {
+    const base = STEPS.filter((s) => s.id !== "entregado").map((s) => {
+      const ev = lastAt(s.id);
+      return { id: s.id, label: s.label, short: s.short, detail: s.detail, state: "done" as const, at: ev?.at ?? null, note: ev?.note };
+    });
+    const exc = (ev: TrackingEvent, state: TimelineState): TimelineItem => {
+      const e = EXCEPTIONS[ev.status as ExceptionId];
+      const detail = ev.status === "reprogramado" && ev.rescheduledFor ? `Nueva fecha de entrega: ${formatDay(ev.rescheduledFor)}.` : e.detail;
+      return { id: e.id, label: e.label, short: e.short, detail, state, at: ev.at, note: ev.note };
+    };
+    const failed = current!.status === "reprogramado" ? lastAt("entrega_fallida") : undefined;
+    const delivered = STEPS[STEPS.length - 1];
+    return [
+      ...base,
+      ...(failed ? [exc(failed, "done")] : []),
+      exc(current!, "current"),
+      { id: delivered.id, label: delivered.label, short: delivered.short, detail: delivered.detail, state: "pending", at: null },
     ];
   }
 
@@ -168,7 +241,7 @@ export function timeline(guide: Pick<Guide, "events">, now: Date = new Date()): 
     const ev = lastAt(s.id);
     const state: TimelineState = i < currentIndex ? "done" : i === currentIndex ? "current" : "pending";
     // Un paso anterior saltado (p. ej. se marcó "Enviado" directo) se muestra hecho, sin fecha propia.
-    return { id: s.id, label: s.label, detail: s.detail, state, at: state === "pending" ? null : (ev?.at ?? null), note: state === "pending" ? undefined : ev?.note };
+    return { id: s.id, label: s.label, short: s.short, detail: state === "pending" ? s.detail : detailFor(s.id, ev), state, at: state === "pending" ? null : (ev?.at ?? null), note: state === "pending" ? undefined : ev?.note };
   });
 }
 
@@ -183,8 +256,8 @@ export function freezeToManual(events: TrackingEvent[], now: Date = new Date()):
 }
 
 /** Cambio manual de estado: se agrega al historial con la hora actual. */
-export function addManualStatus(events: TrackingEvent[], status: StatusId, now: Date = new Date(), note?: string): TrackingEvent[] {
-  return [...events, { status, at: now.toISOString(), ...(note ? { note } : {}) }];
+export function addManualStatus(events: TrackingEvent[], status: StatusId, now: Date = new Date(), note?: string, extra: Pick<TrackingEvent, "receivedBy" | "rescheduledFor"> = {}): TrackingEvent[] {
+  return [...events, { status, at: now.toISOString(), ...(note ? { note } : {}), ...(extra.receivedBy ? { receivedBy: extra.receivedBy } : {}), ...(extra.rescheduledFor ? { rescheduledFor: extra.rescheduledFor } : {}) }];
 }
 
 /**

@@ -8,8 +8,11 @@ import { guidesStore } from "@/lib/guides-store";
 import {
   addManualStatus,
   createGuideCode,
+  currentStatus,
   freezeToManual,
+  isOrderLocked,
   isStatus,
+  validateRescheduleDay,
   localInputToISO,
   orderTotals,
   parseCOP,
@@ -110,13 +113,28 @@ function moneyFrom(fd: FormData, key: string, label: string): number | string {
   return v == null ? `"${label}" debe ser un valor en pesos, p. ej. 500.000.` : v;
 }
 
-type Details = Pick<Guide, "customerName" | "phone" | "city" | "lines" | "shipping" | "paid" | "carrier" | "trackingNumber" | "publicNote">;
-function detailsFrom(fd: FormData): Details | string {
+type Contact = Pick<Guide, "customerName" | "phone" | "city" | "carrier" | "trackingNumber" | "publicNote">;
+/** Datos de contacto y envío: se pueden corregir en cualquier momento, incluso con el pedido bloqueado. */
+function contactFrom(fd: FormData): Contact | string {
   const customerName = text(fd, "customerName", 80);
   if (!customerName) return "Escribe el nombre del cliente.";
   const rawPhone = text(fd, "phone", 25);
   const phone = normalizePhone(rawPhone);
   if (rawPhone && !phone) return "El celular no parece válido. Escribe 10 dígitos (p. ej. 3001234567).";
+  return {
+    customerName,
+    phone,
+    city: optional(fd, "city", 60),
+    carrier: optional(fd, "carrier", 40),
+    trackingNumber: optional(fd, "trackingNumber", 40),
+    publicNote: optional(fd, "publicNote", 200),
+  };
+}
+
+type Details = Contact & Pick<Guide, "lines" | "shipping" | "paid">;
+function detailsFrom(fd: FormData): Details | string {
+  const contact = contactFrom(fd);
+  if (typeof contact === "string") return contact;
   const lines = linesFrom(fd);
   if (typeof lines === "string") return lines;
   const shipping = moneyFrom(fd, "shipping", "Envío");
@@ -125,17 +143,7 @@ function detailsFrom(fd: FormData): Details | string {
   if (typeof paid === "string") return paid;
   const { total } = orderTotals({ lines, shipping, paid: 0 });
   if (paid > total) return "El pago recibido no puede ser mayor que el total del pedido.";
-  return {
-    customerName,
-    phone,
-    city: optional(fd, "city", 60),
-    lines,
-    shipping,
-    paid,
-    carrier: optional(fd, "carrier", 40),
-    trackingNumber: optional(fd, "trackingNumber", 40),
-    publicNote: optional(fd, "publicNote", 200),
-  };
+  return { ...contact, lines, shipping, paid };
 }
 
 export async function createGuide(_: FormState, fd: FormData): Promise<FormState> {
@@ -165,9 +173,21 @@ export async function createGuide(_: FormState, fd: FormData): Promise<FormState
 
 export async function updateDetails(code: string, _: FormState, fd: FormData): Promise<FormState> {
   await requireAdmin();
+  const store = storeOrFail();
+  const g = await store.get(code);
+  if (!g) return { error: "La guía no existe." };
+  // Pedido en reparto, entregado o cancelado: productos y montos no se tocan aunque el formulario
+  // los enviara (defensa en el servidor, no solo en la interfaz).
+  if (isOrderLocked(currentStatus(g)?.status)) {
+    const contact = contactFrom(fd);
+    if (typeof contact === "string") return { error: contact };
+    await store.update(code, contact);
+    revalidatePath(`/admin/guias/${code}`);
+    return { ok: "Datos de contacto y envío guardados. Los productos y montos están bloqueados." };
+  }
   const details = detailsFrom(fd);
   if (typeof details === "string") return { error: details };
-  await storeOrFail().update(code, details);
+  await store.update(code, details);
   revalidatePath(`/admin/guias/${code}`);
   return { ok: "Datos guardados." };
 }
@@ -194,9 +214,20 @@ export async function setManualStatus(code: string, _: FormState, fd: FormData):
   const store = storeOrFail();
   const g = await store.get(code);
   if (!g) return { error: "La guía no existe." };
+  // Entrega fallida: el motivo es obligatorio, es lo que el cliente necesita saber.
+  const reason = optional(fd, "reason", 120);
+  if (status === "entrega_fallida" && !reason) return { error: "Elige el motivo de la entrega fallida." };
+  const receivedBy = status === "entregado" ? (optional(fd, "receivedBy", 80) ?? undefined) : undefined;
+  let rescheduledFor: string | undefined;
+  if (status === "reprogramado") {
+    const r = validateRescheduleDay(text(fd, "rescheduledFor", 10));
+    if ("error" in r) return { error: r.error };
+    rescheduledFor = r.day;
+  }
+  const note = status === "entrega_fallida" ? reason! : (optional(fd, "note", 160) ?? undefined);
   // Un cambio manual congela el calendario: desde aquí manda el asesor.
   const base = g.mode === "auto" ? freezeToManual(g.events) : g.events;
-  await store.update(code, { mode: "manual", events: addManualStatus(base, status, new Date(), optional(fd, "note", 160) ?? undefined) });
+  await store.update(code, { mode: "manual", events: addManualStatus(base, status, new Date(), note, { receivedBy, rescheduledFor }) });
   revalidatePath(`/admin/guias/${code}`);
   return { ok: "Estado actualizado." };
 }

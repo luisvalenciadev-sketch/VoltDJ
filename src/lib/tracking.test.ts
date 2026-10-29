@@ -5,6 +5,7 @@ import {
   createGuideCode,
   currentStatus,
   freezeToManual,
+  isOrderLocked,
   isoToLocalInput,
   localInputToISO,
   nextScheduled,
@@ -13,6 +14,7 @@ import {
   parseCOP,
   normalizeGuideCode,
   timeline,
+  validateRescheduleDay,
   type Guide,
 } from "./tracking";
 
@@ -98,6 +100,42 @@ describe("cuentas del pedido", () => {
     expect(parseCOP("$ 800000")).toBe(800_000);
     expect(parseCOP("")).toBe(0);
     expect(parseCOP("mil")).toBeNull();
+  });
+});
+
+describe("entrega fallida y reprogramación", () => {
+  const enReparto = () => addManualStatus(freezeToManual(auto().events, day(4, 1)), "entrega_fallida", day(4, 2), "No había nadie en la dirección");
+
+  it("la entrega fallida es el paso actual, antes de Entregado", () => {
+    const t = timeline({ events: enReparto() }, day(4, 3));
+    expect(t.map((s) => `${s.id}:${s.state}`).slice(-3)).toEqual(["en_reparto:done", "entrega_fallida:current", "entregado:pending"]);
+    expect(t.find((s) => s.id === "entrega_fallida")?.note).toBe("No había nadie en la dirección");
+  });
+
+  it("al reprogramar se ve la falla y la nueva fecha", () => {
+    const events = addManualStatus(enReparto(), "reprogramado", day(4, 3), undefined, { rescheduledFor: "2026-11-10" });
+    const t = timeline({ events }, day(4, 4));
+    expect(t.map((s) => `${s.id}:${s.state}`).slice(-3)).toEqual(["entrega_fallida:done", "reprogramado:current", "entregado:pending"]);
+    expect(t.find((s) => s.id === "reprogramado")?.detail).toMatch(/Nueva fecha de entrega: .*10 de noviembre/);
+    expect(nextStep("reprogramado")).toBe("en_reparto");
+  });
+
+  it("entregado muestra quién recibió", () => {
+    const events = addManualStatus(enReparto(), "entregado", day(5), undefined, { receivedBy: "Carolina Restrepo" });
+    expect(timeline({ events }, day(5, 1)).at(-1)).toMatchObject({ id: "entregado", state: "current", detail: "Recibido por Carolina Restrepo." });
+  });
+
+  it("valida la fecha que elige el cliente (mañana a 30 días, hora de Colombia)", () => {
+    const now = new Date("2026-11-02T15:00:00Z"); // 2 nov, 10 a. m. en Bogotá
+    expect(validateRescheduleDay("2026-11-02", now)).toHaveProperty("error");
+    expect(validateRescheduleDay("2026-11-03", now)).toEqual({ day: "2026-11-03" });
+    expect(validateRescheduleDay("2026-12-15", now)).toHaveProperty("error");
+    expect(validateRescheduleDay("pronto", now)).toHaveProperty("error");
+  });
+
+  it("bloquea cambios al pedido desde que sale a reparto", () => {
+    expect(isOrderLocked("enviado")).toBe(false);
+    expect(["en_reparto", "entrega_fallida", "reprogramado", "entregado", "cancelado"].every((s) => isOrderLocked(s as never))).toBe(true);
   });
 });
 
