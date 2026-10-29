@@ -3,7 +3,7 @@ import { revalidateTag } from "next/cache";
 import { CATALOG_TAG } from "@/data/catalog";
 import { catalogStore, ReadOnlyCatalogError } from "./catalog-store";
 import type { GuidesStore } from "./guides-store";
-import { holdChanges, wantedHolds, type StockHold } from "./order-stock";
+import { holdChanges, unitsToReturn, wantedHolds, type StockHold } from "./order-stock";
 import { currentStatus, type Guide } from "./tracking";
 
 /**
@@ -17,35 +17,41 @@ export async function syncGuideStock(guide: Guide, guides: GuidesStore, opts: { 
   // Guías anteriores al inventario conectado: editarlas no debe descontar ahora un pedido ya entregado.
   if (!catalog.writable || !guide.stockApplied) return [];
   const cancelled = opts.release || currentStatus(guide)?.status === "cancelado";
-  const applied = new Map((guide.stockApplied ?? []).map((h) => [h.productId, h.qty]));
+  const holds = new Map((guide.stockApplied ?? []).map((h) => [h.productId, { qty: h.qty, taken: h.taken ?? h.qty }]));
   const changes = holdChanges(guide.stockApplied ?? [], wantedHolds(guide.lines, cancelled));
   if (!changes.length) return [];
 
   const warnings: string[] = [];
   for (const { productId, change } of changes) {
     const product = await catalog.getProduct(productId);
-    const held = applied.get(productId) ?? 0;
+    const cur = holds.get(productId) ?? { qty: 0, taken: 0 };
+    const qty = cur.qty + change;
     try {
       if (change > 0) {
-        if (!product || product.stock == null) continue; // sin control de inventario
+        // Sin control de inventario (o producto borrado): se cuenta, pero no se saca nada de la bodega.
+        if (!product || product.stock == null) {
+          holds.set(productId, { qty, taken: cur.taken });
+          continue;
+        }
         const before = product.stock;
         const after = (await catalog.changeStock(productId, { mode: "add", delta: -change }, { reason: "pedido", ref: guide.code })) ?? 0;
         const taken = before - after;
-        applied.set(productId, held + taken);
+        holds.set(productId, { qty, taken: cur.taken + taken });
+        // Se avisa una sola vez: lo que faltó queda contado y no se vuelve a intentar en cada cambio de estado.
         if (taken < change) warnings.push(`${product.name}: el pedido pide ${change} y en bodega había ${before}. Quedó en 0; revisa el inventario.`);
       } else {
-        const give = Math.min(-change, held);
+        const give = unitsToReturn(cur.taken, qty);
         if (give > 0 && product) {
           await catalog.changeStock(productId, { mode: "add", delta: give }, { reason: "cancelacion", ref: guide.code, note: cancelled ? "Pedido cancelado" : "Pedido modificado" });
         }
-        applied.set(productId, held - give);
+        holds.set(productId, { qty, taken: cur.taken - give });
       }
     } catch (e) {
       if (e instanceof ReadOnlyCatalogError) return [];
       throw e;
     }
   }
-  const stockApplied: StockHold[] = [...applied].filter(([, qty]) => qty > 0).map(([productId, qty]) => ({ productId, qty }));
+  const stockApplied: StockHold[] = [...holds].filter(([, h]) => h.qty > 0).map(([productId, h]) => ({ productId, qty: h.qty, taken: h.taken }));
   if (!opts.release) await guides.update(guide.code, { stockApplied });
   revalidateTag(CATALOG_TAG, { expire: 0 });
   return warnings;

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { FaqList } from "@/components/Content";
 import { Breadcrumbs } from "@/components/ui";
-import { FAQ } from "@/config/content";
+import { getContent } from "@/data/content";
 
 export const metadata: Metadata = {
   title: "Preguntas frecuentes",
@@ -9,7 +9,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/preguntas-frecuentes" },
 };
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const FAQ = (await getContent()).faqs;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",

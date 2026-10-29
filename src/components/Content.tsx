@@ -13,9 +13,9 @@ export function FaqList({ items }: { items: FaqItem[] }) {
   return (
     <div className="faq">
       {items.map((f, i) => (
-        <details key={f.q} open={i === 0}>
+        <details key={f.id} open={i === 0}>
           <summary>{f.q}</summary>
-          <div>{f.a ?? <Pending>{f.pendingLabel}</Pending>}</div>
+          <div>{f.a || <Pending>Respuesta pendiente</Pending>}</div>
         </details>
       ))}
     </div>

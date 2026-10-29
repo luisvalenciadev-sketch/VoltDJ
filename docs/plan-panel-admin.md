@@ -1,6 +1,14 @@
 # Plan técnico — Panel de administración completo
 
-Estado: **fases 1, 2 y 2b en producción** (`main`) · **fase 3** construida en `feat/panel-fase-3` · 2026-10-29
+Estado: **fases 1 a 3 en producción** (`main`) · **fase 4** construida en `feat/panel-fase-4` · 2026-10-29
+
+### Cambios respecto al plan en la fase 4
+
+- **Un documento, no cinco tablas:** banners, videos, preguntas, reseñas y orden del inicio van en la fila `content` de `settings`, con su propia caché (`content`). Son pocos datos que se editan juntos.
+- **Videos:** además de MP4 en Blob, enlaces de YouTube (videos y Shorts), que no gastan almacenamiento ni transferencia de la tienda. Así se resuelve el riesgo de costo de videos.
+- **Destacados:** se siguen eligiendo en cada producto ("Destacar en el inicio"); el panel de contenido lo indica.
+- **Reseñas a mano**, sin conexión a Google Places (requiere clave y tiene costo). El panel advierte que deben ser reales.
+- **Lección de producción (fase 3):** la caché de datos de Vercel sobrevive a los despliegues. Las claves llevan versión (`-v2`) y cada lectura completa con los valores iniciales lo que falte.
 
 ### Cambios respecto al plan en la fase 3
 
@@ -9,7 +17,7 @@ Estado: **fases 1, 2 y 2b en producción** (`main`) · **fase 3** construida en 
 - **Pagos y envíos dentro de `settings`** (fila `store`), no en tablas propias: son pocos datos y se editan juntos.
 - **Sin logos de las marcas de pago:** se muestran sus nombres. Usar logos de Addi, Nequi, etc. requiere su permiso.
 - **Stock de pedidos:** al crear la guía (no al confirmarla), porque una guía solo se crea cuando el pedido ya está confirmado por WhatsApp. Cada guía guarda lo que tiene apartado (`stock_applied`), así que repetir una operación nunca descuenta dos veces.
-- **Pendiente:** el texto libre de "medios de pago" de los términos y la pregunta frecuente sobre pagos siguen escritos a mano (fase 4).
+- **Pendiente:** el texto libre de "medios de pago" de los términos sigue escrito a mano; la pregunta frecuente sobre pagos ya se edita en Contenido (fase 4).
 
 ### Cambios respecto al plan en la fase 2b
 

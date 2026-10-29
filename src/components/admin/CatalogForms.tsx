@@ -132,6 +132,23 @@ async function optimize(file: File, keepAlpha: boolean): Promise<{ blob: Blob; w
   return { blob, width, height };
 }
 
+/** Sube un video tal cual (no se recomprime en el navegador). Devuelve su URL. */
+export async function uploadVideo(file: File, mode: UploadMode, baseName: string): Promise<string> {
+  if (!/^video\/(mp4|webm)$/.test(file.type)) throw new Error(`"${file.name}" no es un video MP4.`);
+  if (file.size > 50 * 1024 * 1024) throw new Error("El video pesa más de 50 MB. Recórtalo o súbelo a YouTube y pega el enlace.");
+  const ext = file.type === "video/webm" ? "webm" : "mp4";
+  if (mode === "blob") {
+    const { upload } = await import("@vercel/blob/client");
+    return (await upload(`videos/${baseName || "video"}.${ext}`, file, { access: "public", handleUploadUrl: "/admin/subir", contentType: file.type, clientPayload: "video" })).url;
+  }
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await fetch("/admin/subir", { method: "POST", body: fd });
+  const json = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+  if (!res.ok || !json.url) throw new Error(json.error ?? "No se pudo subir el video.");
+  return json.url;
+}
+
 async function uploadImage(file: File, mode: UploadMode, baseName: string, keepAlpha = false): Promise<ProductImage> {
   if (!/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error(`"${file.name}" no es una foto JPG, PNG o WebP.`);
   const { blob, width, height } = await optimize(file, keepAlpha);

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Fragment } from "react";
 import { ProductArt } from "@/components/ProductArt";
 import { ProductCard } from "@/components/ProductCard";
 import { CartIcon, ChatIcon, ShieldIcon, TruckIcon } from "@/components/icons";
@@ -7,8 +8,11 @@ import { Marquee } from "@/components/Marquee";
 import { PauseOffscreen, Tilt } from "@/components/Tilt";
 import { Meter, Pending, Price, ProductMedia } from "@/components/ui";
 import { FaqList } from "@/components/Content";
-import { FAQ } from "@/config/content";
+import { BannerCarousel, ReviewsSection, VideoSection } from "@/components/HomeContent";
+import type { HomeSectionId } from "@/config/content";
+import { getContent } from "@/data/content";
 import { getStore } from "@/data/store";
+import { liveBanners, liveVideos, safeHref } from "@/lib/home-content";
 import { getBrands, getCategories, getProducts } from "@/data/catalog";
 import { hasPromo } from "@/lib/pricing";
 
@@ -37,7 +41,9 @@ const EQ_BARS = Array.from({ length: EQ_COLS * EQ_ROWS }, (_, i) => {
  * Cada sección tiene un único "ver más" en su cabecera: nunca dos CTAs compitiendo.
  */
 export default async function HomePage() {
-  const [products, categories, brands, store] = await Promise.all([getProducts(), getCategories(), getBrands(), getStore()]);
+  const [products, categories, brands, store, content] = await Promise.all([getProducts(), getCategories(), getBrands(), getStore(), getContent()]);
+  const banners = liveBanners(content.banners);
+  const videos = liveVideos(content.videos);
   const brandName = (id: string) => brands.find((b) => b.id === id)?.name ?? "";
   const categoryName = (id: string) => categories.find((c) => c.id === id)?.name ?? "";
   const featured = products.filter((p) => p.featured).slice(0, 4);
@@ -49,56 +55,12 @@ export default async function HomePage() {
   const lines = (store.tagline || store.name).split(/(?<=[.!?])\s+/).filter(Boolean);
   const last = lines.pop() ?? "";
 
-  return (
-    <>
-      <section className="hero">
-        <div className="wrap">
-          <div className="stage">
-            <div className="scene">
-              <PauseOffscreen className="eq">
-                {EQ_BARS.map((b, i) => (
-                  <i key={i} style={b} />
-                ))}
-              </PauseOffscreen>
-              <div className="prod">
-                <div className="bob">
-                  <Tilt className="tilt" max={12} lift={40} host=".stage">
-                    <div className="angle">
-                      {starImage ? (
-                        <Image src={starImage.src} alt={starImage.alt} width={starImage.width} height={starImage.height} sizes="(min-width: 900px) 600px, 90vw" priority />
-                      ) : (
-                        <ProductArt kind="turntable" />
-                      )}
-                    </div>
-                  </Tilt>
-                </div>
-                <span className="floor" aria-hidden="true" />
-              </div>
-            </div>
-            <div className="copy">
-              <p className="eyebrow">
-                <Meter />
-                Equipos DJ y audio profesional
-              </p>
-              <h1 className="disp">
-                {lines.map((l, i) => (
-                  <span key={i}>
-                    {l}
-                    <br />
-                  </span>
-                ))}
-                <em>{last}</em>
-              </h1>
-              <p className="lead">Sistemas todo en uno, controladores, reproductores, parlantes y monitores para cabina, estudio y eventos. Arma tu pedido y confírmalo con un asesor por WhatsApp.</p>
-              <div className="ctas">
-                <Link className="btn btn-primary" href="/catalogo">Explorar productos</Link>
-                {promos.length > 0 && <Link className="btn btn-ghost" href="/ofertas">Ver ofertas</Link>}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
+  // Cada sección del inicio, en el orden y con el encendido que la tienda eligió en el panel.
+  // Una sección sin contenido (sin ofertas, sin videos…) no se muestra aunque esté encendida.
+  const blocks: Record<HomeSectionId, React.ReactNode> = {
+    banners: banners.length > 0 && <BannerCarousel banners={banners} />,
+    categorias: (
       <section className="sec" aria-labelledby="h-cats">
         <div className="wrap">
           <div className="sechead">
@@ -128,8 +90,8 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      {featured.length > 0 && (
+    ),
+    destacados: featured.length > 0 && (
         <section className="sec showcase" aria-labelledby="h-feat">
           <div className="wrap">
             <div className="sechead">
@@ -173,9 +135,8 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
-      )}
-
-      {promos.length > 0 && (
+    ),
+    ofertas: promos.length > 0 && (
         <section className="sec" aria-labelledby="h-promo">
           <div className="wrap">
             <div className="sechead">
@@ -188,9 +149,8 @@ export default async function HomePage() {
             <div className="grid-p">{promos.map((p) => <ProductCard key={p.id} product={p} brand={brandName(p.brandId)} />)}</div>
           </div>
         </section>
-      )}
-
-      {accessories.length > 0 && (
+    ),
+    accesorios: accessories.length > 0 && (
         <section className="sec" aria-labelledby="h-acc">
           <div className="wrap">
             <div className="sechead">
@@ -204,8 +164,10 @@ export default async function HomePage() {
             <div className="grid-p">{accessories.map((p) => <ProductCard key={p.id} product={p} brand={brandName(p.brandId)} />)}</div>
           </div>
         </section>
-      )}
-
+    ),
+    videos: videos.length > 0 && <VideoSection videos={videos} products={products} />,
+    resenas: (content.reviews.items.length > 0 || content.reviews.rating != null) && <ReviewsSection reviews={content.reviews} />,
+    marcas: catalogBrands.length > 0 && (
       <section className="sec" aria-labelledby="h-brands">
         <div className="wrap">
           <div className="sechead">
@@ -224,7 +186,8 @@ export default async function HomePage() {
           ))}
         </Marquee>
       </section>
-
+    ),
+    "como-compras": (
       <section className="band" aria-labelledby="h-how">
         <div className="wrap">
           <div className="sechead">
@@ -251,16 +214,76 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
+    ),
+    preguntas: content.faqs.length > 0 && (
       <section className="sec" aria-labelledby="h-faq">
         <div className="wrap">
           <div className="sechead">
             <h2 className="disp" id="h-faq">Preguntas frecuentes</h2>
             <Link className="link" href="/preguntas-frecuentes">Ver todas</Link>
           </div>
-          <FaqList items={FAQ.slice(0, 4)} />
+          <FaqList items={content.faqs.slice(0, 4)} />
         </div>
       </section>
+    ),
+  };
+
+  return (
+    <>
+      <section className="hero">
+        <div className="wrap">
+          <div className="stage">
+            <div className="scene">
+              <PauseOffscreen className="eq">
+                {EQ_BARS.map((b, i) => (
+                  <i key={i} style={b} />
+                ))}
+              </PauseOffscreen>
+              <div className="prod">
+                <div className="bob">
+                  <Tilt className="tilt" max={12} lift={40} host=".stage">
+                    <div className="angle">
+                      {starImage ? (
+                        <Image src={starImage.src} alt={starImage.alt} width={starImage.width} height={starImage.height} sizes="(min-width: 900px) 600px, 90vw" priority />
+                      ) : (
+                        <ProductArt kind="turntable" />
+                      )}
+                    </div>
+                  </Tilt>
+                </div>
+                <span className="floor" aria-hidden="true" />
+              </div>
+            </div>
+            <div className="copy">
+              {content.hero.eyebrow && (
+                <p className="eyebrow">
+                  <Meter />
+                  {content.hero.eyebrow}
+                </p>
+              )}
+              <h1 className="disp">
+                {lines.map((l, i) => (
+                  <span key={i}>
+                    {l}
+                    <br />
+                  </span>
+                ))}
+                <em>{last}</em>
+              </h1>
+              {content.hero.lead && <p className="lead">{content.hero.lead}</p>}
+              <div className="ctas">
+                <Link className="btn btn-primary" href={safeHref(content.hero.ctaHref) ?? "/catalogo"}>{content.hero.ctaLabel || "Explorar productos"}</Link>
+                {promos.length > 0 && <Link className="btn btn-ghost" href="/ofertas">Ver ofertas</Link>}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      {content.sections
+        .filter((s) => s.enabled)
+        .map((s) => (
+          <Fragment key={s.id}>{blocks[s.id]}</Fragment>
+        ))}
     </>
   );
 }

@@ -100,8 +100,15 @@ test("búsqueda sin resultados muestra estado vacío con salida", async ({ page 
 test("filtros del catálogo se reflejan en la URL y en los resultados", async ({ page }) => {
   await page.goto("/catalogo");
   await expect(page.getByRole("status").filter({ hasText: "28 productos" })).toBeVisible();
-  if (isMobile(page)) await page.getByRole("button", { name: /Filtros/ }).click();
-  await page.getByRole("checkbox", { name: /^Pioneer DJ/ }).check();
+  const pioneer = page.getByRole("checkbox", { name: /^Pioneer DJ/ });
+  // Con la máquina cargada, el toque puede llegar antes de que React hidrate y no abrir el panel: se reintenta.
+  if (isMobile(page)) {
+    await expect(async () => {
+      await page.getByRole("button", { name: /Filtros/ }).click();
+      await expect(pioneer).toBeVisible({ timeout: 1_000 });
+    }).toPass({ timeout: 15_000 });
+  }
+  await pioneer.check();
   await expect(page).toHaveURL(/marca=pioneer-dj/);
   await expect(page.getByRole("status").filter({ hasText: "20 productos" })).toBeVisible();
   await page.getByLabel("Orden").selectOption("precio-asc");

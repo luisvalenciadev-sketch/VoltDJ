@@ -43,7 +43,16 @@ Se editan en el panel, en **Configuración** (`/admin/configuracion`), y se guar
 
 `src/config/store.ts` guarda solo los valores iniciales (`initialStore`, o `blankStore` con `CATALOG_SEED=none`) y lo que no cambia desde el panel (`SITE`: URL, idioma y moneda). Un valor vacío se muestra como "pendiente".
 
-Las preguntas frecuentes están en `src/config/content.ts`.
+### Contenido del inicio
+
+Se edita en el panel, en **Contenido** (`/admin/contenido`), y se guarda en Neon (fila `content` de `settings`):
+
+- **Inicio:** texto pequeño, párrafo y botón de la portada; orden y encendido de las secciones (banners, categorías, destacados, ofertas, accesorios, videos, reseñas, marcas, cómo compras, preguntas).
+- **Banners:** foto con título, subtítulo y botón escritos aparte (nunca dentro de la imagen), con fechas de inicio y fin. Carrusel con deslizamiento nativo, sin avance automático.
+- **Videos "Mira cómo suena":** MP4 subido a Blob (hasta 50 MB) o enlace de YouTube. YouTube no se carga hasta que el cliente pulsa play (`youtube-nocookie`).
+- **Preguntas frecuentes** y **reseñas** (calificación, número y reseñas destacadas copiadas de Google, con enlace para verificarlas).
+
+`src/config/content.ts` guarda solo los valores iniciales.
 
 ### Fotos de referencia (Pexels)
 
@@ -125,8 +134,8 @@ src/
 
 ```bash
 npm run typecheck
-npm test            # Vitest: lógica, componentes y contraste de los temas (200 pruebas)
-npm run test:e2e    # Playwright: escritorio, tablet, móvil, los cinco temas, panel de catálogo, configuración y ventas (126 pruebas)
+npm test            # Vitest: lógica, componentes y contraste de los temas (205 pruebas)
+npm run test:e2e    # Playwright: escritorio, tablet, móvil, los cinco temas, panel de catálogo, configuración, ventas y contenido (132 pruebas)
 ```
 
 La primera vez, para las pruebas e2e: `npx playwright install chromium`. Usan el puerto 3217 y un número de WhatsApp ficticio de prueba.

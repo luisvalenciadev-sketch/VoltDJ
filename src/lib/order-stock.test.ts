@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { holdChanges, wantedHolds } from "./order-stock";
+import { holdChanges, unitsToReturn, wantedHolds } from "./order-stock";
 
 const line = (productId: string | null, qty: number) => ({ productId, name: "x", qty, unitPrice: 1 });
 
@@ -23,5 +23,17 @@ describe("stock apartado por un pedido", () => {
 
   it("repetir la misma operación no mueve nada", () => {
     expect(holdChanges([{ productId: "a", qty: 2 }], wantedHolds([line("a", 2)], false))).toEqual([]);
+  });
+
+  it("un faltante queda contado: cambiar de estado no vuelve a pedir unidades", () => {
+    // Pedía 1, la bodega tenía 0: contó 1 y sacó 0.
+    expect(holdChanges([{ productId: "a", qty: 1, taken: 0 }], wantedHolds([line("a", 1)], false))).toEqual([]);
+  });
+
+  it("al devolver solo vuelve lo que de verdad salió de la bodega", () => {
+    expect(unitsToReturn(1, 0)).toBe(1); // cancelado: vuelve lo sacado
+    expect(unitsToReturn(0, 0)).toBe(0); // nunca hubo unidades: no se inventan
+    expect(unitsToReturn(1, 1)).toBe(0); // pedía 2, sacó 1, ahora pide 1: esa unidad sigue apartada
+    expect(unitsToReturn(3, 1)).toBe(2);
   });
 });

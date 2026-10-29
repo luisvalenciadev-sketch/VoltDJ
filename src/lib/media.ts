@@ -18,6 +18,9 @@ export function uploadMode(): UploadMode {
 
 export const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 export const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+/** Videos cortos de "Mira cómo suena". Pesan en la transferencia de Blob: 50 MB alcanza para ~1 minuto en 1080p. */
+export const VIDEO_TYPES = ["video/mp4", "video/webm"] as const;
+export const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 /** Lado mayor de las fotos guardadas: suficiente para el visor con zoom, liviano para el celular. */
 export const MAX_IMAGE_SIDE = 1600;
 
@@ -28,7 +31,7 @@ const localFiles = () => {
 };
 
 export function saveLocalMedia(bytes: Uint8Array, type: string): string {
-  const ext = type === "image/png" ? "png" : type === "image/jpeg" ? "jpg" : "webp";
+  const ext = ({ "image/png": "png", "image/jpeg": "jpg", "video/mp4": "mp4", "video/webm": "webm" } as Record<string, string>)[type] ?? "webp";
   const name = `${randomUUID()}.${ext}`;
   localFiles().set(name, { bytes, type });
   return `/media/${name}`;

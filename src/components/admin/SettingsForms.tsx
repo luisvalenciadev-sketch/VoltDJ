@@ -16,7 +16,7 @@ import { sameDayText, type ShippingZone, zoneCostLabel } from "@/lib/shipping";
 import { normalizeWhatsApp } from "@/lib/whatsapp";
 import { Message, Section, SingleImage } from "./CatalogForms";
 
-function ReadOnlyNotice({ writable }: { writable: boolean }) {
+export function ReadOnlyNotice({ writable }: { writable: boolean }) {
   if (writable) return null;
   return (
     <p className="alert warn">
@@ -29,7 +29,7 @@ function ReadOnlyNotice({ writable }: { writable: boolean }) {
  * Guarda sin que React reinicie el formulario: con action={…} los campos no controlados volverían a su
  * valor inicial (el de antes de guardar) mientras llega la página actualizada.
  */
-function useSave(fn: (prev: SettingsState, fd: FormData) => Promise<SettingsState>) {
+export function useSave(fn: (prev: SettingsState, fd: FormData) => Promise<SettingsState>) {
   const [state, dispatch, pending] = useActionState(fn, undefined);
   const [dirty, setDirty] = useState(false);
   const [, startTransition] = useTransition();
@@ -43,7 +43,7 @@ function useSave(fn: (prev: SettingsState, fd: FormData) => Promise<SettingsStat
 }
 
 /** Barra de guardar pegada abajo, igual que en la ficha de producto. */
-function SaveBar({ state, pending, dirty, writable }: { state: SettingsState; pending: boolean; dirty: boolean; writable: boolean }) {
+export function SaveBar({ state, pending, dirty, writable }: { state: SettingsState; pending: boolean; dirty: boolean; writable: boolean }) {
   return (
     <div className="aform-bar">
       {dirty && !pending ? <span className="note">Cambios sin guardar</span> : <Message state={state} />}
@@ -54,7 +54,7 @@ function SaveBar({ state, pending, dirty, writable }: { state: SettingsState; pe
   );
 }
 
-function Field({ id, label, hint, children, wide }: { id: string; label: string; hint?: string; children: React.ReactNode; wide?: boolean }) {
+export function Field({ id, label, hint, children, wide }: { id: string; label: string; hint?: string; children: React.ReactNode; wide?: boolean }) {
   return (
     <div className={`field${wide ? " span-2" : ""}`}>
       <label htmlFor={id}>{label}</label>

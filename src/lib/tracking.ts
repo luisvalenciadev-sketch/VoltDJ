@@ -116,7 +116,7 @@ export interface Guide {
    * Unidades que este pedido tiene apartadas del inventario (src/lib/order-stock.ts). Sin valor = guía creada
    * antes de conectar el inventario: no aparta ni devuelve nada, porque su stock ya se ajustó a mano.
    */
-  stockApplied?: { productId: string; qty: number }[];
+  stockApplied?: { productId: string; qty: number; taken?: number }[];
   createdAt: string;
   updatedAt: string;
 }

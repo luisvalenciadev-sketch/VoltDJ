@@ -34,7 +34,7 @@ export default async function GuideAdminPage({ params, searchParams }: { params:
   const search = await searchParams;
   const created = Boolean(search.creada);
   const stockWarning = typeof search.stock === "string" ? search.stock : null;
-  const held = (guide.stockApplied ?? []).reduce((n, h) => n + h.qty, 0);
+  const held = (guide.stockApplied ?? []).reduce((n, h) => n + (h.taken ?? h.qty), 0);
 
   const now = new Date();
   const cur = currentStatus(guide, now);
