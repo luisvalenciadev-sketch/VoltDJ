@@ -28,6 +28,7 @@ export function Footer({ categories, showOffers }: { categories: Category[]; sho
           <div>
             <h2>Ayuda</h2>
             <ul>
+              <li><Link href="/seguimiento">Rastrear pedido</Link></li>
               <li><Link href="/envios-y-garantias">Envíos y garantías</Link></li>
               <li><Link href="/preguntas-frecuentes">Preguntas frecuentes</Link></li>
               <li><Link href="/contacto">Contacto y WhatsApp</Link></li>

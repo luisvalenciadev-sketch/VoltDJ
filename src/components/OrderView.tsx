@@ -132,7 +132,7 @@ export function OrderView({ catalog }: { catalog: CartProduct[] }) {
               <OkIcon />
               <div>
                 <b>Abrimos WhatsApp con tu pedido {orderId}</b>
-                <p>Envía el mensaje en WhatsApp para que un asesor lo reciba. Te confirmarán disponibilidad, envío y forma de pago.</p>
+                <p>Envía el mensaje en WhatsApp para que un asesor lo reciba. Te confirmarán disponibilidad, envío y forma de pago, y te enviarán un código para <Link href="/seguimiento">rastrear tu pedido</Link>.</p>
                 <button
                   type="button"
                   className="link"

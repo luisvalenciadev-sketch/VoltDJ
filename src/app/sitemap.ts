@@ -5,7 +5,7 @@ import { getCategories, getProducts } from "@/data/catalog";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [products, categories] = await Promise.all([getProducts(), getCategories()]);
   const url = (path: string) => new URL(path, STORE.siteUrl).toString();
-  const pages = ["/", "/catalogo", "/ofertas", "/contacto", "/envios-y-garantias", "/preguntas-frecuentes", "/privacidad", "/terminos"];
+  const pages = ["/", "/catalogo", "/ofertas", "/contacto", "/envios-y-garantias", "/preguntas-frecuentes", "/seguimiento", "/privacidad", "/terminos"];
   return [
     ...pages.map((p) => ({ url: url(p) })),
     ...categories.map((c) => ({ url: url(`/catalogo/${c.slug}`) })),

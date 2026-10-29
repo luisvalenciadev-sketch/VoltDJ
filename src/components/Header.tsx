@@ -38,6 +38,9 @@ function PromoTicker() {
         </>
       )}
       <span className="tick">Arma tu pedido y confírmalo por WhatsApp</span>
+      <Link className="tick" href="/seguimiento">
+        Rastrea tu pedido con tu código de guía
+      </Link>
       {info.map((item, i) => (
         <span className="tick" key={i}>
           {item}
