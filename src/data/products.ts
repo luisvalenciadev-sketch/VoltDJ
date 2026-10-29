@@ -47,14 +47,14 @@ const SEEDS: Seed[] = [
   // Reproductores
   { model: "CDJ-3000", brandId: "pioneer-dj", categoryId: "reproductores", type: "Reproductor multimedia DJ", price: 10000000, art: "turntable", featured: true },
   // Sistemas todo en uno
-  { model: "XDJ-AZ", brandId: "pioneer-dj", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 9000000, art: "controller", featured: true },
+  { model: "XDJ-AZ", brandId: "alphatheta", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 9000000, art: "controller", featured: true },
   { model: "Opus Quad", brandId: "pioneer-dj", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 8000000, art: "controller", featured: true },
   { model: "XDJ-RX3", brandId: "pioneer-dj", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 7800000, art: "controller" },
   { model: "XDJ-XZ", brandId: "pioneer-dj", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 7000000, art: "controller" },
   { model: "OMNIS-DUO", brandId: "alphatheta", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 4500000, art: "controller" },
   { model: "XDJ-RX2 Edición Limitada", brandId: "pioneer-dj", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 4500000, art: "controller" },
   { model: "XDJ-RX2", brandId: "pioneer-dj", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 4200000, art: "controller" },
-  { model: "XDJ-AN", brandId: "pioneer-dj", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 3800000, art: "controller" },
+  { model: "XDJ-AN", brandId: "alphatheta", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 3800000, art: "controller" },
   { model: "XDJ-RR", brandId: "pioneer-dj", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 3800000, art: "controller" },
   { model: "XDJ-RX", brandId: "pioneer-dj", categoryId: "standalone", type: "Sistema DJ todo en uno", price: 3500000, art: "controller" },
   // Controladores

@@ -82,7 +82,7 @@ test("filtros del catálogo se reflejan en la URL y en los resultados", async ({
   if (isMobile(page)) await page.getByRole("button", { name: /Filtros/ }).click();
   await page.getByRole("checkbox", { name: /^Pioneer DJ/ }).check();
   await expect(page).toHaveURL(/marca=pioneer-dj/);
-  await expect(page.getByRole("status").filter({ hasText: "22 productos" })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "20 productos" })).toBeVisible();
   await page.getByLabel("Orden").selectOption("precio-asc");
   await expect(page).toHaveURL(/orden=precio-asc/);
   await expect(page.locator(".card .name").first()).toHaveText("Pioneer DJ DDJ-FLX2");

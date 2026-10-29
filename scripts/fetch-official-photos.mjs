@@ -34,7 +34,7 @@ const PIONEER = {
   "pioneer-dj-rmx-1000": "dj-effectors/rmx-1000",
 };
 const ALPHATHETA = {
-  "pioneer-dj-xdj-az": "https://assets.alphatheta.com/wp-content/uploads/2024/09/XDJ-AZ_CGI_Angle_3300x2034-scaled.webp",
+  "alphatheta-xdj-az": "https://assets.alphatheta.com/wp-content/uploads/2024/09/XDJ-AZ_CGI_Angle_3300x2034-scaled.webp",
   "alphatheta-omnis-duo": "https://assets.alphatheta.com/wp-content/uploads/2024/01/OMNIS-DUO-CGI-angle-3500x2994-1-scaled.webp",
   "pioneer-dj-ddj-flx2": "https://assets.alphatheta.com/wp-content/uploads/2024/10/ddj-flx2-black-main.webp",
 };

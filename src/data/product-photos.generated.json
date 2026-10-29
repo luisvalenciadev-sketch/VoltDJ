@@ -4,6 +4,36 @@
     "width": 1200,
     "height": 1027
   },
+  "alphatheta-xdj-an": {
+    "src": "/img/productos/alphatheta-xdj-an.webp",
+    "width": 1200,
+    "height": 1200
+  },
+  "alphatheta-xdj-az": {
+    "src": "/img/productos/alphatheta-xdj-az.webp",
+    "width": 1200,
+    "height": 740
+  },
+  "beta-three-b3-mu18ba": {
+    "src": "/img/productos/beta-three-b3-mu18ba.webp",
+    "width": 900,
+    "height": 818
+  },
+  "beta-three-b3-n15a-mp3-ii": {
+    "src": "/img/productos/beta-three-b3-n15a-mp3-ii.webp",
+    "width": 1000,
+    "height": 1000
+  },
+  "electro-voice-zlx-15p-g2": {
+    "src": "/img/productos/electro-voice-zlx-15p-g2.webp",
+    "width": 600,
+    "height": 600
+  },
+  "krk-vxt8": {
+    "src": "/img/productos/krk-vxt8.webp",
+    "width": 914,
+    "height": 1200
+  },
   "pioneer-dj-cdj-3000": {
     "src": "/img/productos/pioneer-dj-cdj-3000.webp",
     "width": 1200,
@@ -73,11 +103,6 @@
     "src": "/img/productos/pioneer-dj-rmx-1000.webp",
     "width": 1200,
     "height": 540
-  },
-  "pioneer-dj-xdj-az": {
-    "src": "/img/productos/pioneer-dj-xdj-az.webp",
-    "width": 1200,
-    "height": 740
   },
   "pioneer-dj-xdj-rr": {
     "src": "/img/productos/pioneer-dj-xdj-rr.webp",
