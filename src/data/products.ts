@@ -1,3 +1,4 @@
+import { PRODUCT_PHOTOS } from "./product-photos";
 import type { ArtKind, Product } from "./types";
 
 /**
@@ -75,6 +76,7 @@ const SEEDS: Seed[] = [
 export const PRODUCTS: Product[] = SEEDS.map((s) => {
   const brand = BRAND_NAME[s.brandId];
   const name = `${brand} ${s.model}`;
+  const photo = PRODUCT_PHOTOS[slugify(name)];
   return {
     id: slugify(name),
     slug: slugify(name),
@@ -82,7 +84,7 @@ export const PRODUCTS: Product[] = SEEDS.map((s) => {
     brandId: s.brandId,
     categoryId: s.categoryId,
     description: `${s.type} ${brand} ${s.model}, nuevo. Escríbenos por WhatsApp para confirmar disponibilidad, estado y costo de envío a tu ciudad.`,
-    images: [],
+    images: photo ? [photo] : [],
     art: s.art,
     price: s.price,
     promoPrice: null,

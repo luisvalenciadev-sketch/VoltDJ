@@ -11,6 +11,9 @@ export interface ImageCredit {
   url: string;
   /** Página de la foto en el banco de imágenes. */
   source: string;
+  /** Licencias que exigen atribución (p. ej. CC BY-SA). */
+  license?: string;
+  licenseUrl?: string;
 }
 
 export interface ProductImage {

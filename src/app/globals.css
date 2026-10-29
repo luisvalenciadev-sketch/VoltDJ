@@ -101,6 +101,8 @@ main { min-height: 60vh; }
 /* ---------- Fotos ---------- */
 /* Fotos de ambiente (Pexels) llenan el marco; las de producto sobre fondo usan contain. */
 img.cover { width: 100% !important; height: 100% !important; object-fit: cover; }
+/* Fotos reales de producto (sin recorte): ocupan casi todo el marco, a diferencia de las ilustraciones. */
+.card .img > img:not(.cover), .gallery .main > img:not(.cover), .line .thumb img:not(.cover) { width: 94%; height: 94%; }
 .card .img, .line .thumb, .cat .img { overflow: hidden; }
 .hero .shot .cap.credit { border-style: solid; border-color: var(--border); color: var(--fg-2); text-decoration: none; }
 .hero .shot .cap.credit:hover { color: var(--fg); }

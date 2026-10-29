@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import type { ArtKind, ProductImage } from "@/data/types";
 import { ProductArt } from "./ProductArt";
+import { LicenseCredit } from "./ui";
 
 export function Gallery({ images, art, name, discount }: { images: ProductImage[]; art: ArtKind; name: string; discount: number }) {
   const [index, setIndex] = useState(0);
@@ -18,6 +19,7 @@ export function Gallery({ images, art, name, discount }: { images: ProductImage[
         )}
         {discount > 0 && <span className="flag">−{discount}%</span>}
       </div>
+      <LicenseCredit image={current} />
       {images.length > 1 && (
         <div className="thumbs">
           {images.map((img, i) => (

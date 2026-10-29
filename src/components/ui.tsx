@@ -57,6 +57,21 @@ export function ProductMedia({ image, art, sizes, priority }: { image: ProductIm
 }
 
 
+/** Atribución obligatoria para fotos con licencia Creative Commons. */
+export function LicenseCredit({ image }: { image: ProductImage | null | undefined }) {
+  const c = image?.credit;
+  if (!c?.license) return null;
+  return (
+    <p className="note">
+      Foto:{" "}
+      <a href={c.source} target="_blank" rel="noopener noreferrer">
+        {c.name}
+      </a>
+      , <a href={c.licenseUrl} target="_blank" rel="noopener noreferrer">{c.license}</a>, vía Wikimedia Commons
+    </p>
+  );
+}
+
 export function Meter() {
   const on = 5;
   return (
