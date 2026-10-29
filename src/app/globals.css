@@ -113,8 +113,11 @@ main { min-height: 60vh; }
 
 /* Cinta de marcas: logos en un solo tono para que ninguna marca grite más que otra. */
 .logos { margin-top: var(--s2); border-block: 1px solid var(--border); }
-.logo-item { display: grid; place-items: center; height: 96px; padding-inline: clamp(28px, 4vw, 56px); color: var(--fg); text-decoration: none; opacity: 0.62; transition: opacity var(--d-hover) var(--ease), transform var(--d-press) var(--ease-out); }
+.logo-item { display: flex; align-items: center; justify-content: center; gap: 12px; height: 96px; padding-inline: clamp(28px, 4vw, 56px); color: var(--fg); text-decoration: none; opacity: 0.62; transition: opacity var(--d-hover) var(--ease), transform var(--d-press) var(--ease-out); }
 .logo-item img { width: auto; height: 26px; max-width: 200px; filter: brightness(0) invert(1); }
+.logo-item img[src*="krk"] { height: 40px; } /* insignia compacta: a 26 px quedaría más chica que el resto */
+.logo-item img.mark { height: 36px; }
+.logo-item img.mark + .wordmark { font-size: 1.1rem; }
 .logo-item .wordmark { font-family: var(--f-display); font-stretch: 115%; font-weight: 800; font-size: 1.35rem; letter-spacing: 0.01em; text-transform: uppercase; white-space: nowrap; }
 .logo-item:active { transform: scale(0.97); }
 @media (hover: hover) and (pointer: fine) { .logo-item:hover { opacity: 1; } }
@@ -511,6 +514,10 @@ img.cover { width: 100% !important; height: 100% !important; object-fit: cover; 
 .line .ctrl { grid-column: 2; display: flex; align-items: center; justify-content: space-between; gap: var(--s3); flex-wrap: wrap; }
 @media (min-width: 720px) { .line .ctrl { grid-column: 3; flex-direction: column; align-items: end; justify-content: space-between; } }
 .line .lt { font-weight: 700; font-variant-numeric: tabular-nums; }
+.line .unitp { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.line .unitp s, .summary s { color: var(--fg-2); }
+.line .saving-text, .sumrow.saving { color: var(--accent); font-weight: 600; }
+.line .saving-text { font-size: var(--t-xs); }
 .line .warn-text { color: var(--warn); font-size: var(--t-xs); }
 .summary { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: var(--s5); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s4); min-width: 0; }
 @media (min-width: 900px) { .summary { position: sticky; top: calc(var(--header-h) + 16px); } }

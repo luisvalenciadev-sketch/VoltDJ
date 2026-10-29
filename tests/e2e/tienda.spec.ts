@@ -38,6 +38,7 @@ test("flujo completo: categoría → producto → carrito → pedido por WhatsAp
   await page.getByRole("button", { name: "Añadir al carrito", exact: true }).click();
 
   await page.goto("/carrito");
+  await expect(page.getByTestId("savings")).toHaveText("−$ 435.000");
   await expect(page.getByTestId("subtotal")).toHaveText("$ 2.465.000"); // 1.105.000 + 1.360.000 (precios de lista − 15 %)
   // Persistencia tras recargar.
   await page.reload();
@@ -58,6 +59,8 @@ test("flujo completo: categoría → producto → carrito → pedido por WhatsAp
   expect(text).toBe(await preview.textContent());
   expect(text).toContain("Pioneer DJ DDJ-FLX4\n   Ref.: DDJ-FLX4\n   Cantidad: 1\n   Precio unitario: $ 1.105.000 · Total: $ 1.105.000");
   expect(text).toContain("Yamaha HS5\n   Ref.: HS5\n   Cantidad: 1");
+  expect(text).toContain("Precio normal: $ 1.300.000 (−15% de descuento)");
+  expect(text).toContain("Descuento: −$ 435.000");
   expect(text).toContain("Subtotal estimado: $ 2.465.000");
   expect(text).toMatch(/Pedido provisional: VD-\d{6}-[A-Z2-9]{4}/);
   expect(href).not.toMatch(/[\s\n]/);
@@ -78,6 +81,9 @@ test("búsqueda sin resultados muestra estado vacío con salida", async ({ page 
 
 test("filtros del catálogo se reflejan en la URL y en los resultados", async ({ page }) => {
   await page.goto("/catalogo");
+  // Los filtros son inputs controlados por React: un clic antes de hidratar marca la casilla sin
+  // disparar la navegación. Con varias pruebas en paralelo la hidratación tarda más.
+  await page.waitForLoadState("networkidle");
   await expect(page.getByRole("status").filter({ hasText: "28 productos" })).toBeVisible();
   if (isMobile(page)) await page.getByRole("button", { name: /Filtros/ }).click();
   await page.getByRole("checkbox", { name: /^Pioneer DJ/ }).check();
