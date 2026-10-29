@@ -11,6 +11,24 @@ async function expectInside(page: Page, outer: string, inner: string) {
 
 const isMobile = (page: Page) => (page.viewportSize()?.width ?? 1366) < 900;
 
+/**
+ * La acción principal del resumen siempre debe estar al alcance: en escritorio dentro del
+ * resumen; en celular fija abajo y visible sin hacer scroll, arriba y al final de la página.
+ */
+async function expectCtaReachable(page: Page) {
+  const cta = ".summary .dock .btn-primary";
+  if (!isMobile(page)) return expectInside(page, ".summary", cta);
+  const vp = page.viewportSize()!;
+  for (const y of [0, 99999]) {
+    await page.evaluate((top) => window.scrollTo(0, top), y);
+    const b = (await page.locator(cta).boundingBox())!;
+    expect(b.y).toBeGreaterThanOrEqual(0);
+    expect(b.y + b.height).toBeLessThanOrEqual(vp.height + 0.5);
+    expect(b.x + b.width).toBeLessThanOrEqual(vp.width + 0.5);
+  }
+  await page.evaluate(() => window.scrollTo(0, 0));
+}
+
 async function search(page: Page, term: string) {
   const input = page.locator(isMobile(page) ? "#q-mobile" : "#q-desktop");
   await input.fill(term);
@@ -43,14 +61,14 @@ test("flujo completo: categoría → producto → carrito → pedido por WhatsAp
   // Persistencia tras recargar.
   await page.reload();
   await expect(page.getByTestId("subtotal")).toHaveText("$ 2.465.000");
-  await expectInside(page, ".summary", ".summary .btn-primary");
+  await expectCtaReachable(page);
 
   await page.getByRole("link", { name: "Revisar pedido" }).click();
   await page.getByLabel(/Ciudad de envío/).fill("Bogotá D.C.");
   const preview = page.getByTestId("message-preview");
   await expect(preview).toContainText("Ciudad de envío: Bogotá D.C.");
 
-  await expectInside(page, ".summary", ".summary .btn-primary");
+  await expectCtaReachable(page);
   const href = await page.getByTestId("send-whatsapp").getAttribute("href");
   const url = new URL(href!);
   expect(url.host).toBe("wa.me");
@@ -81,9 +99,6 @@ test("búsqueda sin resultados muestra estado vacío con salida", async ({ page 
 
 test("filtros del catálogo se reflejan en la URL y en los resultados", async ({ page }) => {
   await page.goto("/catalogo");
-  // Los filtros son inputs controlados por React: un clic antes de hidratar marca la casilla sin
-  // disparar la navegación. Con varias pruebas en paralelo la hidratación tarda más.
-  await page.waitForLoadState("networkidle");
   await expect(page.getByRole("status").filter({ hasText: "28 productos" })).toBeVisible();
   if (isMobile(page)) await page.getByRole("button", { name: /Filtros/ }).click();
   await page.getByRole("checkbox", { name: /^Pioneer DJ/ }).check();

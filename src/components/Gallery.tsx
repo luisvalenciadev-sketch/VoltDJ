@@ -27,10 +27,11 @@ export function Gallery({ images, art, name, discount }: { images: ProductImage[
   }, [expanded]);
 
   const label = `${name}: vista interactiva. Arrastra o usa las flechas para girarlo, acerca con doble clic, pellizco o las teclas + y −.`;
-  // Se pide la foto a 1200 px (su tamaño original): al ampliar 2,5× no debe verse borrosa.
+  // Se sirve la foto original (WebP de 1200 px ya optimizado por scripts/optimize-photos.mjs):
+  // al ampliar 2,5× no debe verse borrosa, y re-procesarla en el optimizador de Next solo gasta CPU.
   const media = (priority: boolean) =>
     current ? (
-      <Image key={current.src} src={current.src} alt={current.alt} width={current.width} height={current.height} sizes="1200px" priority={priority} draggable={false} className={current.fit === "cover" ? "cover" : undefined} />
+      <Image key={current.src} src={current.src} alt={current.alt} width={current.width} height={current.height} unoptimized priority={priority} draggable={false} className={current.fit === "cover" ? "cover" : undefined} />
     ) : (
       <ProductArt kind={art} />
     );
