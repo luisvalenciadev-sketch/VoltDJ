@@ -28,7 +28,8 @@ export default function TermsPage() {
         </ul>
         <h2>Condiciones comerciales</h2>
         <p>
-          <Pending>Medios de pago, derecho de retracto, devoluciones, garantías, envíos y PQR</Pending>
+          Medio de pago: {STORE.paymentMethods}. Envíos: {STORE.shipping.summary} Garantía: {STORE.warranty.summary}{" "}
+          <Pending>Derecho de retracto, devoluciones y PQR</Pending>
         </p>
       </div>
     </div>

@@ -29,7 +29,7 @@ export const FAQ: FaqItem[] = [
     q: "¿Necesito crear una cuenta?",
     a: "No. El carrito se guarda en este navegador y no pedimos datos personales en la página.",
   },
-  { q: "¿Qué formas de pago aceptan?", a: null, pendingLabel: "Medios de pago aceptados" },
-  { q: "¿Hacen envíos a todo el país?", a: null, pendingLabel: "Cobertura y tiempos de envío" },
-  { q: "¿Los productos tienen garantía?", a: null, pendingLabel: "Política de garantía" },
+  { q: "¿Qué formas de pago aceptan?", a: "Transferencia bancaria. El asesor te comparte los datos por WhatsApp cuando confirme tu pedido." },
+  { q: "¿Hacen envíos a todo el país?", a: "Sí, enviamos a todo Colombia. El costo y el tiempo de entrega se confirman por WhatsApp según tu ciudad." },
+  { q: "¿Los productos tienen garantía?", a: "Sí, los equipos tienen 12 meses de garantía. Para solicitarla, escríbenos por WhatsApp con tu número de pedido." },
 ];

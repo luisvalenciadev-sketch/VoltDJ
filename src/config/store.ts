@@ -35,16 +35,29 @@ export const STORE: StoreConfig = {
   currency: "COP",
   whatsappNumber: (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "").replace(/\D/g, ""),
   orderIdPrefix: "VD",
-  topbar: [null, null, null],
+  topbar: ["Envíos a todo Colombia", null, null],
   legalName: null,
   taxId: null,
   email: null,
   address: null,
   hours: null,
   social: [],
-  shipping: { summary: null, details: null },
-  warranty: { summary: null, details: null },
-  paymentMethods: null,
+  shipping: {
+    summary: "Envíos a todo Colombia. El costo y el tiempo de entrega se confirman por WhatsApp según tu ciudad.",
+    details: [
+      "Cobertura: todo Colombia.",
+      "Costo y tiempo de entrega: se cotizan por WhatsApp según la ciudad y el pedido.",
+      "El envío no está incluido en el subtotal del carrito.",
+    ],
+  },
+  warranty: {
+    summary: "Garantía de 12 meses en los equipos.",
+    details: [
+      "12 meses de garantía en los equipos.",
+      "Para solicitarla, escríbenos por WhatsApp con tu número de pedido.",
+    ],
+  },
+  paymentMethods: "Transferencia bancaria",
 };
 
 /** Etiquetas de los marcadores para datos pendientes, en el mismo orden que `topbar`. */
