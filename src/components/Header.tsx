@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { PROMO, STORE, TOPBAR_PLACEHOLDERS } from "@/config/store";
+import { activePromo, STORE, TOPBAR_PLACEHOLDERS } from "@/config/store";
 import type { Category } from "@/data/types";
 import { CartButton, CategoryNav, SearchForm } from "./HeaderClient";
 import { LogoMark, WhatsAppIcon } from "./icons";
@@ -25,6 +25,7 @@ export function Logo() {
  * servicio que antes vivían en una barra fija. Una sola banda en lugar de dos apiladas.
  */
 function PromoTicker() {
+  const PROMO = activePromo();
   const info = STORE.topbar.map((text, i) => text ?? <Pending>{TOPBAR_PLACEHOLDERS[i]}</Pending>);
   return (
     <Marquee label="cinta de promociones" seconds={38} className="ticker">

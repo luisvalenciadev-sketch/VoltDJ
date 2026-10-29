@@ -9,6 +9,10 @@ import { ToastProvider } from "@/store/toast";
 import { archivo, hanken, mono } from "./fonts";
 import "./globals.css";
 
+// Las páginas estáticas se regeneran cada hora: así una promoción vencida desaparece sola,
+// sin redesplegar (a más tardar una hora después de la fecha de fin).
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   metadataBase: new URL(STORE.siteUrl),
   title: { default: `${STORE.name} · Equipos DJ y audio profesional`, template: `%s · ${STORE.name}` },

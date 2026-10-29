@@ -112,7 +112,7 @@ export default async function ProductPage({ params }: { params: Params }) {
             {promo && (
               <p className="note">
                 {p.promoEndsAt
-                  ? `Promoción vigente hasta el ${new Date(p.promoEndsAt).toLocaleDateString(STORE.locale, { day: "numeric", month: "long", year: "numeric" })} o hasta agotar unidades.`
+                  ? `Promoción vigente hasta el ${new Date(p.promoEndsAt).toLocaleDateString(STORE.locale, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })} o hasta agotar unidades.`
                   : <>Vigencia de la promoción: <Pending>fecha de fin</Pending></>}
               </p>
             )}

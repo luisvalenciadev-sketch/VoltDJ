@@ -1,4 +1,5 @@
 import "server-only";
+import { promoIsActive } from "@/config/store";
 import { BRANDS } from "./brands";
 import { CATEGORIES } from "./categories";
 import { PRODUCTS } from "./products";
@@ -13,12 +14,19 @@ const SOURCE: Product[] = PRODUCTS;
 
 const isPublished = (p: Product) => p.status === "published";
 
+/**
+ * Las promociones vencidas se quitan en cada lectura, no al cargar el módulo: un servidor que
+ * sigue encendido después de la fecha de fin no debe seguir sirviendo el precio rebajado.
+ */
+const withCurrentPromo = (p: Product): Product => (p.promoEndsAt && !promoIsActive(p.promoEndsAt) ? { ...p, promoPrice: null, promoEndsAt: null } : p);
+
 export async function getProducts(): Promise<Product[]> {
-  return SOURCE.filter(isPublished);
+  return SOURCE.filter(isPublished).map(withCurrentPromo);
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  return SOURCE.find((p) => p.slug === slug && isPublished(p)) ?? null;
+  const p = SOURCE.find((x) => x.slug === slug && isPublished(x));
+  return p ? withCurrentPromo(p) : null;
 }
 
 export async function getCategories(): Promise<Category[]> {

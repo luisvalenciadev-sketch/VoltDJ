@@ -68,9 +68,22 @@ export const STORE: StoreConfig = {
 /**
  * Promoción global: descuento sobre el precio de lista en todo el catálogo.
  * `null` desactiva la promoción en toda la tienda (precios, cinta superior y página de ofertas).
- * `endsAt` (ISO, p. ej. "2026-11-30") es opcional; sin fecha, la ficha la marca como pendiente.
+ * `endsAt` (fecha "AAAA-MM-DD") es el último día de la promoción, inclusive, en hora de Colombia;
+ * sin fecha, la ficha la marca como pendiente. Al vencer se apaga sola (ver promoIsActive).
  */
-export const PROMO: { percent: number; endsAt: string | null } | null = { percent: 15, endsAt: null };
+export const PROMO: { percent: number; endsAt: string | null } | null = { percent: 15, endsAt: "2026-11-30" };
+
+/** La promoción vale hasta el final del día `endsAt` en Colombia (UTC−5, sin horario de verano). */
+export function promoIsActive(endsAt: string | null, now: Date = new Date()): boolean {
+  if (!endsAt) return true;
+  const lastDayStart = Date.parse(`${endsAt}T00:00:00-05:00`);
+  return now.getTime() < lastDayStart + 24 * 60 * 60 * 1000;
+}
+
+/** Promoción vigente en este momento, o null. Usar esto en la UI, no PROMO directamente. */
+export function activePromo(now: Date = new Date()) {
+  return PROMO && promoIsActive(PROMO.endsAt, now) ? PROMO : null;
+}
 
 /** Etiquetas de los marcadores para datos pendientes, en el mismo orden que `topbar`. */
 export const TOPBAR_PLACEHOLDERS = ["Cobertura de envíos", "Horario de atención", "Ciudad / showroom"];
