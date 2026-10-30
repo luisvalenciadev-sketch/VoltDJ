@@ -468,12 +468,51 @@ img.cover { width: 100% !important; height: 100% !important; object-fit: cover; 
 .crumbs a { color: var(--fg-2); text-underline-offset: 3px; }
 .catlayout { display: grid; gap: var(--s5); padding-bottom: var(--s7); }
 @media (min-width: 900px) { .catlayout { grid-template-columns: 248px minmax(0, 1fr); gap: var(--s6); } }
-.filters { display: none; gap: var(--s5); align-content: start; }
-.filters.open { display: grid; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: var(--s4); transition: opacity var(--d-ui) var(--ease-out), transform var(--d-ui) var(--ease-out); }
-@starting-style { .filters.open { opacity: 0; transform: translateY(calc(var(--rise) * -0.5)); } }
+.fbody { display: grid; gap: var(--s5); align-content: start; }
+/*
+ * Celular: los filtros son un panel que sube desde abajo (sheet), no una lista que empuja los productos.
+ * Siempre está en el DOM: cerrado queda abajo y con visibility: hidden (fuera del foco y del lector de
+ * pantalla); abierto sube con la curva de cajón. La salida es más rápida que la entrada.
+ */
+@media (max-width: 899px) {
+  .filters { position: fixed; z-index: 60; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; max-height: min(86dvh, 760px); background: var(--surface); color: var(--fg); border-radius: max(var(--r-lg), 14px) max(var(--r-lg), 14px) 0 0; box-shadow: 0 -16px 40px rgb(0 0 0 / 0.3); transform: translateY(100%); visibility: hidden; transition: transform 240ms var(--ease-drawer), visibility 0s linear 240ms; }
+  .filters.open { transform: none; visibility: visible; transition: transform 420ms var(--ease-drawer), visibility 0s; }
+  .filters.dragging { transition: none; }
+  /* Encabezado: asa para arrastrar, título, limpiar y cerrar. Es la superficie del gesto (touch-action: none). */
+  .fhead { position: relative; display: flex; align-items: center; gap: var(--s3); padding: var(--s5) var(--s4) var(--s3); border-bottom: 1px solid var(--border); touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
+  .fhead::before { content: ""; position: absolute; top: 8px; left: 50%; width: 36px; height: 4px; translate: -50% 0; border-radius: 2px; background: var(--border-strong); }
+  .fhead b { margin-right: auto; font-size: var(--t-lg); }
+  .fbody { overflow-y: auto; overscroll-behavior: contain; padding: var(--s4); }
+  .ffoot { padding: var(--s3) var(--s4) calc(var(--s3) + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--border); }
+  .ffoot .btn { width: 100%; }
+  .filters .check { min-height: 44px; } /* zona de toque completa en cada opción */
+  /* Categorías como fichas en fila: en lista ocupaban medio panel antes de llegar a los filtros. */
+  .filters nav.fgroup { display: flex; flex-wrap: wrap; gap: var(--s2); }
+  .filters nav.fgroup .eyebrow { flex-basis: 100%; }
+  .filters nav.fgroup .check { min-height: 40px; padding: 0 var(--s3); border: 1px solid var(--border); border-radius: 999px; background: var(--bg); }
+  .filters nav.fgroup .check .n { margin-left: 2px; }
+  .filters nav.fgroup .check[aria-current="page"] { border-color: var(--accent); }
+  .fscrim { position: fixed; inset: 0; z-index: 55; background: rgb(0 0 0 / 0.5); opacity: 0; visibility: hidden; transition: opacity 240ms var(--ease-out), visibility 0s linear 240ms; }
+  .fscrim.open { opacity: 1; visibility: visible; transition: opacity 320ms var(--ease-out), visibility 0s; }
+  :root.sheet-open { overflow: hidden; } /* la lista de atrás no se mueve mientras se filtra */
+  /* La barra de vista previa de tema (solo la ve quien administra) no tapa el panel ni el botón flotante. */
+  :root.sheet-open .theme-preview { display: none; }
+  body:has(.theme-preview) .ffab { bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+  /* Botón flotante: aparece al bajar por la lista, abajo al centro y por encima de la barra de inicio. */
+  .ffab { position: fixed; z-index: 50; left: 0; right: 0; width: fit-content; margin-inline: auto; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 var(--s5); border: 0; border-radius: 999px; background: var(--fg); color: var(--bg); font-weight: 700; font-size: var(--t-sm); box-shadow: 0 10px 28px rgb(0 0 0 / 0.3); transform: translateY(calc(100% + 24px)); visibility: hidden; transition: transform 200ms var(--ease-out), visibility 0s linear 200ms; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+  .ffab.show { transform: none; visibility: visible; transition: transform 320ms var(--ease-out), visibility 0s; }
+  .ffab.show:active { transform: scale(0.97); }
+  .ffab svg { width: 18px; height: 18px; }
+  .ffab-n { display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-size: var(--t-xs); }
+}
+@media (max-width: 899px) and (prefers-reduced-motion: reduce) {
+  .filters, .filters.open, .ffab, .ffab.show { transform: none; }
+  .filters { opacity: 0; transition: opacity 160ms var(--ease-out), visibility 0s linear 160ms; }
+  .filters.open { opacity: 1; transition: opacity 200ms var(--ease-out), visibility 0s; }
+}
 @media (min-width: 900px) {
-  .filters, .filters.open { display: grid; position: sticky; top: calc(var(--header-h) + 16px); background: none; border: 0; padding: 0; }
-  .fbtn { display: none !important; }
+  .filters { display: grid; position: sticky; top: calc(var(--header-h) + 16px); align-content: start; }
+  .fbtn, .fhead, .ffoot, .fscrim, .ffab { display: none !important; }
 }
 .fgroup { display: grid; gap: var(--s2); border: 0; margin: 0; padding: 0; min-width: 0; }
 .fgroup legend { font-family: var(--f-mono); font-size: var(--t-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-2); margin-bottom: var(--s2); padding: 0; }

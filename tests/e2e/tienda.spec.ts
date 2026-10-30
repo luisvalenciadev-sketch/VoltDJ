@@ -123,6 +123,8 @@ test("filtros del catálogo se reflejan en la URL y en los resultados", async ({
   await pioneer.check();
   await expect(page).toHaveURL(/marca=pioneer-dj/);
   await expect(page.getByRole("status").filter({ hasText: "20 productos" })).toBeVisible();
+  // En celular los filtros son un panel inferior: su botón dice cuántos quedan y lo cierra.
+  if (isMobile(page)) await page.getByRole("button", { name: "Ver 20 productos" }).click();
   await page.getByLabel("Orden").selectOption("precio-asc");
   await expect(page).toHaveURL(/orden=precio-asc/);
   await expect(page.locator(".card .name").first()).toHaveText("Pioneer DJ DDJ-FLX2");
