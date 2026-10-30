@@ -10,7 +10,7 @@ export function ProductInstallments({ price }: { price: number | null }) {
   if (!offer) return null;
   return (
     <span className="installments-mini">
-      o {formatCOP(offer.monthly)}/mes con {offer.method}
+      o <span className="nw">{formatCOP(offer.monthly)}/mes</span> con {offer.method}
     </span>
   );
 }

@@ -11,7 +11,8 @@ export const mono = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "500"],
 
 export const barlowCondensed = Barlow_Condensed({ subsets: ["latin"], display: "swap", preload: false, weight: ["600", "700", "800"], variable: "--font-barlow-condensed" });
 export const barlow = Barlow({ subsets: ["latin"], display: "swap", preload: false, weight: ["400", "500", "600", "700"], variable: "--font-barlow" });
-export const fraunces = Fraunces({ subsets: ["latin"], display: "swap", preload: false, variable: "--font-fraunces" });
+// Con itálica: la última línea del lema va en cursiva en la portada de Estudio.
+export const fraunces = Fraunces({ subsets: ["latin"], display: "swap", preload: false, style: ["normal", "italic"], variable: "--font-fraunces" });
 export const plex = IBM_Plex_Sans({ subsets: ["latin"], display: "swap", preload: false, variable: "--font-plex" });
 export const plexCondensed = IBM_Plex_Sans_Condensed({ subsets: ["latin"], display: "swap", preload: false, weight: ["500", "600", "700"], variable: "--font-plex-condensed" });
 export const bricolage = Bricolage_Grotesque({ subsets: ["latin"], display: "swap", preload: false, variable: "--font-bricolage" });

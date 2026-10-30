@@ -14,7 +14,7 @@ import { getContent } from "@/data/content";
 import { getStore } from "@/data/store";
 import { liveBanners, liveVideos, safeHref } from "@/lib/home-content";
 import { getBrands, getCategories, getProducts } from "@/data/catalog";
-import { hasPromo } from "@/lib/pricing";
+import { discountPercent, hasPromo } from "@/lib/pricing";
 
 /*
  * Paisaje de espectro del hero: el medidor del logo llevado a 3D. Cada barra pulsa con un
@@ -50,7 +50,12 @@ export default async function HomePage() {
   const promos = products.filter(hasPromo).slice(0, 4);
   const accessories = products.filter((p) => p.categoryId === "accesorios").slice(0, 4);
   const catalogBrands = brands.filter((b) => products.some((p) => p.brandId === b.id));
-  const starImage = featured.find((p) => p.images[0])?.images[0] ?? null;
+  // Producto estrella de la portada: el primer destacado con foto (o el primero, con ilustración).
+  const star = featured.find((p) => p.images[0]) ?? featured[0] ?? null;
+  const starImage = star?.images[0] ?? null;
+  const starBrand = star ? brandName(star.brandId) : "";
+  const starModel = star ? (star.name.startsWith(`${starBrand} `) ? star.name.slice(starBrand.length + 1) : star.name) : "";
+  const starOff = star ? discountPercent(star) : 0;
   // Una frase por línea y la última resaltada: "Tu sonido. Tu energía. Tu escenario." da tres líneas.
   const lines = (store.tagline || store.name).split(/(?<=[.!?])\s+/).filter(Boolean);
   const last = lines.pop() ?? "";
@@ -230,15 +235,39 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="hero">
+      {/*
+        Portada: título arriba, producto estrella al centro con su ficha (nombre y precio) y las acciones
+        abajo. En escritorio el título y las acciones van a la izquierda y la escena a la derecha.
+        Cada tema la viste distinto en src/styles/themes.css (luces, cartel de oferta, portada de revista…).
+      */}
+      <section className="hero" aria-labelledby="h-hero">
         <div className="wrap">
           <div className="stage">
+            {starModel && <span className="ghost" aria-hidden="true">{starModel}</span>}
+            <div className="head">
+              {content.hero.eyebrow && (
+                <p className="eyebrow">
+                  <Meter />
+                  {content.hero.eyebrow}
+                </p>
+              )}
+              <h1 className="disp" id="h-hero">
+                {lines.map((l, i) => (
+                  <span key={i}>
+                    {l}
+                    <br />
+                  </span>
+                ))}
+                <em>{last}</em>
+              </h1>
+            </div>
             <div className="scene">
               <PauseOffscreen className="eq">
                 {EQ_BARS.map((b, i) => (
                   <i key={i} style={b} />
                 ))}
               </PauseOffscreen>
+              <span className="halo" aria-hidden="true" />
               <div className="prod">
                 <div className="bob">
                   <Tilt className="tilt" max={12} lift={40} host=".stage">
@@ -253,28 +282,29 @@ export default async function HomePage() {
                 </div>
                 <span className="floor" aria-hidden="true" />
               </div>
-            </div>
-            <div className="copy">
-              {content.hero.eyebrow && (
-                <p className="eyebrow">
-                  <Meter />
-                  {content.hero.eyebrow}
-                </p>
-              )}
-              <h1 className="disp">
-                {lines.map((l, i) => (
-                  <span key={i}>
-                    {l}
-                    <br />
+              {star && (
+                <Link className="spot" href={`/producto/${star.slug}`}>
+                  <span className="spot-tag">
+                    Destacado
+                    {starOff > 0 && <span className="spot-off">−{starOff}%</span>}
                   </span>
-                ))}
-                <em>{last}</em>
-              </h1>
+                  <span className="spot-name">{star.name}</span>
+                  <Price price={star.price} promoPrice={star.promoPrice} />
+                </Link>
+              )}
+            </div>
+            <div className="foot">
               {content.hero.lead && <p className="lead">{content.hero.lead}</p>}
               <div className="ctas">
                 <Link className="btn btn-primary" href={safeHref(content.hero.ctaHref) ?? "/catalogo"}>{content.hero.ctaLabel || "Explorar productos"}</Link>
                 {promos.length > 0 && <Link className="btn btn-ghost" href="/ofertas">Ver ofertas</Link>}
               </div>
+              {/* Cifras del catálogo: solo las muestran los temas de mucho catálogo (Vitrina, Bodega). */}
+              <ul className="facts">
+                <li><b>{products.length}</b> productos</li>
+                <li><b>{catalogBrands.length}</b> marcas</li>
+                <li><b>{categories.length}</b> categorías</li>
+              </ul>
             </div>
           </div>
         </div>

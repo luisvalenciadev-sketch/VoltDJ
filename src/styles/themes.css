@@ -17,26 +17,75 @@
 :is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero .bob { animation: none; }
 :is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero .angle { transform: none; filter: drop-shadow(0 18px 22px rgb(0 0 0 / 0.14)); animation: fade 0.6s var(--ease-out) both; }
 :is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero .ctas .btn-ghost { background: var(--bg); border-color: var(--border-strong); backdrop-filter: none; }
-:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero h1 em { color: var(--accent); }
+/* Sin luces ni letra fantasma: cada tema claro pone su propia figura detrás del producto (.halo). */
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero .ghost,
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero .halo::before,
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero .spot-tag::before { display: none; }
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero .halo { inset: auto; transform-origin: 50% 50%; -webkit-mask-image: none; mask-image: none; animation: none; background: none; }
+:is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hero .spot { backdrop-filter: none; background: var(--bg); border-color: var(--border); box-shadow: 0 10px 30px rgb(17 19 24 / 0.1); }
 /* Logos de marcas: en fondo claro, el 62 % de opacidad del tema oscuro no llega al contraste mínimo. */
 :is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .logo-item { opacity: 0.85; }
 :is([data-theme="vitrina"], [data-theme="estudio"], [data-theme="bodega"], [data-theme="barrio"]) .hdr { background: color-mix(in srgb, var(--bg) 96%, transparent); }
 
 /* ---------- Vitrina: retail claro, precio protagonista, tarjetas en caja ---------- */
-[data-theme="vitrina"] .hero .stage { background: linear-gradient(120deg, var(--surface) 0%, var(--surface) 55%, color-mix(in srgb, var(--accent) 10%, var(--surface)) 100%); }
-[data-theme="vitrina"] .hero h1 { letter-spacing: 0.005em; }
+/* Portada como cartel de oferta: el producto se sale de una franja roja en diagonal y el precio manda. */
+[data-theme="vitrina"] .hero .stage { background: var(--surface); border: 0; }
+[data-theme="vitrina"] .hero h1 { letter-spacing: 0.005em; font-size: clamp(2.9rem, 13.5vw, 5.75rem); line-height: 0.92; }
+[data-theme="vitrina"] .hero .halo { display: block; top: 6%; bottom: 16%; left: 14%; right: -4%; background: var(--accent); clip-path: polygon(26% 0, 100% 0, 100% 100%, 0 100%); animation: slab-in 0.7s var(--ease-out) both; }
+@keyframes slab-in { from { clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%); } }
+[data-theme="vitrina"] .hero .angle { filter: drop-shadow(0 24px 26px rgb(17 19 24 / 0.32)); }
+[data-theme="vitrina"] .hero .spot { border: 0; border-radius: var(--r); padding: 10px 14px; box-shadow: 0 12px 28px rgb(17 19 24 / 0.18); }
+[data-theme="vitrina"] .hero .spot-tag { font: 800 var(--t-sm)/1 var(--f-display); letter-spacing: 0.04em; color: var(--fg); }
+[data-theme="vitrina"] .hero .spot-name { font-weight: 600; }
+[data-theme="vitrina"] .hero .spot .price b { font-size: var(--t-2xl); line-height: 1; letter-spacing: 0.005em; }
+/* Descuento como calcomanía torcida en la esquina de la ficha. */
+[data-theme="vitrina"] .hero .spot-off { position: absolute; top: -16px; right: -12px; rotate: 6deg; padding: 6px 10px; border-radius: var(--r); font: 800 var(--t-lg)/1 var(--f-display); box-shadow: 0 6px 14px rgb(17 19 24 / 0.2); }
+[data-theme="vitrina"] .hero .facts { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s5); list-style: none; padding: 0; }
+[data-theme="vitrina"] .hero .facts li { padding: 6px 10px; border: 1px solid var(--border-strong); border-radius: var(--r); font-size: var(--t-sm); color: var(--fg-2); }
+[data-theme="vitrina"] .hero .facts b { font: 800 var(--t-md)/1 var(--f-display); color: var(--fg); margin-right: 4px; }
+@media (min-width: 900px) {
+  [data-theme="vitrina"] .hero h1 { font-size: clamp(3rem, 5.6vw, 5.75rem); }
+  [data-theme="vitrina"] .hero .halo { top: 0; bottom: 0; left: 8%; right: 0; }
+  [data-theme="vitrina"] .hero .spot { left: var(--s5); right: auto; bottom: var(--s7); }
+}
+@media (prefers-reduced-motion: reduce) { [data-theme="vitrina"] .hero .halo { animation: fade 0.4s var(--ease-out) both; } }
 [data-theme="vitrina"] .grid-p { gap: var(--s3); }
 [data-theme="vitrina"] .card { padding: var(--s3); background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-lg); gap: var(--s2); transition: border-color var(--d-hover) var(--ease), box-shadow var(--d-hover) var(--ease); }
 @media (hover: hover) and (pointer: fine) { [data-theme="vitrina"] .card:hover { border-color: var(--border-strong); box-shadow: 0 6px 18px rgb(17 19 24 / 0.08); } }
 [data-theme="vitrina"] .card .name { font-family: var(--f-body); font-weight: 600; }
+[data-theme="vitrina"] .card { --card-pad: var(--s3); }
 [data-theme="vitrina"] .card .price b { color: var(--accent); font-family: var(--f-display); font-size: var(--t-xl); font-weight: 800; letter-spacing: 0.01em; }
+@container (max-width: 260px) { [data-theme="vitrina"] .card .price b { font-size: min(var(--t-xl), 16cqi); } }
 [data-theme="vitrina"] .flag { font: 800 var(--t-sm)/1 var(--f-display); padding: 6px 8px; }
 [data-theme="vitrina"] .cat .img { border: 1px solid var(--border); }
 [data-theme="vitrina"] .sechead h2 { letter-spacing: 0.01em; }
 
 /* ---------- Estudio: sobrio, serifa, aire y fichas amplias ---------- */
-[data-theme="estudio"] .hero .stage { border: 0; }
-[data-theme="estudio"] .hero h1 { line-height: 1.04; }
+/* Portada de revista: sin caja, filetes arriba y abajo, el producto sobre un disco y la ficha como pie de foto. */
+[data-theme="estudio"] .hero .stage { border: 0; border-radius: 0; background: transparent; border-top: 2px solid var(--fg); border-bottom: 1px solid var(--border-strong); }
+[data-theme="estudio"] .hero .head, [data-theme="estudio"] .hero .foot { padding-inline: 0; }
+[data-theme="estudio"] .hero h1 { line-height: 1; font-size: clamp(2.6rem, 12vw, 5.5rem); font-weight: 500; letter-spacing: -0.035em; }
+[data-theme="estudio"] .hero h1 em { font-style: italic; font-weight: 400; }
+[data-theme="estudio"] .hero .eyebrow .meter { display: none; }
+[data-theme="estudio"] .hero .eyebrow::before { content: ""; display: inline-block; width: 28px; height: 1px; margin-right: 10px; vertical-align: middle; background: var(--fg); }
+[data-theme="estudio"] .hero .halo { display: block; left: 50%; top: 46%; width: min(74%, 440px); aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; background: var(--surface-2); animation: fade 0.9s var(--ease-out) both; }
+[data-theme="estudio"] .hero .angle { filter: drop-shadow(0 26px 24px rgb(31 29 26 / 0.22)); }
+[data-theme="estudio"] .hero .spot { left: 0; right: 0; bottom: var(--s3); max-width: none; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: baseline; gap: var(--s3); padding: var(--s3) 0 0; border: 0; border-top: 1px solid var(--border-strong); border-radius: 0; background: transparent; box-shadow: none; }
+[data-theme="estudio"] .hero .spot-tag { color: var(--fg-2); letter-spacing: 0.12em; }
+[data-theme="estudio"] .hero .spot-off { background: var(--fg); color: var(--bg); }
+[data-theme="estudio"] .hero .spot-name { font-family: var(--f-display); font-style: italic; font-weight: 400; font-size: var(--t-md); }
+[data-theme="estudio"] .hero .spot .price b { font-family: var(--f-body); font-weight: 600; font-size: var(--t-md); color: var(--fg); }
+@media (hover: hover) and (pointer: fine) { [data-theme="estudio"] .hero .spot:hover .spot-name { text-decoration: underline; text-underline-offset: 3px; } }
+@media (max-width: 719px) {
+  [data-theme="estudio"] .hero .spot { grid-template-columns: minmax(0, 1fr) auto; }
+  [data-theme="estudio"] .hero .spot-tag { grid-column: 1 / -1; }
+}
+@media (min-width: 900px) {
+  [data-theme="estudio"] .hero .head { padding-left: 0; }
+  [data-theme="estudio"] .hero .foot { padding-left: 0; }
+  [data-theme="estudio"] .hero h1 { font-size: clamp(3rem, 5.4vw, 5.5rem); }
+  [data-theme="estudio"] .hero .spot { left: var(--s7); right: 0; bottom: var(--s6); }
+}
 [data-theme="estudio"] .grid-p { gap: var(--s6) var(--s5); }
 @media (min-width: 1080px) { [data-theme="estudio"] .grid-p { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 [data-theme="estudio"] .card .img { border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--border); }
@@ -48,16 +97,39 @@
 
 /* ---------- Bodega: denso, filas con precio y disponibilidad al frente ---------- */
 [data-theme="bodega"] .hdr .row { padding-block: var(--s2); }
-/* Portada compacta: la foto de portada se ve, pero en una franja baja (sin escena a pantalla completa). */
-[data-theme="bodega"] .hero .scene { min-height: 200px; }
-[data-theme="bodega"] .hero .bob { width: min(52%, 300px); }
-[data-theme="bodega"] .hero .copy { padding: var(--s5); }
+/*
+ * Portada de mostrador: compacta y útil. Título corto, el destacado como una fila de catálogo (foto chica +
+ * nombre + precio) y una franja de cifras. Nada ocupa la pantalla entera: aquí se viene a buscar.
+ */
+[data-theme="bodega"] .hero .stage { border-top: 3px solid var(--accent); }
+[data-theme="bodega"] .hero h1 { font-size: clamp(1.9rem, 8vw, 2.8rem); line-height: 1.06; }
+[data-theme="bodega"] .hero .head { padding: var(--s4) var(--s4) var(--s3); }
+[data-theme="bodega"] .hero .foot { padding: var(--s3) var(--s4) 0; }
+[data-theme="bodega"] .hero .scene { min-height: 0; display: grid; grid-template-columns: 104px minmax(0, 1fr); align-items: center; gap: var(--s3); margin: 0 var(--s4); padding: var(--s2); border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--bg); }
+[data-theme="bodega"] .hero .prod { position: relative; inset: auto; aspect-ratio: 1; background: var(--photo); border-radius: var(--r); }
+[data-theme="bodega"] .hero .bob { width: 88%; translate: none; }
+[data-theme="bodega"] .hero .angle { filter: none; }
+[data-theme="bodega"] .hero .spot { position: static; max-width: none; padding: 0; border: 0; box-shadow: none; background: none; gap: 4px; }
+[data-theme="bodega"] .hero .spot-tag { color: var(--accent); }
+[data-theme="bodega"] .hero .spot-name { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+[data-theme="bodega"] .hero .spot .price b { font-size: var(--t-xl); font-stretch: 100%; color: var(--fg); }
+[data-theme="bodega"] .hero .ctas { margin-top: var(--s4); }
+[data-theme="bodega"] .hero .ctas .btn { height: 44px; }
+/* Cifras del catálogo en una franja de datos, con divisiones: como el pie de un listado. */
+[data-theme="bodega"] .hero .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); margin: var(--s4) calc(-1 * var(--s4)) 0; padding: 0; list-style: none; border-top: 1px solid var(--border); }
+[data-theme="bodega"] .hero .facts li { display: grid; padding: var(--s3) var(--s4); font-size: var(--t-xs); text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-2); }
+[data-theme="bodega"] .hero .facts li + li { border-left: 1px solid var(--border); }
+[data-theme="bodega"] .hero .facts b { font: 700 var(--t-xl)/1.1 var(--f-display); color: var(--fg); letter-spacing: 0; }
 @media (min-width: 900px) {
-  [data-theme="bodega"] .hero .stage { grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr); min-height: 0; }
-  [data-theme="bodega"] .hero .scene { min-height: 360px; }
-  [data-theme="bodega"] .hero .bob { width: min(80%, 420px); }
+  [data-theme="bodega"] .hero .stage { grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr); grid-template-rows: auto auto; min-height: 0; }
+  [data-theme="bodega"] .hero .head { padding: var(--s6) var(--s6) var(--s2); }
+  [data-theme="bodega"] .hero .foot { padding: var(--s2) var(--s6) 0; }
+  [data-theme="bodega"] .hero .facts { margin-inline: calc(-1 * var(--s6)); }
+  [data-theme="bodega"] .hero .facts li { padding-inline: var(--s6); }
+  /* El destacado ocupa toda la columna derecha, hasta la franja de cifras: un panel, no una caja flotando. */
+  [data-theme="bodega"] .hero .scene { margin: 0; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr); gap: var(--s5); padding: var(--s6); border: 0; border-left: 1px solid var(--border); border-radius: 0; background: color-mix(in srgb, var(--surface-2) 45%, var(--surface)); }
+  [data-theme="bodega"] .hero h1 { font-size: clamp(2rem, 3.4vw, 3rem); }
 }
-[data-theme="bodega"] .hero h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); }
 [data-theme="bodega"] .sechead h2 { font-size: clamp(1.35rem, 2.6vw, 1.8rem); }
 [data-theme="bodega"] .grid-p { grid-template-columns: minmax(0, 1fr); gap: var(--s2); }
 [data-theme="bodega"] .card { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: var(--s3); padding: var(--s2); background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); }
@@ -84,9 +156,26 @@
 @media (max-width: 719px) { [data-theme="bodega"] .cats { grid-template-columns: minmax(0, 1fr); } }
 
 /* ---------- Barrio: cálido, redondeado, tarjetas con sombra suave ---------- */
+/* Portada cálida: una mancha de color que gira despacio (parece respirar), la ficha como calcomanía ladeada
+   y la última línea del lema resaltada con marcador. */
 [data-theme="barrio"] .hero .stage { border: 0; background: var(--surface-2); }
-[data-theme="barrio"] .hero .angle { filter: drop-shadow(0 22px 26px rgb(42 31 23 / 0.18)); }
-[data-theme="barrio"] .card { padding: var(--s3); background: var(--surface); border-radius: var(--r-lg); box-shadow: 0 1px 2px rgb(42 31 23 / 0.06), 0 8px 24px rgb(42 31 23 / 0.06); }
+[data-theme="barrio"] .hero h1 { font-size: clamp(2.5rem, 11.5vw, 5rem); line-height: 0.98; }
+[data-theme="barrio"] .hero h1 em { padding-inline: 0.06em; background: linear-gradient(transparent 50%, color-mix(in srgb, var(--accent) 20%, transparent) 50% 84%, transparent 84%); -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+[data-theme="barrio"] .hero .angle { filter: drop-shadow(0 22px 26px rgb(42 31 23 / 0.22)); }
+[data-theme="barrio"] .hero .halo { display: block; left: 50%; top: 46%; width: min(78%, 460px); aspect-ratio: 1; translate: -50% -50%; border-radius: 58% 42% 55% 45% / 48% 58% 42% 52%; background: color-mix(in srgb, var(--accent) 18%, var(--surface-2)); animation: spin 48s linear infinite; }
+@keyframes spin { to { rotate: 360deg; } }
+[data-theme="barrio"] .hero .spot { rotate: -3deg; border: 0; border-radius: var(--r-lg); padding: 12px 16px 14px; box-shadow: 0 2px 4px rgb(42 31 23 / 0.08), 0 14px 30px rgb(42 31 23 / 0.14); transition: rotate var(--d-ui) var(--ease-out), transform var(--d-press) var(--ease-out); }
+@media (hover: hover) and (pointer: fine) { [data-theme="barrio"] .hero .spot:hover { rotate: 0deg; } }
+[data-theme="barrio"] .hero .spot-tag { align-self: start; justify-self: start; padding: 3px 10px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-family: var(--f-body); font-weight: 700; text-transform: none; letter-spacing: 0; }
+[data-theme="barrio"] .hero .spot-off { background: var(--accent-ink); color: var(--accent); border-radius: 999px; }
+[data-theme="barrio"] .hero .spot-name { font-family: var(--f-display); font-weight: 700; font-size: var(--t-md); margin-top: 4px; }
+[data-theme="barrio"] .hero .spot .price b { font-stretch: 100%; color: var(--fg); }
+@media (min-width: 900px) {
+  [data-theme="barrio"] .hero h1 { font-size: clamp(2.8rem, 5vw, 4.75rem); }
+  [data-theme="barrio"] .hero .spot { right: var(--s7); bottom: var(--s7); }
+}
+@media (prefers-reduced-motion: reduce) { [data-theme="barrio"] .hero .halo { animation: none; } }
+[data-theme="barrio"] .card { --card-pad: var(--s3); padding: var(--s3); background: var(--surface); border-radius: var(--r-lg); box-shadow: 0 1px 2px rgb(42 31 23 / 0.06), 0 8px 24px rgb(42 31 23 / 0.06); }
 [data-theme="barrio"] .card .img { border-radius: calc(var(--r-lg) - 6px); }
 [data-theme="barrio"] .card .name { font-family: var(--f-display); font-weight: 700; }
 [data-theme="barrio"] .flag { border-radius: 999px; padding: 5px 9px; }
