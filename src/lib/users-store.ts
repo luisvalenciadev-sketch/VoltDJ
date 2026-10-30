@@ -19,7 +19,7 @@ export interface PanelUser {
   createdAt: string;
 }
 
-export type AuditEntity = "producto" | "stock" | "promocion" | "categoria" | "marca" | "configuracion" | "contenido" | "usuario" | "importacion";
+export type AuditEntity = "producto" | "stock" | "promocion" | "categoria" | "marca" | "configuracion" | "contenido" | "usuario" | "importacion" | "correo";
 
 export interface AuditEntry {
   id: string;

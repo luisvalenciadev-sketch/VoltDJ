@@ -30,6 +30,8 @@ type Row = {
   events: Guide["events"];
   public_note: string | null;
   stock_applied: Guide["stockApplied"] | null;
+  email: string | null;
+  notified: string[] | null;
   created_at: string | Date;
   updated_at: string | Date;
 };
@@ -50,6 +52,8 @@ const toGuide = (r: Row): Guide => ({
   events: r.events ?? [],
   publicNote: r.public_note,
   stockApplied: r.stock_applied ?? undefined,
+  email: r.email ?? null,
+  notified: r.notified ?? [],
   createdAt: new Date(r.created_at).toISOString(),
   updatedAt: new Date(r.updated_at).toISOString(),
 });
@@ -81,7 +85,9 @@ function neonStore(url: string): GuidesStore {
           add column if not exists lines jsonb not null default '[]'::jsonb,
           add column if not exists shipping bigint not null default 0,
           add column if not exists paid bigint not null default 0,
-          add column if not exists stock_applied jsonb`; // sin valor = guía anterior al inventario conectado
+          add column if not exists stock_applied jsonb,
+          add column if not exists email text,
+          add column if not exists notified jsonb not null default '[]'::jsonb`; // sin valor = guía anterior al inventario conectado
     })().catch((e) => {
       ready = null; // reintenta en la siguiente petición si Neon estaba despertando
       throw e;
@@ -100,8 +106,8 @@ function neonStore(url: string): GuidesStore {
     async create(g) {
       await schema();
       await sql`
-        insert into guides (code, customer_name, phone, city, items, lines, shipping, paid, carrier, tracking_number, mode, events, public_note, stock_applied)
-        values (${g.code}, ${g.customerName}, ${g.phone}, ${g.city}, ${g.items}, ${JSON.stringify(g.lines)}::jsonb, ${g.shipping}, ${g.paid}, ${g.carrier}, ${g.trackingNumber}, ${g.mode}, ${JSON.stringify(g.events)}::jsonb, ${g.publicNote}, ${g.stockApplied ? JSON.stringify(g.stockApplied) : null}::jsonb)`;
+        insert into guides (code, customer_name, phone, city, items, lines, shipping, paid, carrier, tracking_number, mode, events, public_note, stock_applied, email, notified)
+        values (${g.code}, ${g.customerName}, ${g.phone}, ${g.city}, ${g.items}, ${JSON.stringify(g.lines)}::jsonb, ${g.shipping}, ${g.paid}, ${g.carrier}, ${g.trackingNumber}, ${g.mode}, ${JSON.stringify(g.events)}::jsonb, ${g.publicNote}, ${g.stockApplied ? JSON.stringify(g.stockApplied) : null}::jsonb, ${g.email ?? null}, ${JSON.stringify(g.notified ?? [])}::jsonb)`;
     },
     async update(code, p) {
       await schema();
@@ -114,7 +120,8 @@ function neonStore(url: string): GuidesStore {
           lines = ${JSON.stringify(g.lines)}::jsonb, shipping = ${g.shipping}, paid = ${g.paid},
           carrier = ${g.carrier}, tracking_number = ${g.trackingNumber}, mode = ${g.mode},
           events = ${JSON.stringify(g.events)}::jsonb, public_note = ${g.publicNote},
-          stock_applied = ${g.stockApplied ? JSON.stringify(g.stockApplied) : null}::jsonb, updated_at = now()
+          stock_applied = ${g.stockApplied ? JSON.stringify(g.stockApplied) : null}::jsonb, email = ${g.email ?? null},
+          notified = ${JSON.stringify(g.notified ?? [])}::jsonb, updated_at = now()
         where code = ${code}`;
     },
     async remove(code) {

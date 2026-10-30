@@ -3,6 +3,7 @@ import { revalidateTag } from "next/cache";
 import { CATALOG_TAG } from "@/data/catalog";
 import { catalogStore, ReadOnlyCatalogError } from "./catalog-store";
 import type { GuidesStore } from "./guides-store";
+import { notifyLowStock } from "./notifications";
 import { holdChanges, unitsToReturn, wantedHolds, type StockHold } from "./order-stock";
 import { currentStatus, type Guide } from "./tracking";
 
@@ -22,6 +23,7 @@ export async function syncGuideStock(guide: Guide, guides: GuidesStore, opts: { 
   if (!changes.length) return [];
 
   const warnings: string[] = [];
+  const lowStock: { name: string; stock: number }[] = [];
   for (const { productId, change } of changes) {
     const product = await catalog.getProduct(productId);
     const cur = holds.get(productId) ?? { qty: 0, taken: 0 };
@@ -37,6 +39,9 @@ export async function syncGuideStock(guide: Guide, guides: GuidesStore, opts: { 
         const after = (await catalog.changeStock(productId, { mode: "add", delta: -change }, { reason: "pedido", ref: guide.code })) ?? 0;
         const taken = before - after;
         holds.set(productId, { qty, taken: cur.taken + taken });
+        // Aviso al dueño solo al cruzar el umbral (o al agotarse), no en cada venta por debajo de él.
+        const low = (n: number) => n <= 0 || (product.lowStockAt > 0 && n <= product.lowStockAt);
+        if (low(after) && !low(before)) lowStock.push({ name: product.name, stock: after });
         // Se avisa una sola vez: lo que faltó queda contado y no se vuelve a intentar en cada cambio de estado.
         if (taken < change) warnings.push(`${product.name}: el pedido pide ${change} y en bodega había ${before}. Quedó en 0; revisa el inventario.`);
       } else {
@@ -54,5 +59,6 @@ export async function syncGuideStock(guide: Guide, guides: GuidesStore, opts: { 
   const stockApplied: StockHold[] = [...holds].filter(([, h]) => h.qty > 0).map(([productId, h]) => ({ productId, qty: h.qty, taken: h.taken }));
   if (!opts.release) await guides.update(guide.code, { stockApplied });
   revalidateTag(CATALOG_TAG, { expire: 0 });
+  if (lowStock.length) await notifyLowStock(lowStock);
   return warnings;
 }

@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { connection } from "next/server";
+import { after, connection } from "next/server";
 import { RescheduleForm } from "@/components/RescheduleForm";
 import { TrackingStepper } from "@/components/TrackingTimeline";
 import { WhatsAppIcon } from "@/components/icons";
 import { Breadcrumbs } from "@/components/ui";
 import { getStore } from "@/data/store";
 import { guidesStore } from "@/lib/guides-store";
+import { notifyGuide } from "@/lib/notifications";
 import { formatCOP } from "@/lib/pricing";
 import { currentStatus, formatTrackingDate, normalizeGuideCode, orderTotals, PAYMENT_LABEL, STATUS_LABEL, timeline } from "@/lib/tracking";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
@@ -27,6 +28,9 @@ export default async function TrackingPage({ params }: { params: Params }) {
   const store = guidesStore();
   const shop = await getStore();
   const guide = code && store ? await store.get(code) : null;
+  // Un pedido en modo automático avanza solo: si el cliente mira su pedido y hay un paso sin avisar, se le
+  // escribe después de responder la página (no la demora).
+  if (guide?.email) after(() => notifyGuide(guide.code));
   const crumbs = [{ label: "Inicio", href: "/" }, { label: "Rastrear pedido", href: "/seguimiento" }, { label: code ?? "Guía" }];
 
   if (!guide) {

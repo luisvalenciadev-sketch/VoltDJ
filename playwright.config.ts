@@ -19,9 +19,9 @@ export default defineConfig({
   reporter: [["list"]],
   use: { baseURL: `http://localhost:${PORT}`, trace: "retain-on-failure" },
   projects: [
-    { name: "escritorio", testIgnore: /(catalogo|configuracion|ventas|guias|contenido|usuarios)\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } } },
-    { name: "tablet", testIgnore: /(catalogo|configuracion|temas|ventas|guias|contenido|usuarios)\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 820, height: 1180 }, hasTouch: true } },
-    { name: "movil", testIgnore: /(catalogo|configuracion|ventas|guias|contenido|usuarios)\.spec/, use: { ...devices["Pixel 7"] } },
+    { name: "escritorio", testIgnore: /(catalogo|configuracion|ventas|guias|contenido|usuarios|notificaciones)\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } } },
+    { name: "tablet", testIgnore: /(catalogo|configuracion|temas|ventas|guias|contenido|usuarios|notificaciones)\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 820, height: 1180 }, hasTouch: true } },
+    { name: "movil", testIgnore: /(catalogo|configuracion|ventas|guias|contenido|usuarios|notificaciones)\.spec/, use: { ...devices["Pixel 7"] } },
     // Las guías apartan stock de los productos que llevan (el catálogo inicial tiene 1 unidad de cada uno):
     // corren después de la tienda para no agotar lo que el flujo de compra está probando.
     { name: "guias-escritorio", testMatch: /guias\.spec/, dependencies: ["escritorio", "tablet", "movil"], use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } } },
@@ -53,7 +53,15 @@ export default defineConfig({
     {
       name: "panel-ventas",
       testMatch: /ventas\.spec/,
-      dependencies: ["escritorio", "tablet", "movil"],
+      // Pagos y envíos se guardan en el mismo documento que configuración: una después de la otra.
+      dependencies: ["panel-configuracion"],
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } },
+    },
+    // Correos: guarda las notificaciones en el mismo documento de la tienda, después de ventas.
+    {
+      name: "panel-notificaciones",
+      testMatch: /notificaciones\.spec/,
+      dependencies: ["panel-ventas"],
       use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } },
     },
     // Usuarios y roles: crear el primer dueño apaga la contraseña única con la que entran las demás pruebas
@@ -61,7 +69,7 @@ export default defineConfig({
     {
       name: "panel-usuarios",
       testMatch: /usuarios\.spec/,
-      dependencies: ["panel-catalogo", "panel-contenido", "panel-ventas", "guias-escritorio", "guias-movil"],
+      dependencies: ["panel-catalogo", "panel-contenido", "panel-notificaciones", "guias-escritorio", "guias-movil"],
       use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } },
     },
   ],
@@ -77,6 +85,8 @@ export default defineConfig({
       // Panel de guías con almacén en memoria: las pruebas nunca tocan la base real.
       GUIDES_STORE: "memory",
       CATALOG_STORE: "memory",
+      // Los correos se guardan en memoria del servidor en lugar de enviarse.
+      EMAIL_PROVIDER: "memoria",
       ADMIN_PASSWORD: TEST_ADMIN_PASSWORD,
       SESSION_SECRET: "clave-de-prueba-solo-para-e2e-0123456789abcdef",
     },

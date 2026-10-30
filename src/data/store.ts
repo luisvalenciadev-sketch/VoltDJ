@@ -14,7 +14,7 @@ export const SETTINGS_TAG = "settings";
 
 // La caché de Vercel sobrevive a los despliegues: versión en la clave y, por si llega una entrada vieja,
 // se completa con los valores iniciales (un campo nuevo nunca llega vacío a la página).
-const read = unstable_cache(() => settingsStore().get(), ["store-settings-v2", cacheScope()], { tags: [SETTINGS_TAG] });
+const read = unstable_cache(() => settingsStore().get(), ["store-settings-v3", cacheScope()], { tags: [SETTINGS_TAG] });
 
 export const getStore = cache(async (): Promise<StoreSettings> => mergeStore(defaultStore(), await read()));
 

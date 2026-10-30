@@ -1,4 +1,5 @@
 import type { ProductImage } from "@/data/types";
+import type { NotifyStatus } from "@/lib/notify-rules";
 import type { SameDay, ShippingZone } from "@/lib/shipping";
 import { defaultPayments, type PaymentSetting } from "./payments";
 import { DEFAULT_THEME, type ThemeId } from "./themes";
@@ -44,6 +45,20 @@ export interface SeoSettings {
   image: ProductImage | null;
 }
 
+/** Avisos por correo. El proveedor (Gmail o Resend) y sus claves van en variables de Vercel, no aquí. */
+export interface NotificationSettings {
+  /** Qué pasos del pedido le avisan al cliente. */
+  statuses: Record<NotifyStatus, boolean>;
+  /** Aviso al dueño cuando un producto queda en stock bajo o agotado. */
+  lowStock: boolean;
+  /** A dónde llegan los avisos para la tienda (stock bajo, prueba). */
+  ownerEmail: string | null;
+  /** Si el cliente responde el correo, a dónde llega. */
+  replyTo: string | null;
+}
+
+const allStatuses = (on: boolean): Record<NotifyStatus, boolean> => ({ confirmado: on, enviado: on, en_reparto: on, entregado: on, entrega_fallida: on, reprogramado: on, cancelado: on });
+
 export interface StoreSettings {
   name: string;
   tagline: string;
@@ -67,6 +82,7 @@ export interface StoreSettings {
   payments: PaymentSetting[];
   shippingZones: ShippingZone[];
   sameDay: SameDay;
+  notifications: NotificationSettings;
   returnsPolicy: string | null;
   /** Texto propio de las páginas legales; null = la página explica cómo funciona el sitio y marca lo pendiente. */
   privacyText: string | null;
@@ -111,6 +127,7 @@ export function initialStore(): StoreSettings {
     payments: defaultPayments(["transferencia"]),
     shippingZones: [],
     sameDay: { enabled: false, cutoff: "14:00", area: "Ibagué" },
+    notifications: { statuses: allStatuses(true), lowStock: true, ownerEmail: "cdr.sdjcolombia@gmail.com", replyTo: "cdr.sdjcolombia@gmail.com" },
     privacyText: null,
     termsText: null,
     brand: { theme: DEFAULT_THEME, logoOnDark: null, logoOnLight: null, favicon: null, accent: null },
@@ -140,6 +157,7 @@ export function blankStore(): StoreSettings {
     payments: defaultPayments(),
     shippingZones: [],
     sameDay: { enabled: false, cutoff: "14:00", area: "" },
+    notifications: { statuses: allStatuses(true), lowStock: true, ownerEmail: null, replyTo: null },
     returnsPolicy: null,
     privacyText: null,
     termsText: null,
@@ -163,6 +181,7 @@ export function mergeStore(base: StoreSettings, saved: Partial<StoreSettings> | 
     warranty: { ...base.warranty, ...saved.warranty },
     brand: { ...base.brand, ...saved.brand },
     sameDay: { ...base.sameDay, ...saved.sameDay },
+    notifications: { ...base.notifications, ...saved.notifications, statuses: { ...base.notifications.statuses, ...saved.notifications?.statuses } },
     // Un medio de pago que el código agregue después aparece (apagado) también en tiendas que ya guardaron.
     payments: base.payments.map((p) => ({ ...p, ...saved.payments?.find((x) => x.id === p.id) })),
     seo: { ...base.seo, ...saved.seo },

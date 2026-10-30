@@ -125,6 +125,11 @@ function CustomerFields({ guide }: { guide?: Guide }) {
         <span className="note">Para enviarle el enlace. El cliente nunca lo ve en la consulta.</span>
       </div>
       <div className="field">
+        <label htmlFor="email">Correo del cliente (opcional)</label>
+        <input id="email" name="email" type="email" className="input" maxLength={160} placeholder="cliente@gmail.com" defaultValue={guide?.email ?? ""} autoComplete="off" />
+        <span className="note">Recibe por correo cada paso de su pedido. Nunca se muestra en la consulta.</span>
+      </div>
+      <div className="field">
         <label htmlFor="city">Ciudad de entrega</label>
         <input id="city" name="city" className="input" maxLength={60} defaultValue={guide?.city ?? ""} />
       </div>

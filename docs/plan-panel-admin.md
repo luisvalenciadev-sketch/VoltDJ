@@ -1,6 +1,12 @@
 # Plan técnico — Panel de administración completo
 
-Estado: **fases 1 a 4 en producción** (`main`) · **fase 5** construida en `feat/panel-fase-5` · 2026-10-29
+Estado: **fases 1 a 5 en producción** (`main`) · **notificaciones por correo** en `feat/notificaciones` · 2026-10-30
+
+### Notificaciones por correo (después del plan)
+
+- **Gmail o Resend** según variables de entorno, con `EMAIL_PROVIDER` para elegir si están los dos. Gmail no necesita dominio propio; Resend sí.
+- **Sin colas ni tareas cada minuto:** se revisa al guardar la guía, cuando el cliente abre su seguimiento (`after()`) y una vez al día (cron de Vercel, que en el plan Hobby solo corre diario).
+- **WhatsApp automático no:** la API oficial cobra por mensaje (también los avisos dentro de las 24 horas desde octubre de 2026). Se mantiene el botón manual de WhatsApp en la guía.
 
 ### Cambios respecto al plan en la fase 5
 

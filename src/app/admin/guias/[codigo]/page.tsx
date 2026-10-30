@@ -78,6 +78,8 @@ export default async function GuideAdminPage({ params, searchParams }: { params:
           <span>
             Guía creada. Envíale el enlace al cliente por WhatsApp.
             {held > 0 && ` Se apartaron ${held} ${held === 1 ? "unidad" : "unidades"} del inventario.`}
+            {search.correo === "1" && ` Le escribimos a ${guide.email} con la confirmación.`}
+            {search.correo === "0" && " No se pudo enviar el correo de confirmación; se reintentará."}
           </span>
         </p>
       )}

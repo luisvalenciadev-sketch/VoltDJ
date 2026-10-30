@@ -7,6 +7,8 @@ import { adminConfigured, clearLoginAttempts, createMasterSession, createUserSes
 import { hashPassword, verifyPassword } from "@/lib/passwords";
 import { usersStore } from "@/lib/users-store";
 import { syncGuideStock } from "@/lib/guide-stock";
+import { notifyGuide } from "@/lib/notifications";
+import { EMAIL_RE } from "@/lib/notify-rules";
 import { guidesStore, type GuidesStore } from "@/lib/guides-store";
 import {
   addManualStatus,
@@ -137,7 +139,7 @@ function moneyFrom(fd: FormData, key: string, label: string): number | string {
   return v == null ? `"${label}" debe ser un valor en pesos, p. ej. 500.000.` : v;
 }
 
-type Contact = Pick<Guide, "customerName" | "phone" | "city" | "carrier" | "trackingNumber" | "publicNote">;
+type Contact = Pick<Guide, "customerName" | "phone" | "email" | "city" | "carrier" | "trackingNumber" | "publicNote">;
 /** Datos de contacto y envío: se pueden corregir en cualquier momento, incluso con el pedido bloqueado. */
 function contactFrom(fd: FormData): Contact | string {
   const customerName = text(fd, "customerName", 80);
@@ -145,9 +147,12 @@ function contactFrom(fd: FormData): Contact | string {
   const rawPhone = text(fd, "phone", 25);
   const phone = normalizePhone(rawPhone);
   if (rawPhone && !phone) return "El celular no parece válido. Escribe 10 dígitos (p. ej. 3001234567).";
+  const email = text(fd, "email", 160).toLowerCase();
+  if (email && !EMAIL_RE.test(email)) return "El correo del cliente no parece válido.";
   return {
     customerName,
     phone,
+    email: email || null,
     city: optional(fd, "city", 60),
     carrier: optional(fd, "carrier", 40),
     trackingNumber: optional(fd, "trackingNumber", 40),
@@ -193,7 +198,9 @@ export async function createGuide(_: FormState, fd: FormData): Promise<FormState
   await store.create({ code, ...details, items: "", mode, events, stockApplied: [], createdAt: now, updatedAt: now });
   const warnings = await stockAfter(store, code);
   revalidatePath("/admin");
-  redirect(`/admin/guias/${code}?creada=1${warnings ? `&stock=${encodeURIComponent(warnings.slice(0, 600))}` : ""}`);
+  const mail = await notifyGuide(code);
+  const mailParam = mail?.sent ? "&correo=1" : mail?.error ? "&correo=0" : "";
+  redirect(`/admin/guias/${code}?creada=1${mailParam}${warnings ? `&stock=${encodeURIComponent(warnings.slice(0, 600))}` : ""}`);
 }
 
 /** Inventario al día con la guía. Devuelve los avisos de stock juntos, o "" si no hay. */
@@ -211,6 +218,13 @@ async function stockAfter(store: GuidesStore, code: string, opts?: { release?: b
 
 const withStock = (ok: string, warnings: string): FormState => (warnings ? { ok: `${ok} Inventario: ${warnings}` } : { ok });
 
+/** Revisa si toca escribirle al cliente y suma el resultado al mensaje del panel. */
+async function withMail(code: string, state: FormState): Promise<FormState> {
+  const mail = await notifyGuide(code);
+  if (!state?.ok || !mail) return state;
+  return { ok: `${state.ok} ${mail.sent ? `Le escribimos a ${mail.sent}.` : mail.error}` };
+}
+
 export async function updateDetails(code: string, _: FormState, fd: FormData): Promise<FormState> {
   await requireAdmin();
   const store = storeOrFail();
@@ -223,14 +237,14 @@ export async function updateDetails(code: string, _: FormState, fd: FormData): P
     if (typeof contact === "string") return { error: contact };
     await store.update(code, contact);
     revalidatePath(`/admin/guias/${code}`);
-    return { ok: "Datos de contacto y envío guardados. Los productos y montos están bloqueados." };
+    return withMail(code, { ok: "Datos de contacto y envío guardados. Los productos y montos están bloqueados." });
   }
   const details = detailsFrom(fd);
   if (typeof details === "string") return { error: details };
   await store.update(code, details);
   const warnings = await stockAfter(store, code);
   revalidatePath(`/admin/guias/${code}`);
-  return withStock("Datos guardados.", warnings);
+  return withMail(code, withStock("Datos guardados.", warnings));
 }
 
 /** Registrar un abono: el monto es el total recibido hasta ahora, no lo que se suma. */
@@ -272,7 +286,7 @@ export async function setManualStatus(code: string, _: FormState, fd: FormData):
   // Cancelar devuelve las unidades al inventario; reactivar un pedido cancelado las vuelve a apartar.
   const warnings = await stockAfter(store, code);
   revalidatePath(`/admin/guias/${code}`);
-  return withStock(status === "cancelado" ? "Pedido cancelado. Las unidades volvieron al inventario." : "Estado actualizado.", warnings);
+  return withMail(code, withStock(status === "cancelado" ? "Pedido cancelado. Las unidades volvieron al inventario." : "Estado actualizado.", warnings));
 }
 
 export async function saveSchedule(code: string, _: FormState, fd: FormData): Promise<FormState> {
@@ -281,7 +295,7 @@ export async function saveSchedule(code: string, _: FormState, fd: FormData): Pr
   if (typeof s === "string") return { error: s };
   await storeOrFail().update(code, { mode: "auto", events: s });
   revalidatePath(`/admin/guias/${code}`);
-  return { ok: "Calendario guardado: el estado avanzará solo en esas fechas." };
+  return withMail(code, { ok: "Calendario guardado: el estado avanzará solo en esas fechas." });
 }
 
 export async function deleteGuide(code: string): Promise<void> {

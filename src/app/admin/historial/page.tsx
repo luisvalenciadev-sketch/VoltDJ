@@ -15,6 +15,7 @@ const FILTERS: { id: AuditEntity | "todo"; label: string }[] = [
   { id: "configuracion", label: "Configuración" },
   { id: "contenido", label: "Contenido" },
   { id: "usuario", label: "Usuarios" },
+  { id: "correo", label: "Correos" },
 ];
 
 /** Se pueden deshacer los cambios de precio y de stock hechos a mano (no las ventas ni las guías). */

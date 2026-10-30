@@ -96,6 +96,10 @@ export interface OrderLine {
 export interface Guide {
   code: string;
   customerName: string;
+  /** Correo para los avisos del pedido (opcional). Nunca se muestra en la consulta pública. */
+  email?: string | null;
+  /** Pasos ya avisados por correo (src/lib/notify-rules.ts). */
+  notified?: string[];
   /** Solo para el panel (enviar el enlace por WhatsApp). Nunca se muestra en la consulta pública. */
   phone: string | null;
   city: string | null;

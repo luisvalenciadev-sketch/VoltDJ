@@ -13,6 +13,8 @@ import { catalogStore, ReadOnlyCatalogError } from "@/lib/catalog-store";
 import { contrast, MIN_ACCENT_CONTRAST, normalizeHex, readableAccent } from "@/lib/color";
 import { deleteMedia } from "@/lib/media";
 import { settingsStore } from "@/lib/settings-store";
+import { sendTest } from "@/lib/notifications";
+import { EMAIL_RE, NOTIFY_STATUSES, type NotifyStatus } from "@/lib/notify-rules";
 import { normalizeWhatsApp } from "@/lib/whatsapp";
 
 export type SettingsState = { error?: string; ok?: string; field?: string } | undefined;
@@ -198,4 +200,24 @@ export async function saveShipping(_: SettingsState, fd: FormData): Promise<Sett
   const cutoff = text(fd, "cutoff", 5);
   const sameDay = { enabled: fd.get("sameDay") === "on", cutoff: /^\d{1,2}:\d{2}$/.test(cutoff) ? cutoff : "14:00", area: text(fd, "sameDayArea", 60) };
   return save((s) => ({ ...s, shippingZones: zones, sameDay }), "los envíos");
+}
+
+export async function saveNotifications(_: SettingsState, fd: FormData): Promise<SettingsState> {
+  const ownerEmail = text(fd, "ownerEmail", 160).toLowerCase();
+  const replyTo = text(fd, "replyTo", 160).toLowerCase();
+  if (ownerEmail && !EMAIL_RE.test(ownerEmail)) return { error: "El correo de la tienda no parece válido.", field: "ownerEmail" };
+  if (replyTo && !EMAIL_RE.test(replyTo)) return { error: "El correo de respuesta no parece válido.", field: "replyTo" };
+  const statuses = Object.fromEntries(NOTIFY_STATUSES.map((s) => [s, fd.get(`n-${s}`) === "on"])) as Record<NotifyStatus, boolean>;
+  return save(
+    (s) => ({ ...s, notifications: { statuses, lowStock: fd.get("lowStock") === "on", ownerEmail: ownerEmail || null, replyTo: replyTo || null } }),
+    "las notificaciones",
+  );
+}
+
+export async function sendTestEmail(_: SettingsState, fd: FormData): Promise<SettingsState> {
+  const session = await requireOwner();
+  const to = text(fd, "to", 160).toLowerCase();
+  if (!EMAIL_RE.test(to)) return { error: "Escribe un correo válido para la prueba." };
+  const problem = await sendTest(session, to);
+  return problem ? { error: problem } : { ok: `Listo: revisa la bandeja de ${to} (y la carpeta de spam, la primera vez).` };
 }

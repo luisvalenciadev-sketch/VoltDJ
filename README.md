@@ -43,6 +43,15 @@ Se editan en el panel, en **Configuración** (`/admin/configuracion`), y se guar
 
 `src/config/store.ts` guarda solo los valores iniciales (`initialStore`, o `blankStore` con `CATALOG_SEED=none`) y lo que no cambia desde el panel (`SITE`: URL, idioma y moneda). Un valor vacío se muestra como "pendiente".
 
+### Correos al cliente
+
+Configuración → **Notificaciones**. El cliente recibe un correo en cada paso de su pedido (confirmado, enviado, en reparto, entregado, entrega fallida con enlace para reprogramar, reprogramado, cancelado) si la guía tiene su correo; el dueño recibe un aviso cuando un pedido deja un producto en stock bajo o agotado.
+
+- **Proveedores:** Gmail (sin dominio propio, con contraseña de aplicación) o Resend (con dominio verificado). Se eligen con variables de entorno en Vercel; las claves nunca pasan por el panel. Ver `.env.example` y `src/lib/mailer.ts`.
+- **Cuándo se envía:** al crear o cambiar la guía, cuando el cliente abre su página de seguimiento y en una revisión diaria (`/api/cron/notificaciones`, firmada con `CRON_SECRET`), para que los pedidos en modo automático también avisen. Si el pedido avanzó varios pasos sin avisar, sale un solo correo, el del paso más reciente (`src/lib/notify-rules.ts`).
+- **Nunca bloquea:** si el correo falla, el cambio ya quedó guardado, el error queda en el Historial (filtro Correos) y se reintenta en la siguiente oportunidad. El historial guarda el correo del cliente enmascarado (`l***@gmail.com`).
+- **Sin proveedor configurado**, la tienda funciona igual y simplemente no salen correos.
+
 ### Usuarios y permisos
 
 Se administran en `/admin/usuarios` (solo el dueño):
@@ -144,8 +153,8 @@ src/
 
 ```bash
 npm run typecheck
-npm test            # Vitest: lógica, componentes y contraste de los temas (211 pruebas)
-npm run test:e2e    # Playwright: escritorio, tablet, móvil, los cinco temas, panel de catálogo, configuración, ventas, contenido y usuarios (136 pruebas)
+npm test            # Vitest: lógica, componentes y contraste de los temas (223 pruebas)
+npm run test:e2e    # Playwright: escritorio, tablet, móvil, los cinco temas, panel de catálogo, configuración, ventas, contenido, correos y usuarios (139 pruebas)
 ```
 
 La primera vez, para las pruebas e2e: `npx playwright install chromium`. Usan el puerto 3217 y un número de WhatsApp ficticio de prueba.
