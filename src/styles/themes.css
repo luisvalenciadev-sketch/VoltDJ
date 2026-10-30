@@ -48,9 +48,15 @@
 
 /* ---------- Bodega: denso, filas con precio y disponibilidad al frente ---------- */
 [data-theme="bodega"] .hdr .row { padding-block: var(--s2); }
-[data-theme="bodega"] .hero .scene { display: none; }
-[data-theme="bodega"] .hero .stage { grid-template-areas: "copy"; grid-template-columns: minmax(0, 1fr); min-height: 0; }
+/* Portada compacta: la foto de portada se ve, pero en una franja baja (sin escena a pantalla completa). */
+[data-theme="bodega"] .hero .scene { min-height: 200px; }
+[data-theme="bodega"] .hero .bob { width: min(52%, 300px); }
 [data-theme="bodega"] .hero .copy { padding: var(--s5); }
+@media (min-width: 900px) {
+  [data-theme="bodega"] .hero .stage { grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr); min-height: 0; }
+  [data-theme="bodega"] .hero .scene { min-height: 360px; }
+  [data-theme="bodega"] .hero .bob { width: min(80%, 420px); }
+}
 [data-theme="bodega"] .hero h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); }
 [data-theme="bodega"] .sechead h2 { font-size: clamp(1.35rem, 2.6vw, 1.8rem); }
 [data-theme="bodega"] .grid-p { grid-template-columns: minmax(0, 1fr); gap: var(--s2); }
