@@ -103,12 +103,38 @@ test("las zonas de envío se eligen en el pedido y llegan en el mensaje", async 
   await expect(shop.locator("table.zones")).toContainText("Ibagué");
   await expect(shop.getByText("Pide antes de las 2:00 p. m. y despachamos el mismo día en Ibagué.")).toBeVisible();
 
-  await shop.evaluate(() => localStorage.setItem("voltdj.cart.v1", JSON.stringify([{ id: "pioneer-dj-ddj-flx6-gt", qty: 1, seenPrice: 2635000 }])));
-  await go(shop, "/pedido");
+  await shop.evaluate(() => localStorage.setItem("voltdj.cart.v1", JSON.stringify([{ id: "pioneer-dj-ddj-400", qty: 1, seenPrice: 850000 }])));
+  await go(shop, "/carrito");
   await shop.getByLabel("¿A dónde lo enviamos?").selectOption({ label: "Ibagué" });
   const preview = shop.getByTestId("message-preview");
   await expect(preview).toContainText("Envío a Ibagué: 1 día hábil, envío $ 10.000.");
   await expect(preview).toContainText("Medios de pago de la tienda: Transferencia bancaria, Addi (hasta 6 cuotas).");
+
+  // El pedido enviado queda en el panel y se convierte en guía con el mismo código, sin reescribir datos.
+  const name = `Pedido Web ${uid()}`;
+  await shop.getByLabel("Nombre y apellido *").fill(name);
+  await shop.getByLabel("Celular (WhatsApp) *").fill("3001234567");
+  await shop.getByLabel("Ciudad *").fill("Ibagué");
+  await shop.getByLabel("Dirección de entrega").fill("Calle 10 # 5-20");
+  const [popup] = await Promise.all([shop.waitForEvent("popup"), shop.getByTestId("send-whatsapp").click()]);
+  await popup.close();
+  const code = (await shop.getByTestId("order-code").textContent())!.trim();
+  expect(code).toMatch(/^VD-[A-Z2-9]{4}-[A-Z2-9]{4}$/);
+
+  await go(page, "/admin");
+  const row = page.locator(".draft-row", { hasText: code });
+  await expect(row).toContainText(name);
+  await expect(row).toContainText("$ 850.000");
+  await row.getByRole("link", { name: "Crear guía" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: `Guía del pedido ${code}` })).toBeVisible();
+  await expect(page.getByLabel("Nombre del cliente *")).toHaveValue(name);
+  await expect(page.getByLabel("Dirección de entrega")).toHaveValue("Calle 10 # 5-20");
+  await expect(page.getByLabel("Costo de envío")).toHaveValue("10.000");
+  await expect(page.locator(".order-lines")).toContainText("DDJ-400");
+  await page.getByRole("button", { name: "Crear guía" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(code, { timeout: 15_000 });
+  await go(page, "/admin");
+  await expect(page.locator(".draft-row", { hasText: code })).toHaveCount(0);
 });
 
 test("una guía con productos aparta el stock y al cancelarla lo devuelve", async ({ page }) => {

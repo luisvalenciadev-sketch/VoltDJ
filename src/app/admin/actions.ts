@@ -9,6 +9,7 @@ import { usersStore } from "@/lib/users-store";
 import { syncGuideStock } from "@/lib/guide-stock";
 import { notifyGuide } from "@/lib/notifications";
 import { EMAIL_RE } from "@/lib/notify-rules";
+import { draftsStore } from "@/lib/drafts-store";
 import { guidesStore, type GuidesStore } from "@/lib/guides-store";
 import {
   addManualStatus,
@@ -19,6 +20,7 @@ import {
   isStatus,
   validateRescheduleDay,
   localInputToISO,
+  normalizeGuideCode,
   orderTotals,
   parseCOP,
   STEPS,
@@ -139,7 +141,7 @@ function moneyFrom(fd: FormData, key: string, label: string): number | string {
   return v == null ? `"${label}" debe ser un valor en pesos, p. ej. 500.000.` : v;
 }
 
-type Contact = Pick<Guide, "customerName" | "phone" | "email" | "city" | "carrier" | "trackingNumber" | "publicNote">;
+type Contact = Pick<Guide, "customerName" | "phone" | "email" | "city" | "address" | "carrier" | "trackingNumber" | "publicNote">;
 /** Datos de contacto y envío: se pueden corregir en cualquier momento, incluso con el pedido bloqueado. */
 function contactFrom(fd: FormData): Contact | string {
   const customerName = text(fd, "customerName", 80);
@@ -154,6 +156,7 @@ function contactFrom(fd: FormData): Contact | string {
     phone,
     email: email || null,
     city: optional(fd, "city", 60),
+    address: optional(fd, "address", 120),
     carrier: optional(fd, "carrier", 40),
     trackingNumber: optional(fd, "trackingNumber", 40),
     publicNote: optional(fd, "publicNote", 200),
@@ -191,11 +194,17 @@ export async function createGuide(_: FormState, fd: FormData): Promise<FormState
   }
 
   const store = storeOrFail();
+  // Pedido de la web: la guía conserva el código que el cliente ya recibió al enviarlo.
+  const drafts = draftsStore();
+  const draftCode = normalizeGuideCode(text(fd, "draft", 20));
+  const draft = draftCode && drafts ? await drafts.get(draftCode) : null;
+  if (draft && draft.status !== "pendiente") return { error: `El pedido ${draft.code} ya fue ${draft.status === "convertido" ? "convertido en guía" : "descartado"}.` };
   // Colisión prácticamente imposible (31^8), pero se verifica igual.
-  let code = createGuideCode();
-  while (await store.get(code)) code = createGuideCode();
+  let code = draft && !(await store.get(draft.code)) ? draft.code : createGuideCode();
+  while (code !== draft?.code && (await store.get(code))) code = createGuideCode();
   const now = new Date().toISOString();
   await store.create({ code, ...details, items: "", mode, events, stockApplied: [], createdAt: now, updatedAt: now });
+  if (draft) await drafts!.update(draft.code, { status: "convertido", guideCode: code });
   const warnings = await stockAfter(store, code);
   revalidatePath("/admin");
   const mail = await notifyGuide(code);
@@ -296,6 +305,17 @@ export async function saveSchedule(code: string, _: FormState, fd: FormData): Pr
   await storeOrFail().update(code, { mode: "auto", events: s });
   revalidatePath(`/admin/guias/${code}`);
   return withMail(code, { ok: "Calendario guardado: el estado avanzará solo en esas fechas." });
+}
+
+// ---------- Pedidos de la web ----------
+
+/** Descartar un pedido de la web que no se concretó (el cliente no escribió, era una prueba…). */
+export async function discardDraft(code: string): Promise<void> {
+  await requireAdmin();
+  const drafts = draftsStore();
+  const draft = drafts ? await drafts.get(code) : null;
+  if (draft?.status === "pendiente") await drafts!.update(code, { status: "descartado" });
+  revalidatePath("/admin");
 }
 
 export async function deleteGuide(code: string): Promise<void> {

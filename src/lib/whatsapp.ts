@@ -3,8 +3,8 @@ import { discountPercent, formatCOP, unitPrice } from "./pricing";
 
 /**
  * Servicio centralizado de WhatsApp. Construye mensajes legibles y enlaces
- * wa.me (válidos en móvil y escritorio). No incluye datos personales: solo
- * productos, cantidades y, si el cliente lo escribe, la ciudad de envío.
+ * wa.me (válidos en móvil y escritorio). Del cliente solo viajan el nombre, la
+ * ciudad y la dirección: el celular y el correo quedan guardados en el pedido.
  */
 export const MAX_CITY_LENGTH = 60;
 
@@ -28,8 +28,11 @@ export function buildWhatsAppLink(text: string, number: string): string | null {
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }
 
+/** Texto del cliente en una sola línea: un salto de línea no puede inventar renglones en el mensaje. */
+const oneLine = (v: string | null | undefined, max: number) => (v ?? "").replace(/[\r\n\t]+/g, " ").replace(/\s{2,}/g, " ").trim().slice(0, max);
+
 export function sanitizeCity(city: string | undefined): string {
-  return (city ?? "").replace(/[\r\n\t]+/g, " ").replace(/\s{2,}/g, " ").trim().slice(0, MAX_CITY_LENGTH);
+  return oneLine(city, MAX_CITY_LENGTH);
 }
 
 export function buildOrderMessage(
@@ -37,6 +40,9 @@ export function buildOrderMessage(
   opts: {
     orderId: string;
     city?: string;
+    /** Nombre de quien pide: el asesor lo cruza con el pedido guardado. */
+    customerName?: string;
+    address?: string | null;
     storeName: string;
     /** Zona elegida en el pedido: el asesor ve el tiempo y el costo que el cliente leyó. */
     zone?: { name: string; days: string; cost: number | null } | null;
@@ -44,7 +50,10 @@ export function buildOrderMessage(
     payments?: string[];
   },
 ): string {
-  const out: string[] = [`Hola ${opts.storeName}, quiero consultar este pedido.`, `Pedido provisional: ${opts.orderId}`, ""];
+  const out: string[] = [`Hola ${opts.storeName}, quiero hacer este pedido.`, `Código de pedido: ${opts.orderId}`];
+  const name = oneLine(opts.customerName, 80);
+  if (name) out.push(`A nombre de: ${name}`);
+  out.push("");
   summary.orderable.forEach((line, i) => {
     out.push(`${i + 1}. ${line.product.name}`);
     out.push(`   Ref.: ${line.product.sku}`);
@@ -74,6 +83,8 @@ export function buildOrderMessage(
   }
   const city = sanitizeCity(opts.city);
   if (city) out.push(`Ciudad de envío: ${city}`);
+  const address = oneLine(opts.address, 120);
+  if (address) out.push(`Dirección: ${address}`);
   if (opts.payments?.length) out.push(`Medios de pago de la tienda: ${opts.payments.join(", ")}.`);
   out.push("", "¿Me confirman disponibilidad, costo de envío y tiempo de entrega?");
   return out.join("\n");
@@ -100,7 +111,7 @@ export function buildGeneralMessage(storeName: string, topic?: string): string {
   return topic ? `Hola ${storeName}, busco: ${topic.slice(0, 80)}. ¿Lo tienen o lo pueden conseguir?` : `Hola ${storeName}, quiero hacer una consulta.`;
 }
 
-/** Identificador provisional legible, p. ej. VD-261028-4F7K. No es una confirmación. */
+/** Identificador provisional legible, p. ej. VD-261028-4F7K, cuando el pedido no se pudo guardar. No es una confirmación. */
 export function createOrderId(prefix: string, date = new Date(), random = Math.random): string {
   const ymd =
     String(date.getFullYear()).slice(2) +

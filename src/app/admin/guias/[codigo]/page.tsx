@@ -63,6 +63,7 @@ export default async function GuideAdminPage({ params, searchParams }: { params:
           <p className="guide-meta">
             <b>{guide.customerName}</b>
             {guide.city && <span>{guide.city}</span>}
+            {guide.address && <span>{guide.address}</span>}
             <span className="status-chip" data-s={cur?.status ?? "none"}>
               {cur ? STATUS_LABEL[cur.status] : "Sin iniciar"}
             </span>

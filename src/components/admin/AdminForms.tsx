@@ -112,7 +112,9 @@ function Section({ n, title, hint, children }: { n: number; title: string; hint?
   );
 }
 
-function CustomerFields({ guide }: { guide?: Guide }) {
+type CustomerData = Pick<Guide, "customerName" | "phone" | "email" | "city" | "address">;
+
+function CustomerFields({ guide }: { guide?: CustomerData }) {
   return (
     <div className="admin-grid">
       <div className="field span-2">
@@ -132,6 +134,11 @@ function CustomerFields({ guide }: { guide?: Guide }) {
       <div className="field">
         <label htmlFor="city">Ciudad de entrega</label>
         <input id="city" name="city" className="input" maxLength={60} defaultValue={guide?.city ?? ""} />
+      </div>
+      <div className="field">
+        <label htmlFor="address">Dirección de entrega</label>
+        <input id="address" name="address" className="input" maxLength={120} defaultValue={guide?.address ?? ""} autoComplete="off" />
+        <span className="note">Para la transportadora. Nunca se muestra en la consulta.</span>
       </div>
     </div>
   );
@@ -424,11 +431,14 @@ function LivePreview({ events, totals, nowISO }: { events: TrackingEvent[]; tota
 
 // ---------- Nueva guía ----------
 
-export function NewGuideForm({ catalog, defaultStart, nowISO }: { catalog: CatalogOption[]; defaultStart: string; nowISO: string }) {
+/** Pedido de la web que se convierte en guía: llena el formulario con lo que el cliente envió. */
+export type DraftPrefill = CustomerData & { code: string; lines: OrderLine[]; shipping: number };
+
+export function NewGuideForm({ catalog, defaultStart, nowISO, draft }: { catalog: CatalogOption[]; defaultStart: string; nowISO: string; draft?: DraftPrefill }) {
   const [state, action, pending] = useActionState(createGuide, undefined);
   const [mode, setMode] = useState<"auto" | "manual">("auto");
-  const [lines, setLines] = useState<OrderLine[]>([]);
-  const [shipping, setShipping] = useState(0);
+  const [lines, setLines] = useState<OrderLine[]>(draft?.lines ?? []);
+  const [shipping, setShipping] = useState(draft?.shipping ?? 0);
   const [paid, setPaid] = useState(0);
   const [schedule, setSchedule] = useState<TrackingEvent[]>([]);
   const [initial, setInitial] = useState<StatusId>("confirmado");
@@ -438,8 +448,9 @@ export function NewGuideForm({ catalog, defaultStart, nowISO }: { catalog: Catal
   return (
     <form action={action} className="aform">
       <div className="aform-main">
+        {draft && <input type="hidden" name="draft" value={draft.code} />}
         <Section n={1} title="Cliente">
-          <CustomerFields />
+          <CustomerFields guide={draft} />
         </Section>
         <Section n={2} title="Pedido y pago" hint="Los precios salen del catálogo (con descuento vigente). Puedes ajustarlos si negociaste otro.">
           <OrderEditor catalog={catalog} lines={lines} setLines={setLines} shipping={shipping} setShipping={setShipping} paid={paid} setPaid={setPaid} />

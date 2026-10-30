@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { discardDraft } from "@/app/admin/actions";
 import { requireAdmin } from "@/lib/admin-auth";
+import { draftsStore } from "@/lib/drafts-store";
 import { guidesStore } from "@/lib/guides-store";
+import { draftSubtotal, draftUnits } from "@/lib/order-drafts";
 import { formatCOP } from "@/lib/pricing";
 import { currentStatus, formatTrackingDate, nextScheduled, orderTotals, STATUS_LABEL, type Guide } from "@/lib/tracking";
 
@@ -33,6 +36,10 @@ export default async function AdminHome({ searchParams }: { searchParams: Search
   for (const g of all) counts[tabOf(g)]++;
   const matches = (g: Guide) => !q || [g.code, g.customerName, g.city ?? "", g.trackingNumber ?? ""].some((v) => v.toLowerCase().includes(q));
   const guides = all.filter((g) => (tab === "todas" || tabOf(g) === tab) && matches(g));
+  // Pedidos enviados desde el carrito que aún no son guía: la búsqueda también los encuentra por código.
+  const drafts = ((await draftsStore()?.list()) ?? []).filter(
+    (d) => d.status === "pendiente" && (!q || [d.code, d.customerName, d.city, d.phone].some((v) => v.toLowerCase().includes(q))),
+  );
   // Lo que falta por cobrar en pedidos activos: el número que más le importa a la tienda a diario.
   const toCollect = all.filter((g) => tabOf(g) === "curso").reduce((s, g) => s + orderTotals(g).pending, 0);
   const href = (t: Tab) => `/admin?ver=${t}${q ? `&q=${encodeURIComponent(q)}` : ""}`;
@@ -82,6 +89,45 @@ export default async function AdminHome({ searchParams }: { searchParams: Search
               <b className="num">{counts.entregados}</b>
             </div>
           </div>
+
+          {drafts.length > 0 && (
+            <section className="drafts" aria-labelledby="h-drafts">
+              <h2 id="h-drafts">
+                Pedidos de la web por confirmar <span className="num note">{drafts.length}</span>
+              </h2>
+              <p className="note">Llegaron desde el carrito con el código que el cliente te envía por WhatsApp. Al crear la guía se conserva el mismo código.</p>
+              <ul className="guide-list">
+                {drafts.map((d) => (
+                  <li key={d.code} className="draft-row">
+                    <span className="gr-main">
+                      <b>{d.customerName}</b>
+                      <span className="mono">{d.code}</span>
+                      <span className="note">
+                        {d.city}
+                        {d.zone ? ` · ${d.zone.name}` : ""}
+                      </span>
+                    </span>
+                    <span className="gr-money">
+                      <b className="num">{formatCOP(draftSubtotal(d))}</b>
+                      <span className="note">
+                        {draftUnits(d)} {draftUnits(d) === 1 ? "unidad" : "unidades"} · {formatTrackingDate(d.createdAt)}
+                      </span>
+                    </span>
+                    <span className="gr-acts">
+                      <Link className="btn btn-primary btn-sm" href={`/admin/guias/nueva?pedido=${d.code}`}>
+                        Crear guía
+                      </Link>
+                      <form action={discardDraft.bind(null, d.code)}>
+                        <button type="submit" className="textbtn danger">
+                          Descartar
+                        </button>
+                      </form>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           <div className="list-tools">
             <nav className="tabs" aria-label="Filtrar guías">

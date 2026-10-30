@@ -109,16 +109,3 @@ export function SavingsRows({ summary: s }: { summary: Pick<CartSummary, "listSu
     </>
   );
 }
-
-export function Steps({ current }: { current: 0 | 1 }) {
-  const labels = ["1 Carrito", "2 Resumen", "3 WhatsApp"];
-  return (
-    <ol className="steps" aria-label="Progreso del pedido">
-      {labels.map((s, i) => (
-        <li key={s} aria-current={i === current ? "step" : undefined} className={i < current ? "done" : undefined}>
-          {s}
-        </li>
-      ))}
-    </ol>
-  );
-}

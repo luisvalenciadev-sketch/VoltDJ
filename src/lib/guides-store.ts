@@ -20,6 +20,7 @@ type Row = {
   customer_name: string;
   phone: string | null;
   city: string | null;
+  address: string | null;
   items: string;
   lines: Guide["lines"] | null;
   shipping: string | number | null;
@@ -41,6 +42,7 @@ const toGuide = (r: Row): Guide => ({
   customerName: r.customer_name,
   phone: r.phone,
   city: r.city,
+  address: r.address ?? null,
   items: r.items,
   lines: r.lines ?? [],
   // bigint llega como texto desde Postgres
@@ -87,6 +89,7 @@ function neonStore(url: string): GuidesStore {
           add column if not exists paid bigint not null default 0,
           add column if not exists stock_applied jsonb,
           add column if not exists email text,
+          add column if not exists address text,
           add column if not exists notified jsonb not null default '[]'::jsonb`; // sin valor = guía anterior al inventario conectado
     })().catch((e) => {
       ready = null; // reintenta en la siguiente petición si Neon estaba despertando
@@ -106,8 +109,8 @@ function neonStore(url: string): GuidesStore {
     async create(g) {
       await schema();
       await sql`
-        insert into guides (code, customer_name, phone, city, items, lines, shipping, paid, carrier, tracking_number, mode, events, public_note, stock_applied, email, notified)
-        values (${g.code}, ${g.customerName}, ${g.phone}, ${g.city}, ${g.items}, ${JSON.stringify(g.lines)}::jsonb, ${g.shipping}, ${g.paid}, ${g.carrier}, ${g.trackingNumber}, ${g.mode}, ${JSON.stringify(g.events)}::jsonb, ${g.publicNote}, ${g.stockApplied ? JSON.stringify(g.stockApplied) : null}::jsonb, ${g.email ?? null}, ${JSON.stringify(g.notified ?? [])}::jsonb)`;
+        insert into guides (code, customer_name, phone, city, address, items, lines, shipping, paid, carrier, tracking_number, mode, events, public_note, stock_applied, email, notified)
+        values (${g.code}, ${g.customerName}, ${g.phone}, ${g.city}, ${g.address ?? null}, ${g.items}, ${JSON.stringify(g.lines)}::jsonb, ${g.shipping}, ${g.paid}, ${g.carrier}, ${g.trackingNumber}, ${g.mode}, ${JSON.stringify(g.events)}::jsonb, ${g.publicNote}, ${g.stockApplied ? JSON.stringify(g.stockApplied) : null}::jsonb, ${g.email ?? null}, ${JSON.stringify(g.notified ?? [])}::jsonb)`;
     },
     async update(code, p) {
       await schema();
@@ -116,7 +119,7 @@ function neonStore(url: string): GuidesStore {
       const g = { ...toGuide(cur[0]), ...p };
       await sql`
         update guides set
-          customer_name = ${g.customerName}, phone = ${g.phone}, city = ${g.city}, items = ${g.items},
+          customer_name = ${g.customerName}, phone = ${g.phone}, city = ${g.city}, address = ${g.address ?? null}, items = ${g.items},
           lines = ${JSON.stringify(g.lines)}::jsonb, shipping = ${g.shipping}, paid = ${g.paid},
           carrier = ${g.carrier}, tracking_number = ${g.trackingNumber}, mode = ${g.mode},
           events = ${JSON.stringify(g.events)}::jsonb, public_note = ${g.publicNote},

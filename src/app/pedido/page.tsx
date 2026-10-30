@@ -1,14 +1,6 @@
-import type { Metadata } from "next";
-import { OrderView } from "@/components/OrderView";
-import { getCartCatalog } from "@/data/catalog";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Pedido por WhatsApp", robots: { index: false } };
-
-export default async function OrderPage() {
-  const catalog = await getCartCatalog();
-  return (
-    <div className="wrap">
-      <OrderView catalog={catalog} />
-    </div>
-  );
+/** El pedido se arma y se envía desde el carrito; esta dirección queda para enlaces viejos. */
+export default function OrderPage() {
+  redirect("/carrito");
 }

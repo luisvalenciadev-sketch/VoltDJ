@@ -103,6 +103,8 @@ export interface Guide {
   /** Solo para el panel (enviar el enlace por WhatsApp). Nunca se muestra en la consulta pública. */
   phone: string | null;
   city: string | null;
+  /** Dirección de entrega para la transportadora. Solo panel: nunca se muestra en la consulta pública. */
+  address?: string | null;
   lines: OrderLine[];
   /** Costo de envío en COP (0 si va incluido o se cobra aparte). */
   shipping: number;

@@ -6,6 +6,7 @@ import { TrackingStepper } from "@/components/TrackingTimeline";
 import { WhatsAppIcon } from "@/components/icons";
 import { Breadcrumbs } from "@/components/ui";
 import { getStore } from "@/data/store";
+import { draftsStore } from "@/lib/drafts-store";
 import { guidesStore } from "@/lib/guides-store";
 import { notifyGuide } from "@/lib/notifications";
 import { formatCOP } from "@/lib/pricing";
@@ -32,6 +33,29 @@ export default async function TrackingPage({ params }: { params: Params }) {
   // escribe después de responder la página (no la demora).
   if (guide?.email) after(() => notifyGuide(guide.code));
   const crumbs = [{ label: "Inicio", href: "/" }, { label: "Rastrear pedido", href: "/seguimiento" }, { label: code ?? "Guía" }];
+
+  // Pedido enviado desde el carrito que el asesor aún no confirma: mismo código, todavía sin guía.
+  const draft = !guide && code ? await draftsStore()?.get(code) : null;
+  if (draft?.status === "pendiente") {
+    const help = buildWhatsAppLink(`Hola ${shop.name}, quiero saber de mi pedido ${draft.code}.`, shop.whatsappNumber);
+    return (
+      <div className="wrap track">
+        <Breadcrumbs items={crumbs} />
+        <div className="empty">
+          <span className="eyebrow">Tu pedido {draft.code}</span>
+          <h1 className="disp" style={{ fontSize: "var(--t-xl)" }}>
+            Recibimos tu pedido
+          </h1>
+          <p>Un asesor lo revisará y te escribirá por WhatsApp para confirmar disponibilidad, envío y forma de pago. Cuando lo confirme, aquí verás cada paso de la entrega.</p>
+          {help && (
+            <a className="btn btn-secondary" href={help} target="_blank" rel="noopener noreferrer">
+              <WhatsAppIcon /> Escribir por WhatsApp
+            </a>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (!guide) {
     const help = buildWhatsAppLink(`Hola ${shop.name}, no encuentro mi pedido con el código ${code ?? ""}. ¿Me ayudan?`, shop.whatsappNumber);

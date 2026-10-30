@@ -63,31 +63,43 @@ test("flujo completo: categoría → producto → carrito → pedido por WhatsAp
   await expect(page.getByTestId("subtotal")).toHaveText("$ 2.465.000");
   await expectCtaReachable(page);
 
-  await page.getByRole("link", { name: "Revisar pedido" }).click();
-  await page.getByLabel(/Ciudad de envío/).fill("Bogotá D.C.");
+  // Sin datos no se envía: el carrito pide nombre, celular y ciudad antes de abrir WhatsApp.
+  await page.getByTestId("send-whatsapp").click();
+  await expect(page.getByText("Escribe tu nombre y apellido.")).toBeVisible();
+
+  await page.getByLabel("Nombre y apellido *").fill("Cliente Web");
+  await page.getByLabel("Celular (WhatsApp) *").fill("300 123 4567");
+  await page.getByLabel("Ciudad *").fill("Bogotá D.C.");
+  await page.getByLabel("Dirección de entrega").fill("Calle 1 # 2-3");
   const preview = page.getByTestId("message-preview");
   await expect(preview).toContainText("Ciudad de envío: Bogotá D.C.");
-
   await expectCtaReachable(page);
-  const href = await page.getByTestId("send-whatsapp").getAttribute("href");
+
+  // Al pulsar se guarda el pedido y se abre WhatsApp en otra pestaña con su código.
+  const [popup] = await Promise.all([page.waitForEvent("popup"), page.getByTestId("send-whatsapp").click()]);
+  await popup.close();
+  const code = page.getByTestId("order-code");
+  await expect(code).toHaveText(/^VD-[A-Z2-9]{4}-[A-Z2-9]{4}$/);
+  const href = await page.getByTestId("whatsapp-link").getAttribute("href");
   const url = new URL(href!);
   expect(url.host).toBe("wa.me");
   expect(url.pathname).toBe("/570000000000");
   const text = url.searchParams.get("text")!;
   expect(text).toBe(await preview.textContent());
+  expect(text).toContain(`Código de pedido: ${await code.textContent()}\nA nombre de: Cliente Web`);
   expect(text).toContain("Pioneer DJ DDJ-FLX4\n   Ref.: DDJ-FLX4\n   Cantidad: 1\n   Precio unitario: $ 1.105.000 · Total: $ 1.105.000");
   expect(text).toContain("Yamaha HS5\n   Ref.: HS5\n   Cantidad: 1");
   expect(text).toContain("Precio normal: $ 1.300.000 (−15% de descuento)");
   expect(text).toContain("Descuento: −$ 435.000");
   expect(text).toContain("Subtotal estimado: $ 2.465.000");
-  expect(text).toMatch(/Pedido provisional: VD-\d{6}-[A-Z2-9]{4}/);
+  expect(text).toContain("Dirección: Calle 1 # 2-3");
   expect(href).not.toMatch(/[\s\n]/);
-
-  // Al pulsar se abre WhatsApp en otra pestaña; la tienda no afirma que el pedido fue recibido.
-  const [popup] = await Promise.all([page.waitForEvent("popup"), page.getByTestId("send-whatsapp").click()]);
-  await popup.close();
-  await expect(page.getByText(/Abrimos WhatsApp con tu pedido VD-/)).toBeVisible();
+  // La tienda no afirma que el pedido fue confirmado: eso lo hace el asesor.
   await expect(page.getByText(/pedido (recibido|confirmado)/i)).toHaveCount(0);
+
+  // Con el mismo código, el seguimiento dice que el pedido llegó y espera confirmación.
+  await page.goto(`/seguimiento/${await code.textContent()}`);
+  await expect(page.getByRole("heading", { level: 1, name: "Recibimos tu pedido" })).toBeVisible();
 });
 
 test("búsqueda sin resultados muestra estado vacío con salida", async ({ page }) => {
@@ -143,11 +155,11 @@ test("producto inexistente devuelve 404", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
 });
 
-const PAGES = ["/", "/catalogo", "/catalogo/controladores", "/producto/pioneer-dj-cdj-3000", "/carrito", "/pedido", "/contacto", "/envios-y-garantias", "/preguntas-frecuentes", "/seguimiento", "/admin/ingresar", "/privacidad", "/terminos"];
+const PAGES = ["/", "/catalogo", "/catalogo/controladores", "/producto/pioneer-dj-cdj-3000", "/carrito", "/contacto", "/envios-y-garantias", "/preguntas-frecuentes", "/seguimiento", "/admin/ingresar", "/privacidad", "/terminos"];
 
 for (const path of PAGES) {
   test(`sin scroll horizontal ni errores de accesibilidad graves: ${path}`, async ({ page }) => {
-    if (path === "/carrito" || path === "/pedido") {
+    if (path === "/carrito") {
       await page.goto("/");
       await page.evaluate(() => localStorage.setItem("voltdj.cart.v1", JSON.stringify([{ id: "pioneer-dj-xdj-rx2-edicion-limitada", qty: 1, seenPrice: 4500000 }, { id: "electro-voice-zlx-15p-g2", qty: 1, seenPrice: 2300000 }, { id: "pioneer-dj-ddj-flx2", qty: 1, seenPrice: 800000 }])));
     }

@@ -51,11 +51,12 @@ describe("buildOrderMessage", () => {
 
   it("incluye tienda, ID, nombre, referencia, cantidad, precios, subtotal y consulta de envío", () => {
     const summary = summarize([{ id: "a", qty: 1, seenPrice: null }, { id: "b", qty: 2, seenPrice: null }], catalog);
-    const msg = buildOrderMessage(summary, { orderId: "VD-261028-ABCD", storeName: "VOLT DJ", city: "Medellín" });
+    const msg = buildOrderMessage(summary, { orderId: "VD-AB2C-DE3F", storeName: "VOLT DJ", city: "Medellín", customerName: "Ana  Gómez\n", address: "Cra 1 # 2-3" });
     expect(msg).toBe(
       [
-        "Hola VOLT DJ, quiero consultar este pedido.",
-        "Pedido provisional: VD-261028-ABCD",
+        "Hola VOLT DJ, quiero hacer este pedido.",
+        "Código de pedido: VD-AB2C-DE3F",
+        "A nombre de: Ana Gómez",
         "",
         "1. Controlador DJ",
         "   Ref.: VD-CTR-002",
@@ -72,6 +73,7 @@ describe("buildOrderMessage", () => {
         "Subtotal estimado: $ 2.870.000",
         "No incluye envío.",
         "Ciudad de envío: Medellín",
+        "Dirección: Cra 1 # 2-3",
         "",
         "¿Me confirman disponibilidad, costo de envío y tiempo de entrega?",
       ].join("\n"),
@@ -91,6 +93,7 @@ describe("buildOrderMessage", () => {
     expect(msg).toContain("(sin incluir productos con precio por confirmar)");
     expect(msg).not.toContain("Producto d");
     expect(msg).not.toContain("Ciudad de envío");
+    expect(msg).not.toMatch(/A nombre de|Dirección/);
   });
 
   it("no afirma que el pedido esté confirmado", () => {

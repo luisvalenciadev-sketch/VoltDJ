@@ -146,15 +146,16 @@ src/
 
 - **Carrito:** guarda en `localStorage` solo `{id, qty, seenPrice}`. Precio, promoción y disponibilidad se recalculan siempre contra el catálogo. Se avisan precios cambiados, productos retirados o agotados y cantidades por encima del máximo. Se sincroniza entre pestañas.
 - **El precio del navegador no es una fuente confiable.** Si en el futuro se añaden pagos en línea, el servidor debe recalcular el total desde el catálogo antes de cobrar.
-- **WhatsApp** (`src/lib/whatsapp.ts`): construye el mensaje y el enlace `https://wa.me/{número}?text={encodeURIComponent(mensaje)}`. El mensaje incluye tienda, ID provisional, productos, referencias, cantidades, precios, subtotal y consulta de envío. No incluye datos personales: la ciudad es opcional y se limpia. Tras abrir WhatsApp la tienda nunca dice "pedido recibido".
+- **Pedido** (`/carrito`): carrito, datos de envío (nombre, celular y ciudad obligatorios; zona, dirección y correo opcionales) y envío en una sola página. Al enviar, `src/app/carrito/actions.ts` recalcula productos y precios con el catálogo y guarda un **pedido de la web** (`src/lib/drafts-store.ts`, tabla `order_drafts`) con un código `VD-XXXX-XXXX`. En el panel aparece en "Pedidos de la web por confirmar"; "Crear guía" llena el formulario y la guía conserva ese mismo código, que el cliente ya puede consultar en `/seguimiento`. Sin base de datos, el pedido sale igual por WhatsApp con un ID provisional (prefijo de la configuración). `/pedido` redirige al carrito.
+- **WhatsApp** (`src/lib/whatsapp.ts`): construye el mensaje y el enlace `https://wa.me/{número}?text={encodeURIComponent(mensaje)}`. El mensaje incluye tienda, código del pedido, nombre, productos, referencias, cantidades, precios, subtotal, zona, ciudad y dirección. El celular y el correo no viajan en el mensaje: quedan en el pedido guardado. Tras abrir WhatsApp la tienda nunca dice "pedido recibido".
 - **Filtros** en la URL (`?q=&marca=&disponibilidad=&promo=1&min=&max=&orden=`), renderizados en el servidor; las URL se pueden compartir.
 
 ## Pruebas
 
 ```bash
 npm run typecheck
-npm test            # Vitest: lógica, componentes y contraste de los temas (223 pruebas)
-npm run test:e2e    # Playwright: escritorio, tablet, móvil, los cinco temas, panel de catálogo, configuración, ventas, contenido, correos y usuarios (139 pruebas)
+npm test            # Vitest: lógica, componentes y contraste de los temas (229 pruebas)
+npm run test:e2e    # Playwright: escritorio, tablet, móvil, los cinco temas, panel de catálogo, configuración, ventas, contenido, correos y usuarios (136 pruebas)
 ```
 
 La primera vez, para las pruebas e2e: `npx playwright install chromium`. Usan el puerto 3217 y un número de WhatsApp ficticio de prueba.
