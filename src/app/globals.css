@@ -216,7 +216,7 @@ img.cover { width: 100% !important; height: 100% !important; object-fit: cover; 
 .hero .lead { color: color-mix(in srgb, var(--fg) 82%, transparent); font-size: clamp(var(--t-md), 1.6vw, var(--t-lg)); max-width: 46ch; }
 .hero .ctas { display: flex; flex-wrap: wrap; gap: var(--s3); margin-top: var(--s5); }
 .hero .ctas .btn-ghost { background: color-mix(in srgb, var(--bg) 40%, transparent); border-color: color-mix(in srgb, var(--fg) 28%, transparent); backdrop-filter: blur(6px); }
-.hero .facts { display: none; }
+.hero .facts, .hero .spot-more { display: none; }
 
 /* Modelo del producto estrella en letra gigante, solo el contorno, detrás de la escena: da escala. */
 .hero .ghost { position: absolute; grid-area: scene; left: 50%; top: 50%; translate: -50% -60%; z-index: 0; pointer-events: none; user-select: none; white-space: nowrap; font-family: var(--f-display); font-stretch: var(--disp-stretch); font-weight: 800; text-transform: uppercase; line-height: 0.8; letter-spacing: -0.02em; font-size: clamp(5.5rem, 30vw, 15rem); color: transparent; -webkit-text-stroke: 1px color-mix(in srgb, var(--fg) 18%, transparent); animation: fade 1.2s var(--ease-out) 200ms both; }

@@ -116,17 +116,31 @@
 [data-theme="bodega"] .hero .facts li + li { border-left: 1px solid var(--border); }
 [data-theme="bodega"] .hero .facts b { font: 800 var(--t-2xl)/1 var(--f-display); color: var(--accent); letter-spacing: 0; }
 @media (min-width: 900px) {
-  [data-theme="bodega"] .hero .stage { grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr); grid-template-rows: 0 auto auto 0; min-height: 0; }
+  /* Si el panel derecho es más alto, el sobrante va entre los botones y las cifras, que quedan al pie. */
+  [data-theme="bodega"] .hero .stage { grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr); grid-template-rows: 0 auto 1fr 0; min-height: 0; }
   [data-theme="bodega"] .hero .head { padding: var(--s6) var(--s6) var(--s2); }
-  [data-theme="bodega"] .hero .foot { padding: var(--s2) var(--s6) 0; }
-  [data-theme="bodega"] .hero .facts { margin-inline: calc(-1 * var(--s6)); }
+  [data-theme="bodega"] .hero .foot { display: flex; flex-direction: column; padding: var(--s2) var(--s6) 0; }
+  [data-theme="bodega"] .hero .facts { margin-inline: calc(-1 * var(--s6)); margin-top: auto; }
+  [data-theme="bodega"] .hero .ctas { margin-bottom: var(--s5); }
   [data-theme="bodega"] .hero .facts li { padding-inline: var(--s6); }
   /* El destacado ocupa toda la columna derecha, hasta la franja de cifras: un panel, no una caja flotando. */
-  [data-theme="bodega"] .hero .scene { margin: 0; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr); gap: var(--s5); padding: var(--s6); border: 0; border-left: 1px solid var(--border); border-radius: 0; background: var(--bg); }
+  [data-theme="bodega"] .hero .scene { margin: 0; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr); align-content: center; gap: var(--s5); padding: var(--s6); border: 0; border-left: 1px solid var(--border); border-radius: 0; background: var(--bg); }
   [data-theme="bodega"] .hero h1 { font-size: clamp(2.8rem, min(4.6vw, 8svh), 4.4rem); }
+  /* Debajo del destacado, una lista corta de otros destacados: el panel deja de verse vacío y sirve para comparar. */
+  [data-theme="bodega"] .hero .spot-more { display: grid; grid-column: 1 / -1; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--border); }
+  [data-theme="bodega"] .hero .spot-more::before { content: "Más destacados"; padding: var(--s3) 0 var(--s1); font: 500 var(--t-xs)/1 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-2); }
+  [data-theme="bodega"] .hero .spot-more a { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; align-items: center; gap: var(--s3); padding: var(--s2) 0; border-bottom: 1px solid var(--border); color: var(--fg); text-decoration: none; }
+  [data-theme="bodega"] .hero .spot-more .sm-img { display: grid; place-items: center; width: 56px; height: 56px; overflow: hidden; border-radius: var(--r); background: var(--photo); }
+  [data-theme="bodega"] .hero .spot-more .sm-img > :is(img, svg) { width: 86%; height: 86%; object-fit: contain; }
+  [data-theme="bodega"] .hero .spot-more .sm-img > img.cover { width: 100%; height: 100%; object-fit: cover; }
+  [data-theme="bodega"] .hero .spot-more .sm-name { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: var(--t-sm); font-weight: 600; transition: color var(--d-hover) var(--ease); }
+  [data-theme="bodega"] .hero .spot-more .price { flex-wrap: nowrap; }
+  [data-theme="bodega"] .hero .spot-more .price s { display: none; }
+  [data-theme="bodega"] .hero .spot-more .price b { font-size: var(--t-md); }
+  @media (hover: hover) and (pointer: fine) { [data-theme="bodega"] .hero .spot-more a:hover .sm-name { color: var(--accent); } }
 }
 /* El precio como etiqueta amarilla de bodega (con muesca), en la portada, las filas y los destacados. */
-[data-theme="bodega"] :is(.card, .hero .spot, .billboard) .price b { display: inline-block; padding: 3px 8px 3px 16px; background: var(--accent); color: var(--accent-ink); font-family: var(--f-display); font-weight: 800; letter-spacing: 0.02em; clip-path: polygon(8px 0, 100% 0, 100% 100%, 8px 100%, 0 50%); }
+[data-theme="bodega"] :is(.card, .hero .spot, .hero .spot-more, .billboard) .price b { display: inline-block; padding: 3px 8px 3px 16px; background: var(--accent); color: var(--accent-ink); font-family: var(--f-display); font-weight: 800; letter-spacing: 0.02em; clip-path: polygon(8px 0, 100% 0, 100% 100%, 8px 100%, 0 50%); }
 [data-theme="bodega"] .ticker { background: var(--accent); color: var(--accent-ink); }
 [data-theme="bodega"] .sechead h2 { font-size: clamp(1.9rem, 4vw, 2.6rem); line-height: 0.95; }
 [data-theme="bodega"] .grid-p { grid-template-columns: minmax(0, 1fr); gap: var(--s2); }

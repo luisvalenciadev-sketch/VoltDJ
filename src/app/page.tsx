@@ -56,6 +56,7 @@ export default async function HomePage() {
   const starBrand = star ? brandName(star.brandId) : "";
   const starModel = star ? (star.name.startsWith(`${starBrand} `) ? star.name.slice(starBrand.length + 1) : star.name) : "";
   const starOff = star ? discountPercent(star) : 0;
+  const moreStars = featured.filter((p) => p.id !== star?.id).slice(0, 3);
   // Una frase por línea y la última resaltada: "Tu sonido. Tu energía. Tu escenario." da tres líneas.
   const lines = (store.tagline || store.name).split(/(?<=[.!?])\s+/).filter(Boolean);
   const last = lines.pop() ?? "";
@@ -291,6 +292,22 @@ export default async function HomePage() {
                   <span className="spot-name">{star.name}</span>
                   <Price price={star.price} promoPrice={star.promoPrice} />
                 </Link>
+              )}
+              {/* Lista corta de otros destacados: solo la muestra Bodega en escritorio, donde el panel sobra. */}
+              {moreStars.length > 0 && (
+                <ul className="spot-more" aria-label="Más destacados">
+                  {moreStars.map((p) => (
+                    <li key={p.id}>
+                      <Link href={`/producto/${p.slug}`}>
+                        <span className="sm-img" aria-hidden="true">
+                          <ProductMedia image={p.images[0] ?? null} art={p.art} sizes="64px" />
+                        </span>
+                        <span className="sm-name">{p.name}</span>
+                        <Price price={p.price} promoPrice={p.promoPrice} />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
             <div className="foot">
