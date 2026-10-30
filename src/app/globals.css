@@ -238,16 +238,31 @@ img.cover { width: 100% !important; height: 100% !important; object-fit: cover; 
 .hero .spot-name { font-size: var(--t-sm); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hero .spot .price b { font-family: var(--f-display); font-stretch: 105%; font-weight: 800; font-size: var(--t-lg); color: var(--accent); }
 
+/*
+ * En celular, lo primero que se ve es título, producto, ficha con precio y el botón principal; la
+ * descripción va después de los botones. La escena se encoge en pantallas bajas.
+ */
 @media (max-width: 899px) {
-  .hero .scene { min-height: min(84vw, 380px); }
+  .hero .head { padding-top: var(--s4); }
+  .hero .scene { min-height: min(84vw, 380px, 40svh); }
+  .hero .foot { padding-top: 0; }
   .hero .bob { width: min(68%, 420px); translate: 0 -12%; }
+  .hero .foot { display: flex; flex-direction: column; }
+  .hero .foot .ctas { order: -1; margin-top: var(--s2); }
+  .hero .foot .lead { margin-top: var(--s4); }
 }
+/*
+ * Escritorio: la portada cabe en la pantalla debajo del encabezado (~220 px) y el texto queda centrado
+ * en vertical con filas de relleno. Con dos filas iguales (1fr 1fr) medía el doble del bloque más alto
+ * y la ficha del precio quedaba bajo el borde. El título también se achica en pantallas bajas.
+ */
 @media (min-width: 900px) {
-  .hero .stage { grid-template-areas: "head scene" "foot scene"; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); grid-template-rows: 1fr 1fr; min-height: min(80svh, 720px); }
+  .hero .stage { grid-template-areas: ". scene" "head scene" "foot scene" ". scene"; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); grid-template-rows: 1fr auto auto 1fr; min-height: clamp(460px, calc(100svh - 220px), 700px); }
   .hero .scene { min-height: 100%; }
-  .hero .head { align-self: end; padding: var(--s7) 0 0 var(--s7); }
-  .hero .foot { align-self: start; padding: var(--s4) 0 var(--s7) var(--s7); }
-  .hero h1 { font-size: clamp(2.2rem, 3.9vw, 4rem); } /* cada línea del lema en una sola fila */
+  .hero .head { padding: var(--s6) 0 0 var(--s7); }
+  .hero .foot { padding: var(--s4) 0 var(--s6) var(--s7); }
+  .hero .ctas { margin-top: var(--s4); }
+  .hero h1 { font-size: clamp(2.2rem, min(3.9vw, 7.4svh), 3.2rem); } /* cada línea del lema en una sola fila, también con el contenedor a tope (1240 px) */
   .hero .ghost { font-size: clamp(8rem, 13vw, 14rem); left: 72%; }
   .hero .spot { left: auto; right: var(--s6); bottom: var(--s6); }
   /* El espectro cruza bajo el texto: un velo lateral lo apaga ahí para que el texto se lea siempre. */
@@ -305,6 +320,13 @@ img.cover { width: 100% !important; height: 100% !important; object-fit: cover; 
 .billboard .go::after { content: "→"; transition: transform var(--d-hover) var(--ease-out); }
 .billboard:active .go { transform: scale(0.97); }
 @media (hover: hover) and (pointer: fine) { .billboard:hover .go::after { transform: translateX(4px); } }
+/* En celular la banda es más baja (foto apaisada): cuatro destacados no deben ocupar dos pantallas. */
+@media (max-width: 899px) {
+  .billboard .pose { padding: var(--s5) var(--s5) 0; }
+  .billboard .angle { aspect-ratio: 16 / 11; max-width: 420px; }
+  .billboard .txt { padding: var(--s2) var(--s5) var(--s5); }
+  .billboard h3 { font-size: clamp(2rem, 9vw, 3rem); }
+}
 @media (min-width: 900px) {
   .billboard { grid-template-areas: "pose txt"; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); min-height: 520px; align-items: center; }
   .billboard:nth-child(even) { grid-template-areas: "txt pose"; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); }

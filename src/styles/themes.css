@@ -44,7 +44,7 @@
 [data-theme="vitrina"] .hero .facts li { padding: 6px 10px; border: 1px solid var(--border-strong); border-radius: var(--r); font-size: var(--t-sm); color: var(--fg-2); }
 [data-theme="vitrina"] .hero .facts b { font: 800 var(--t-md)/1 var(--f-display); color: var(--fg); margin-right: 4px; }
 @media (min-width: 900px) {
-  [data-theme="vitrina"] .hero h1 { font-size: clamp(3rem, 5.6vw, 5.75rem); }
+  [data-theme="vitrina"] .hero h1 { font-size: clamp(2.8rem, min(5.6vw, 8.6svh), 5.75rem); }
   [data-theme="vitrina"] .hero .halo { top: 0; bottom: 0; left: 8%; right: 0; }
   [data-theme="vitrina"] .hero .spot { left: var(--s5); right: auto; bottom: var(--s7); }
 }
@@ -83,7 +83,7 @@
 @media (min-width: 900px) {
   [data-theme="estudio"] .hero .head { padding-left: 0; }
   [data-theme="estudio"] .hero .foot { padding-left: 0; }
-  [data-theme="estudio"] .hero h1 { font-size: clamp(3rem, 5.4vw, 5.5rem); }
+  [data-theme="estudio"] .hero h1 { font-size: clamp(2.8rem, min(5.4vw, 8.4svh), 5.5rem); }
   [data-theme="estudio"] .hero .spot { left: var(--s7); right: 0; bottom: var(--s6); }
 }
 [data-theme="estudio"] .grid-p { gap: var(--s6) var(--s5); }
@@ -121,7 +121,7 @@
 [data-theme="bodega"] .hero .facts li + li { border-left: 1px solid var(--border); }
 [data-theme="bodega"] .hero .facts b { font: 700 var(--t-xl)/1.1 var(--f-display); color: var(--fg); letter-spacing: 0; }
 @media (min-width: 900px) {
-  [data-theme="bodega"] .hero .stage { grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr); grid-template-rows: auto auto; min-height: 0; }
+  [data-theme="bodega"] .hero .stage { grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr); grid-template-rows: 0 auto auto 0; min-height: 0; }
   [data-theme="bodega"] .hero .head { padding: var(--s6) var(--s6) var(--s2); }
   [data-theme="bodega"] .hero .foot { padding: var(--s2) var(--s6) 0; }
   [data-theme="bodega"] .hero .facts { margin-inline: calc(-1 * var(--s6)); }
@@ -171,7 +171,7 @@
 [data-theme="barrio"] .hero .spot-name { font-family: var(--f-display); font-weight: 700; font-size: var(--t-md); margin-top: 4px; }
 [data-theme="barrio"] .hero .spot .price b { font-stretch: 100%; color: var(--fg); }
 @media (min-width: 900px) {
-  [data-theme="barrio"] .hero h1 { font-size: clamp(2.8rem, 5vw, 4.75rem); }
+  [data-theme="barrio"] .hero h1 { font-size: clamp(2.6rem, min(5vw, 8svh), 4.75rem); }
   [data-theme="barrio"] .hero .spot { right: var(--s7); bottom: var(--s7); }
 }
 @media (prefers-reduced-motion: reduce) { [data-theme="barrio"] .hero .halo { animation: none; } }
@@ -182,6 +182,76 @@
 [data-theme="barrio"] .btn { border-radius: 999px; }
 [data-theme="barrio"] .cat .img { border-radius: var(--r-lg); }
 [data-theme="barrio"] .band { border-radius: var(--r-lg); }
+
+/*
+ * ---------- Destacados por tema ----------
+ * La base (globals.css) son campos de color saturados, que son de Escenario. Cada tema claro los lleva
+ * a su propio lenguaje, el mismo de su portada.
+ */
+
+/* Vitrina: banda blanca con la franja roja en diagonal del lado del producto, precio grande en rojo. */
+[data-theme="vitrina"] .billboard[data-field] { --field: var(--bg); color: var(--fg); border: 1px solid var(--border); }
+[data-theme="vitrina"] .billboard::before { background: var(--accent); clip-path: polygon(0 0, 100% 0, 100% 36%, 0 50%); }
+[data-theme="vitrina"] .billboard .angle { filter: drop-shadow(0 26px 24px rgb(17 19 24 / 0.36)); }
+[data-theme="vitrina"] .billboard .brand, [data-theme="vitrina"] .billboard .price s { color: var(--fg-2); }
+[data-theme="vitrina"] .billboard .key-figure { border: 0; padding: 4px 10px; background: var(--fg); color: var(--bg); font-stretch: 100%; }
+[data-theme="vitrina"] .billboard h3 { letter-spacing: 0.005em; }
+[data-theme="vitrina"] .billboard .price b { color: var(--accent); font-size: var(--t-2xl); line-height: 1; }
+[data-theme="vitrina"] .billboard .go { background: var(--accent); color: var(--accent-ink); }
+@media (min-width: 900px) {
+  [data-theme="vitrina"] .billboard { min-height: 440px; }
+  [data-theme="vitrina"] .billboard::before { clip-path: polygon(0 0, 52% 0, 40% 100%, 0 100%); }
+  [data-theme="vitrina"] .billboard:nth-child(even)::before { clip-path: polygon(60% 0, 100% 0, 100% 100%, 48% 100%); }
+}
+
+/* Estudio: página de revista. Fondo crema, el producto derecho sobre un disco y el enlace subrayado. */
+[data-theme="estudio"] .billboard[data-field] { --field: var(--surface); color: var(--fg); border: 1px solid var(--border); }
+[data-theme="estudio"] .billboard::before { inset: auto; left: 50%; top: var(--s5); width: min(62%, 300px); aspect-ratio: 1; translate: -50% 0; border-radius: 50%; background: var(--surface-2); }
+[data-theme="estudio"] .billboard .angle, [data-theme="estudio"] .billboard:nth-child(even) .angle { transform: none; filter: drop-shadow(0 22px 22px rgb(31 29 26 / 0.2)); }
+[data-theme="estudio"] .billboard .pose { animation-name: lift; }
+[data-theme="estudio"] .billboard .brand, [data-theme="estudio"] .billboard .price s { color: var(--fg-2); }
+[data-theme="estudio"] .billboard .key-figure { border: 0; padding: 0; font-family: var(--f-display); font-stretch: 100%; font-style: italic; font-weight: 400; color: var(--accent); }
+[data-theme="estudio"] .billboard h3 { font-weight: 500; letter-spacing: -0.03em; }
+[data-theme="estudio"] .billboard .price b { font-family: var(--f-body); font-weight: 600; font-size: var(--t-lg); }
+[data-theme="estudio"] .billboard .go { height: auto; padding: 0 0 2px; border-radius: 0; background: none; color: var(--fg); border-bottom: 1px solid currentColor; }
+@media (min-width: 900px) {
+  [data-theme="estudio"] .billboard { min-height: 460px; }
+  [data-theme="estudio"] .billboard::before { top: 50%; left: 27%; width: min(40%, 400px); translate: -50% -50%; }
+  [data-theme="estudio"] .billboard:nth-child(even)::before { left: 73%; }
+}
+
+/* Bodega: filas de catálogo, dos por fila en escritorio. Sin 3D ni animación: aquí se compara rápido. */
+[data-theme="bodega"] .reel { gap: var(--s2); }
+[data-theme="bodega"] .billboard[data-field], [data-theme="bodega"] .billboard:nth-child(even) { --field: var(--surface); color: var(--fg); border: 1px solid var(--border); grid-template-areas: "pose txt"; grid-template-columns: 120px minmax(0, 1fr); min-height: 0; align-items: center; perspective: none; }
+[data-theme="bodega"] .billboard::before { display: none; }
+[data-theme="bodega"] .billboard .pose { padding: var(--s3); animation: none; }
+[data-theme="bodega"] .billboard .angle, [data-theme="bodega"] .billboard:nth-child(even) .angle { transform: none; filter: none; aspect-ratio: 1; max-width: none; background: var(--photo); border: 1px solid var(--border); border-radius: var(--r); }
+[data-theme="bodega"] .billboard .angle > img:not(.cover) { inset: 6%; width: 88%; height: 88%; }
+[data-theme="bodega"] .billboard .txt { gap: 4px; padding: var(--s3) var(--s3) var(--s3) 0; }
+[data-theme="bodega"] .billboard .txt > * { animation: none; }
+[data-theme="bodega"] .billboard .brand, [data-theme="bodega"] .billboard .price s { color: var(--fg-2); }
+[data-theme="bodega"] .billboard .key-figure { font-size: var(--t-sm); font-stretch: 100%; font-weight: 700; border-width: 1px; padding: 1px 6px; }
+[data-theme="bodega"] .billboard h3 { font-size: var(--t-xl); line-height: 1.05; }
+[data-theme="bodega"] .billboard .price b { font-size: var(--t-lg); }
+[data-theme="bodega"] .billboard .go { height: 36px; margin-top: 4px; padding: 0 var(--s3); background: var(--accent); color: var(--accent-ink); }
+@media (min-width: 900px) {
+  [data-theme="bodega"] .reel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  [data-theme="bodega"] .billboard[data-field], [data-theme="bodega"] .billboard:nth-child(even) { grid-template-columns: 168px minmax(0, 1fr); }
+}
+
+/* Barrio: campos en tonos tierra (barro, mostaza, salvia, arcilla), esquinas redondas y botones de píldora. */
+[data-theme="barrio"] .billboard { color: var(--fg); box-shadow: 0 1px 2px rgb(42 31 23 / 0.06), 0 10px 30px rgb(42 31 23 / 0.08); }
+[data-theme="barrio"] .billboard[data-field="0"] { --field: linear-gradient(140deg, #fbe7da 0%, #f2c2a3 100%); }
+[data-theme="barrio"] .billboard[data-field="1"] { --field: linear-gradient(140deg, #fcf1d6 0%, #efd391 100%); }
+[data-theme="barrio"] .billboard[data-field="2"] { --field: linear-gradient(140deg, #e9f0e1 0%, #c3d6ac 100%); }
+[data-theme="barrio"] .billboard[data-field="3"] { --field: linear-gradient(140deg, #f8e6e6 0%, #e7bbbc 100%); }
+[data-theme="barrio"] .billboard::before { background: radial-gradient(55% 65% at 35% 45%, rgb(255 250 243 / 0.6), transparent 70%); }
+[data-theme="barrio"] .billboard .angle { transform: rotateX(18deg) rotateZ(-8deg) scale(1.04); filter: drop-shadow(0 26px 24px rgb(42 31 23 / 0.3)); }
+@media (min-width: 900px) { [data-theme="barrio"] .billboard:nth-child(even) .angle { transform: rotateX(18deg) rotateZ(8deg) scale(1.04); } }
+[data-theme="barrio"] .billboard .brand { color: var(--fg); }
+[data-theme="barrio"] .billboard .price s { color: rgb(42 31 23 / 0.78); }
+[data-theme="barrio"] .billboard .key-figure { border: 0; padding: 4px 14px; border-radius: 999px; background: var(--fg); color: var(--bg); font-stretch: 100%; }
+[data-theme="barrio"] .billboard .go { border-radius: 999px; background: var(--fg); color: var(--bg); }
 
 /* ---------- Logo de la tienda: claro u oscuro según el fondo del tema ---------- */
 .logo-img .for-light { display: none; }
