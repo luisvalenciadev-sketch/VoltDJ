@@ -409,7 +409,8 @@ function ThemeMini({ id, name }: { id: ThemeId; name: string }) {
         <span />
       </div>
       <div className="tm-cards">
-        {["$ 1.275.000", "$ 890.000", "$ 2.300.000"].map((p) => (
+        {/* Cifras cortas: en la miniatura, un precio completo no cabe en la tarjetita y se corta. */}
+        {["$ 1,2 M", "$ 890 mil", "$ 2,3 M"].map((p) => (
           <div key={p}>
             <b>{p}</b>
           </div>

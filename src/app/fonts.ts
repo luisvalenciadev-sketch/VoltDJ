@@ -1,4 +1,4 @@
-import { Archivo, Barlow, Barlow_Condensed, Bricolage_Grotesque, Fraunces, Hanken_Grotesk, IBM_Plex_Sans, IBM_Plex_Sans_Condensed, JetBrains_Mono, Nunito_Sans } from "next/font/google";
+import { Archivo, Barlow, Barlow_Condensed, Big_Shoulders, Bricolage_Grotesque, Hanken_Grotesk, IBM_Plex_Sans, JetBrains_Mono, Nunito_Sans, Space_Grotesk } from "next/font/google";
 
 /*
  * Familias de los cinco temas (src/config/themes.ts). Todas declaran su @font-face, pero el navegador
@@ -11,11 +11,11 @@ export const mono = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "500"],
 
 export const barlowCondensed = Barlow_Condensed({ subsets: ["latin"], display: "swap", preload: false, weight: ["600", "700", "800"], variable: "--font-barlow-condensed" });
 export const barlow = Barlow({ subsets: ["latin"], display: "swap", preload: false, weight: ["400", "500", "600", "700"], variable: "--font-barlow" });
-// Con itálica: la última línea del lema va en cursiva en la portada de Estudio.
-export const fraunces = Fraunces({ subsets: ["latin"], display: "swap", preload: false, style: ["normal", "italic"], variable: "--font-fraunces" });
+export const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], display: "swap", preload: false, variable: "--font-space-grotesk" });
+// Letra de rótulo de bodega; el eje opsz la afina sola en los tamaños grandes.
+export const bigShoulders = Big_Shoulders({ subsets: ["latin"], display: "swap", preload: false, axes: ["opsz"], variable: "--font-big-shoulders" });
 export const plex = IBM_Plex_Sans({ subsets: ["latin"], display: "swap", preload: false, variable: "--font-plex" });
-export const plexCondensed = IBM_Plex_Sans_Condensed({ subsets: ["latin"], display: "swap", preload: false, weight: ["500", "600", "700"], variable: "--font-plex-condensed" });
 export const bricolage = Bricolage_Grotesque({ subsets: ["latin"], display: "swap", preload: false, variable: "--font-bricolage" });
 export const nunito = Nunito_Sans({ subsets: ["latin"], display: "swap", preload: false, variable: "--font-nunito" });
 
-export const fontVariables = [archivo, hanken, mono, barlowCondensed, barlow, fraunces, plex, plexCondensed, bricolage, nunito].map((f) => f.variable).join(" ");
+export const fontVariables = [archivo, hanken, mono, barlowCondensed, barlow, spaceGrotesk, bigShoulders, plex, bricolage, nunito].map((f) => f.variable).join(" ");
