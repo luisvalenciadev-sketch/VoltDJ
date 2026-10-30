@@ -19,7 +19,7 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
             const external = href?.startsWith("http");
             return (
               <article key={b.id} className="banner" aria-roledescription="banner" aria-label={`${i + 1} de ${banners.length}: ${b.title}`}>
-                {b.image && <Image src={b.image.src} alt="" fill sizes="(min-width: 1240px) 1176px, 100vw" className="banner-img" priority={i === 0} />}
+                {b.image && <Image src={b.image.src} alt="" fill sizes="100vw" className="banner-img" priority={i === 0} />}
                 <div className="banner-txt">
                   <h2 className="disp">{b.title}</h2>
                   {b.subtitle && <p>{b.subtitle}</p>}
