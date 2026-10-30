@@ -13,6 +13,7 @@ import {
   orderTotals,
   parseCOP,
   normalizeGuideCode,
+  shownState,
   timeline,
   validateRescheduleDay,
   type Guide,
@@ -123,6 +124,13 @@ describe("entrega fallida y reprogramación", () => {
   it("entregado muestra quién recibió", () => {
     const events = addManualStatus(enReparto(), "entregado", day(5), undefined, { receivedBy: "Carolina Restrepo" });
     expect(timeline({ events }, day(5, 1)).at(-1)).toMatchObject({ id: "entregado", state: "current", detail: "Recibido por Carolina Restrepo." });
+  });
+
+  it("entregado se pinta completado, no en curso; los demás pasos actuales sí van en curso", () => {
+    const events = addManualStatus(enReparto(), "entregado", day(5));
+    expect(timeline({ events }, day(5, 1)).map(shownState)).toEqual(["done", "done", "done", "done", "done", "done"]);
+    expect(shownState({ id: "en_reparto", state: "current" })).toBe("current");
+    expect(shownState({ id: "cancelado", state: "current" })).toBe("current");
   });
 
   it("valida la fecha que elige el cliente (mañana a 30 días, hora de Colombia)", () => {

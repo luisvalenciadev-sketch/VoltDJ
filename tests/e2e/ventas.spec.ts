@@ -122,10 +122,12 @@ test("las zonas de envío se eligen en el pedido y llegan en el mensaje", async 
   expect(code).toMatch(/^VD-[A-Z2-9]{4}-[A-Z2-9]{4}$/);
 
   await go(page, "/admin");
-  const row = page.locator(".draft-row", { hasText: code });
+  await page.getByRole("link", { name: /^Borradores \d+$/ }).click();
+  const row = page.locator(".guide-row[data-draft]", { hasText: code });
   await expect(row).toContainText(name);
+  await expect(row).toContainText("Borrador");
   await expect(row).toContainText("$ 850.000");
-  await row.getByRole("link", { name: "Crear guía" }).click();
+  await row.click();
   await expect(page.getByRole("heading", { level: 1, name: `Guía del pedido ${code}` })).toBeVisible();
   await expect(page.getByLabel("Nombre del cliente *")).toHaveValue(name);
   await expect(page.getByLabel("Dirección de entrega")).toHaveValue("Calle 10 # 5-20");
@@ -133,8 +135,10 @@ test("las zonas de envío se eligen en el pedido y llegan en el mensaje", async 
   await expect(page.locator(".order-lines")).toContainText("DDJ-400");
   await page.getByRole("button", { name: "Crear guía" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(code, { timeout: 15_000 });
-  await go(page, "/admin");
-  await expect(page.locator(".draft-row", { hasText: code })).toHaveCount(0);
+  // Ya convertido, el pedido aparece una sola vez en "Todas": como guía, no como borrador.
+  await go(page, `/admin?ver=todas&q=${code}`);
+  await expect(page.locator(".guide-row", { hasText: code })).toHaveCount(1);
+  await expect(page.locator(".guide-row[data-draft]", { hasText: code })).toHaveCount(0);
 });
 
 test("una guía con productos aparta el stock y al cancelarla lo devuelve", async ({ page }) => {

@@ -256,6 +256,12 @@ export function timeline(guide: Pick<Guide, "events">, now: Date = new Date()): 
   });
 }
 
+/**
+ * Cómo se pinta un paso. "Entregado" como paso actual es el final del pedido, no algo en curso:
+ * se ve completado (lleno, con chulo y sin pulso). El estado lógico sigue siendo "current".
+ */
+export const shownState = (s: Pick<TimelineItem, "id" | "state">): TimelineState => (s.id === "entregado" && s.state === "current" ? "done" : s.state);
+
 /** Calendario automático a partir de una fecha de inicio y días por paso. */
 export function buildSchedule(start: Date, offsets: Partial<Record<StepId, number>> = DEFAULT_OFFSETS): TrackingEvent[] {
   return STEPS.filter((s) => offsets[s.id] != null).map((s) => ({ status: s.id, at: new Date(start.getTime() + (offsets[s.id] as number) * 86_400_000).toISOString() }));

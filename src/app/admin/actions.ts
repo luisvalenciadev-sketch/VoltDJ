@@ -316,6 +316,7 @@ export async function discardDraft(code: string): Promise<void> {
   const draft = drafts ? await drafts.get(code) : null;
   if (draft?.status === "pendiente") await drafts!.update(code, { status: "descartado" });
   revalidatePath("/admin");
+  redirect("/admin?ver=borradores");
 }
 
 export async function deleteGuide(code: string): Promise<void> {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { discardDraft } from "@/app/admin/actions";
 import { NewGuideForm, type DraftPrefill } from "@/components/admin/AdminForms";
 import { requireAdmin } from "@/lib/admin-auth";
 import { adminCatalog } from "@/lib/admin-catalog";
@@ -38,6 +39,14 @@ export default async function NewGuidePage({ searchParams }: { searchParams: Sea
             {draft.lines.some((l) => l.unitPrice === 0) && " Hay productos sin precio: escríbelo antes de crear la guía."}
           </span>
         </p>
+      )}
+      {draft && (
+        <form action={discardDraft.bind(null, draft.code)} className="row-wrap" style={{ marginBottom: "var(--s4)" }}>
+          <span className="note">¿El cliente no siguió con la compra?</span>
+          <button type="submit" className="textbtn danger">
+            Descartar borrador
+          </button>
+        </form>
       )}
       {found && !draft && (
         <p className="alert warn" role="alert">
